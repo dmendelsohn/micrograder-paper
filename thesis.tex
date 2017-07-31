@@ -2,9 +2,10 @@
 \usepackage{textcomp}
 \usepackage[margin=1.0in]{geometry}
 \usepackage[utf8]{inputenc}
+\usepackage{setspace}
 
 \newcommand{\mytitle}{\textbf{An Automatic Grader for Embedded Systems Projects}}
-\newcommand{\mydate}{\today}
+\newcommand{\mydate}{August 18, 2017}
 
 \begin{document}
 
@@ -29,14 +30,14 @@ Massachusetts Institute of Technology \\
 August 2017 \\
 \vspace{12pt}
 \textcopyright \hspace{0.05in} Massachusetts Institute of Technology 2017.  All rights reserved. \\
-\vspace{24pt}
+\vspace{48pt}
 
 Author \dotfill \\
 \begin{flushright}
 Department of Electrical Engineering and Computer Science \\
 \mydate
 \end{flushright}
-\vspace{12pt}
+\vspace{36pt}
 
 Certified by \dotfill \\
 \begin{flushright}
@@ -44,7 +45,7 @@ Joseph Steinmeyer \\
 Thesis Supervisor \\
 \mydate
 \end{flushright}
-\vspace{12pt}
+\vspace{24pt}
 
 Accepted by \dotfill \\
 \begin{flushright}
@@ -80,25 +81,179 @@ Submitted to the Department of Electrical Engineering and Computer Science\\
 
 \tableofcontents
 
+\doublespacing
+
 \newpage
 \section{Introduction}
+Write about 6.S08, the current situation, how its a pain, etc
+
+Write about how ``regular" software checkers are a solved problem
+
+Write about unique challenges of embedded systems (computing platform challenges, physical vs digital abstractions, heavily time-dependent in a way typical software classes aren't)
 
 \newpage
 \section{Prior Work}
+Write about UT Austin's EdX class, and the system they use
+
+Discuss strengths and weaknesses of the UT Austin approach
 
 \newpage
 \section{Design Principles}
+Before building MicroGrader, I outlined a set of design principles to serve as a foundation for my technical design.
+
+\subsection{Platform agnosticism}
+\indent \indent The microcontroller ecosystem is fractured and changes quickly.  Unsurprisingly, a wide variety of platforms are currently used in embedded systems education.  For example, MIT's 6.S08 uses the Teensy (a third-party Arduino variant) while UT Austin's Embedded Systems course on EdX uses the TM4C123 (an ARM-based board made by Texas Instruments).  Ideally, the automated grader should not care if a project is implemented on a Teensy or a TM4C123, as long as it meets the appropriate specification. The architecture of the grader must not be intrinsically tied to any one microcontroller or any specific sensors.  The interfaces ought to be as generic as possible.
+
+\subsection{Extensibility}
+\indent \indent It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital GPIO, analog GPIO, and a nine-axis IMU.  The automatic grader should \textbf{not} be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader ought to be handle that.
+
+This extensibility could even make it possible to use the grader in domains other than EECS.  In principle, an embedded system provides an interface between the physical world and the digital world.  MicroGrader could therefore be used to grade a project with any kind of electronically measurable output.
+
+\subsection{Actionable feedback for students}
+\indent \indent Students should be able to get explanations of each passed and failed test case.  This may require significant technical work -- the internal representation of a test case might be complicated, but the explanations should be simple.  Based on the description of a failed test, a student should know exactly what output the system observed and what output the system expected to observe.
+
+\subsection{Ease of use for students}
+In terms of the student experience, MicroGrader should be seamless to use.  Running tests should be as simple as setting a flag at the top of the program.  Any embedded libraries that the students use should be configured to use that flag to determine whether to run normally or to run in ``test" mode.  Students should not have to reorganize or rewrite a functioning project in order to coax the grader into working properly.
+
+\subsection{Ease of use for course staff}
+\indent \indent My experience with tedious manual grading in 6.S08 inspired this project, in large part.  If building test cases in MicroGrader is actually more time-intensive than manual grading, this project will have failed its primary purpose.  The time required to customize the grader for a specific assignment should be roughly proportional to the complexity of the assignment.  If possible, a working implementation of the assignment should be sufficient to programmatically generate a test.\\
+\indent \indent MicroGrader should impose as few constraints as possible on the assignments it grades.  In a perfect world, it would be able to evaluate if an embedded system implements any conceivable specification.
+
+\subsection{Minimize false positives}
+\indent \indent Although few students would complain about invalid solutions occasionally passing automated tests, it inevitably does them a disservice.  In 6.S08, for example, the students are mostly newcomers to programming and have not yet developed sophisticated debugging skills or proper testing disciplines.  Students have difficulty shedding the assumption that code is correct just because it passed the tests.  If that code is critical in a future exercise, it will cause problems.
+
+\subsection{Minimize false negatives}
+\indent \indent It's discouraging and perplexing for students when apparently correct solutions fail automated tests.  Ideally, any functional solution -- not just the intended one -- should pass the tests.  It's a challenge to avoid ``Heisenbugs", wherein the system works under normal operation, but fails during testing due to changes introduced by the test itself.  In practice, I've found it necessary to develop a set of guidelines to avoid such situations (e.g. maximum recommended frequency for certain I/O events).
+
+\newpage
+\section{Defining a test case}
+\indent \indent We can think of a specification as a mapping from a set of input signals to a set of output signals.  In this system, signals are assumed to be piecewise constant.  A piecewise constant signal can approximate any piecewise continuous signal by increasing the resolution.  Not all possible specifications can be evaluated by MicroGrader.  For the sake of simplicity, the internal structures of MicroGrader only support a subset of all possible specifications, though this subset is quite broad.
+
+\subsection{Channels}
+\indent \indent We label each individual input and output as a \textit{channel}.  Specifically, a channel is comprised of a data type and a sub-channel.  For example, ``digital input" is a data type, the pin number is the sub-channel.  The built-in data types, and their associated sub-channels, are:
+
+\begin{itemize}
+\item Digital Input (sub-channels are pin numbers)
+\item Digital Output (sub-channels are pin numbers)
+\item Analog Input (sub-channels are pin numbers)
+\item Analog Outputs (sub-channels are pin numbers)
+\item Accelerometer Input (sub-channels are axes)
+\item Gyroscope Input (sub-channels are axes)
+\item Magnetometer Input (sub-channels are axes)
+\item Monochrome Display Output (no sub-channels)
+\end{itemize}
+
+\subsection{Static inputs}
+\indent \indent In a test case, the inputs signals are more-or-less statically pre-defined.  This is in contrast to other automatic graders that deputize the student to perform actions that generate the inputs.  The details of how these pre-defined inputs are delivered to the student's program will be described later.  As mentioned above, input signals are modeled as a piecewise constant function in time, with arbitrarily high time resolution.
+
+Allowing for dynamic input generation at evaluation-time would greatly complicate the implementation and design of the system, and is outside the scope of this project.  Typically, this option is chosen out of necessity, as other automated graders lack a way to deliver pre-define inputs.  Dynamically generating inputs with human action is actually quite restrictive.
+
+\subsection{Evaluation of outputs}
+\indent \indent Outputs are evaluated ``offline" in the algorithmic sense.  That is, the outputs of the embedded system are collected in full, and then evaluated once the test is finished (for some definition of ``finished").  Furthermore, for the sake of simplicity, MicroGrader considers each output channel independently.  As implemented, there is no cross-modal evaluation of separate output channels.
+
+Collected outputs are samples of continuous-time signal.  We use the simplest method of mapping the discrete-time sampling to a continuous-time signal; at any given time, we consider the most recent sample of the output to be the current value of that output.  This turns out to be pretty reasonable in the context of many embedded system outputs.  On most microcontrollers, output values such as an electrical voltage are ``held" until a new output value is specified.
+
+\subsubsection{Data structure: Evaluation Point}
+Our fundamental unit of output evaluation is the \textit{evaluation point}.  An evaluation point consists of:
+
+\begin{itemize}
+\item Output Channel (e.g. ``analog output on pin 5")
+\item Time Interval (a numeric start time and end time)
+\item Expected Value (the ``correct" value of the given output channel in this interval)
+\item Check Function (a boolean function of two arguments)
+\item Required Portion (a float between 0 and 1, inclusive)
+\item Condition (we'll discuss this later)
+\end{itemize}
+
+In order to evaluate an evaluation point, we consider the reconstructed continuous signal for the point's specified channel within the point's specified time interval.  The signal is considered ``correct" if TODO
+
+How is an Evaluation Point evaluated?
+
+What are the possible results?
+
+\subsubsection{Aggregating point results}
+Explain.
+
+\subsection{Relative timing}
+What's wrong with absolute timing?
+
+\subsubsection{Data structure: Condition}
+Explain.
+
+\subsubsection{Relatively-specified inputs}
+How is a frame defined?
+
+What if two frames overlap?
+
+What value does the input have if no frame is defined?
+
+\subsubsection{Relatively-evaluated outputs}
+Quick explanation
 
 \newpage
 \section{Implementation}
 
+\subsection{Architecture}
+How is the system organized?
+
+Why?
+
+What are the responsibilities of the client?
+
+What does the host do?
+
+\subsection{Two-stage testing}
+Describe the interactive session
+
+Describe the evaluation stage
+
+\subsection{Reporting results}
+What info do students get?
+
+How does this interact with centralized courseware (e.g. EdX) [Hint: UT Austin's method is good]
+
+\subsection{Configurability}
+Describe what is configurable
+
+\subsection{Defaults}
+Describe how defaults make life easier
+
+\newpage
+\section{Limitations}
+[Intro sentence]
+
+\subsection{Latency}
+Write about latency (which limits frequency and inhibits tapping into I2C, SPI, etc)
+
+\subsection{Point-by-point evaluation}
+Explain how we cant do things like cross correlation
+
+\subsection{Step-wise continuity restriction}
+Explain how something like "check that integral of output is X" is incompatible with current software...but not ruled out by the overall approach.
+
+
 \newpage
 \section{Automatic Test Generation}
+Explain what this is and why it is helpful
+
+Explain how we generate a recording (i.e. inputs are reported instead of requested)
+
+Explain how recording becomes a test case...this will be a hefty section
 
 \newpage
 \section{Results}
+TODO: write this once I try out a lot of student 6.S08 code on MicroGrader
 
 \newpage
 \section{Future Work}
+TODO: write this at the end...when I actually know what I haven't done yet
+
+``Derived output": where the output we care about is some time-dependent function of something the system produces (e.g. the system produces a motor voltage and we care about the position of the wheel driven by the motor)
+
+\newpage
+\section{Appendix}
+
+\newpage
+\section{References}
 
 \end{document}
