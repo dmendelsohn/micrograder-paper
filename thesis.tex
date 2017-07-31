@@ -4,6 +4,7 @@
 \usepackage[utf8]{inputenc}
 \usepackage{setspace}
 \usepackage{indentfirst}
+
 \usepackage{listings}
 \usepackage{color}
 
@@ -196,15 +197,16 @@ The check function takes an expected value and an observed value as input, and r
 
 In order to evaluate an evaluation point, we consider the reconstructed continuous signal for the point's channel, during the point's time interval.  We then calculate the portion of the interval for which the observed value of the signal is correct, with respect to the point's expected value.  If that portion is greater than or equal to the point's ``required portion", then the point evaluates to |true|.  Otherwise, it evaluates to |false|.
 
-The point's time interval isn't an absolute time interval, but rather a relative time interval, where $t=0$ is the time at which the point's ``condition" is met.  We'll discuss this is more detail in [TODO: fill in section link]
+The point's time interval isn't an absolute time interval, but rather a relative time interval, where $t=0$ is the time at which the point's ``condition" is met.  We'll discuss this is more detail in section \ref{sec:condition}.
 
 \subsubsection{Aggregating point results}
-For any ... TODO
+For any channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each channel.  This function takes the set of boolean point results for that channel as input, and returns a decimal score in the interval $[0,1]$.  The scores for each channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
 \subsection{Relative timing}
 What's wrong with absolute timing?
 
 \subsubsection{Data structure: Condition}
+\label{sec:condition}
 Explain.
 
 \subsubsection{Relatively-specified inputs}

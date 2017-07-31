@@ -1,0 +1,35 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Prior Work}{}% 2
+\BOOKMARK [1][-]{section.3}{Design Principles}{}% 3
+\BOOKMARK [2][-]{subsection.3.1}{Platform agnosticism}{section.3}% 4
+\BOOKMARK [2][-]{subsection.3.2}{Extensibility}{section.3}% 5
+\BOOKMARK [2][-]{subsection.3.3}{Actionable feedback for students}{section.3}% 6
+\BOOKMARK [2][-]{subsection.3.4}{Ease of use for students}{section.3}% 7
+\BOOKMARK [2][-]{subsection.3.5}{Ease of use for course staff}{section.3}% 8
+\BOOKMARK [2][-]{subsection.3.6}{Minimize false positives}{section.3}% 9
+\BOOKMARK [2][-]{subsection.3.7}{Minimize false negatives}{section.3}% 10
+\BOOKMARK [1][-]{section.4}{Defining a test case}{}% 11
+\BOOKMARK [2][-]{subsection.4.1}{Channels}{section.4}% 12
+\BOOKMARK [2][-]{subsection.4.2}{Static inputs}{section.4}% 13
+\BOOKMARK [2][-]{subsection.4.3}{Evaluation of outputs}{section.4}% 14
+\BOOKMARK [3][-]{subsubsection.4.3.1}{Data structure: Evaluation Point}{subsection.4.3}% 15
+\BOOKMARK [3][-]{subsubsection.4.3.2}{Aggregating point results}{subsection.4.3}% 16
+\BOOKMARK [2][-]{subsection.4.4}{Relative timing}{section.4}% 17
+\BOOKMARK [3][-]{subsubsection.4.4.1}{Data structure: Condition}{subsection.4.4}% 18
+\BOOKMARK [3][-]{subsubsection.4.4.2}{Relatively-specified inputs}{subsection.4.4}% 19
+\BOOKMARK [3][-]{subsubsection.4.4.3}{Relatively-evaluated outputs}{subsection.4.4}% 20
+\BOOKMARK [1][-]{section.5}{Implementation}{}% 21
+\BOOKMARK [2][-]{subsection.5.1}{Architecture}{section.5}% 22
+\BOOKMARK [2][-]{subsection.5.2}{Two-stage testing}{section.5}% 23
+\BOOKMARK [2][-]{subsection.5.3}{Reporting results}{section.5}% 24
+\BOOKMARK [2][-]{subsection.5.4}{Configurability}{section.5}% 25
+\BOOKMARK [2][-]{subsection.5.5}{Defaults}{section.5}% 26
+\BOOKMARK [1][-]{section.6}{Limitations}{}% 27
+\BOOKMARK [2][-]{subsection.6.1}{Latency}{section.6}% 28
+\BOOKMARK [2][-]{subsection.6.2}{Point-by-point evaluation}{section.6}% 29
+\BOOKMARK [2][-]{subsection.6.3}{Step-wise continuity restriction}{section.6}% 30
+\BOOKMARK [1][-]{section.7}{Automatic Test Generation}{}% 31
+\BOOKMARK [1][-]{section.8}{Results}{}% 32
+\BOOKMARK [1][-]{section.9}{Future Work}{}% 33
+\BOOKMARK [1][-]{section.10}{Appendix}{}% 34
+\BOOKMARK [1][-]{section.11}{References}{}% 35
