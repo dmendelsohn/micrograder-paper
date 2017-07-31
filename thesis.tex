@@ -3,6 +3,32 @@
 \usepackage[margin=1.0in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{setspace}
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage{color}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+\lstMakeShortInline[columns=fixed]|
+
 
 \newcommand{\mytitle}{\textbf{An Automatic Grader for Embedded Systems Projects}}
 \newcommand{\mydate}{August 18, 2017}
@@ -102,35 +128,36 @@ Discuss strengths and weaknesses of the UT Austin approach
 Before building MicroGrader, I outlined a set of design principles to serve as a foundation for my technical design.
 
 \subsection{Platform agnosticism}
-\indent \indent The microcontroller ecosystem is fractured and changes quickly.  Unsurprisingly, a wide variety of platforms are currently used in embedded systems education.  For example, MIT's 6.S08 uses the Teensy (a third-party Arduino variant) while UT Austin's Embedded Systems course on EdX uses the TM4C123 (an ARM-based board made by Texas Instruments).  Ideally, the automated grader should not care if a project is implemented on a Teensy or a TM4C123, as long as it meets the appropriate specification. The architecture of the grader must not be intrinsically tied to any one microcontroller or any specific sensors.  The interfaces ought to be as generic as possible.
+The microcontroller ecosystem is fractured and changes quickly.  Unsurprisingly, a wide variety of platforms are currently used in embedded systems education.  For example, MIT's 6.S08 uses the Teensy (a third-party Arduino variant) while UT Austin's Embedded Systems course on EdX uses the TM4C123 (an ARM-based board made by Texas Instruments).  Ideally, the automated grader should not care if a project is implemented on a Teensy or a TM4C123, as long as it meets the appropriate specification. The architecture of the grader must not be intrinsically tied to any one microcontroller or any specific sensors.  The interfaces ought to be as generic as possible.
 
 \subsection{Extensibility}
-\indent \indent It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital GPIO, analog GPIO, and a nine-axis IMU.  The automatic grader should \textbf{not} be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader ought to be handle that.
+It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital GPIO, analog GPIO, and a nine-axis IMU.  The automatic grader should \textbf{not} be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader ought to be handle that.
 
 This extensibility could even make it possible to use the grader in domains other than EECS.  In principle, an embedded system provides an interface between the physical world and the digital world.  MicroGrader could therefore be used to grade a project with any kind of electronically measurable output.
 
 \subsection{Actionable feedback for students}
-\indent \indent Students should be able to get explanations of each passed and failed test case.  This may require significant technical work -- the internal representation of a test case might be complicated, but the explanations should be simple.  Based on the description of a failed test, a student should know exactly what output the system observed and what output the system expected to observe.
+Students should be able to get explanations of each passed and failed test case.  This may require significant technical work -- the internal representation of a test case might be complicated, but the explanations should be simple.  Based on the description of a failed test, a student should know exactly what output the system observed and what output the system expected to observe.
 
 \subsection{Ease of use for students}
 In terms of the student experience, MicroGrader should be seamless to use.  Running tests should be as simple as setting a flag at the top of the program.  Any embedded libraries that the students use should be configured to use that flag to determine whether to run normally or to run in ``test" mode.  Students should not have to reorganize or rewrite a functioning project in order to coax the grader into working properly.
 
 \subsection{Ease of use for course staff}
-\indent \indent My experience with tedious manual grading in 6.S08 inspired this project, in large part.  If building test cases in MicroGrader is actually more time-intensive than manual grading, this project will have failed its primary purpose.  The time required to customize the grader for a specific assignment should be roughly proportional to the complexity of the assignment.  If possible, a working implementation of the assignment should be sufficient to programmatically generate a test.\\
-\indent \indent MicroGrader should impose as few constraints as possible on the assignments it grades.  In a perfect world, it would be able to evaluate if an embedded system implements any conceivable specification.
+My experience with tedious manual grading in 6.S08 inspired this project, in large part.  If building test cases in MicroGrader is actually more time-intensive than manual grading, this project will have failed its primary purpose.  The time required to customize the grader for a specific assignment should be roughly proportional to the complexity of the assignment.  If possible, a working implementation of the assignment should be sufficient to programmatically generate a test.\\
+
+MicroGrader should impose as few constraints as possible on the assignments it grades.  In a perfect world, it would be able to evaluate if an embedded system implements any conceivable specification.
 
 \subsection{Minimize false positives}
-\indent \indent Although few students would complain about invalid solutions occasionally passing automated tests, it inevitably does them a disservice.  In 6.S08, for example, the students are mostly newcomers to programming and have not yet developed sophisticated debugging skills or proper testing disciplines.  Students have difficulty shedding the assumption that code is correct just because it passed the tests.  If that code is critical in a future exercise, it will cause problems.
+Although few students would complain about invalid solutions occasionally passing automated tests, it inevitably does them a disservice.  In 6.S08, for example, the students are mostly newcomers to programming and have not yet developed sophisticated debugging skills or proper testing disciplines.  Students have difficulty shedding the assumption that code is correct just because it passed the tests.  If that code is critical in a future exercise, it will cause problems.
 
 \subsection{Minimize false negatives}
-\indent \indent It's discouraging and perplexing for students when apparently correct solutions fail automated tests.  Ideally, any functional solution -- not just the intended one -- should pass the tests.  It's a challenge to avoid ``Heisenbugs", wherein the system works under normal operation, but fails during testing due to changes introduced by the test itself.  In practice, I've found it necessary to develop a set of guidelines to avoid such situations (e.g. maximum recommended frequency for certain I/O events).
+It's discouraging and perplexing for students when apparently correct solutions fail automated tests.  Ideally, any functional solution -- not just the intended one -- should pass the tests.  It's a challenge to avoid ``Heisenbugs", wherein the system works under normal operation, but fails during testing due to changes introduced by the test itself.  In practice, I've found it necessary to develop a set of guidelines to avoid such situations (e.g. maximum recommended frequency for certain I/O events).
 
 \newpage
 \section{Defining a test case}
-\indent \indent We can think of a specification as a mapping from a set of input signals to a set of output signals.  In this system, signals are assumed to be piecewise constant.  A piecewise constant signal can approximate any piecewise continuous signal by increasing the resolution.  Not all possible specifications can be evaluated by MicroGrader.  For the sake of simplicity, the internal structures of MicroGrader only support a subset of all possible specifications, though this subset is quite broad.
+We can think of a specification as a mapping from a set of input signals to a set of output signals.  In this system, signals are assumed to be piecewise constant.  A piecewise constant signal can approximate any piecewise continuous signal by increasing the resolution.  Not all possible specifications can be evaluated by MicroGrader.  For the sake of simplicity, the internal structures of MicroGrader only support a subset of all possible specifications, though this subset is quite broad.
 
 \subsection{Channels}
-\indent \indent We label each individual input and output as a \textit{channel}.  Specifically, a channel is comprised of a data type and a sub-channel.  For example, ``digital input" is a data type, the pin number is the sub-channel.  The built-in data types, and their associated sub-channels, are:
+We label each individual input and output as a \textit{channel}.  Specifically, a channel is comprised of a data type and a sub-channel.  For example, ``digital input" is a data type, the pin number is the sub-channel.  The built-in data types, and their associated sub-channels, are:
 
 \begin{itemize}
 \item Digital Input (sub-channels are pin numbers)
@@ -144,12 +171,12 @@ In terms of the student experience, MicroGrader should be seamless to use.  Runn
 \end{itemize}
 
 \subsection{Static inputs}
-\indent \indent In a test case, the inputs signals are more-or-less statically pre-defined.  This is in contrast to other automatic graders that deputize the student to perform actions that generate the inputs.  The details of how these pre-defined inputs are delivered to the student's program will be described later.  As mentioned above, input signals are modeled as a piecewise constant function in time, with arbitrarily high time resolution.
+In a test case, the inputs signals are more-or-less statically pre-defined.  This is in contrast to other automatic graders that deputize the student to perform actions that generate the inputs.  The details of how these pre-defined inputs are delivered to the student's program will be described later.  As mentioned above, input signals are modeled as a piecewise constant function in time, with arbitrarily high time resolution.
 
 Allowing for dynamic input generation at evaluation-time would greatly complicate the implementation and design of the system, and is outside the scope of this project.  Typically, this option is chosen out of necessity, as other automated graders lack a way to deliver pre-define inputs.  Dynamically generating inputs with human action is actually quite restrictive.
 
 \subsection{Evaluation of outputs}
-\indent \indent Outputs are evaluated ``offline" in the algorithmic sense.  That is, the outputs of the embedded system are collected in full, and then evaluated once the test is finished (for some definition of ``finished").  Furthermore, for the sake of simplicity, MicroGrader considers each output channel independently.  As implemented, there is no cross-modal evaluation of separate output channels.
+Outputs are evaluated ``offline" in the algorithmic sense.  That is, the outputs of the embedded system are collected in full, and then evaluated once the test is finished (for some definition of ``finished").  Furthermore, for the sake of simplicity, MicroGrader considers each output channel independently.  As implemented, there is no cross-modal evaluation of separate output channels.
 
 Collected outputs are samples of continuous-time signal.  We use the simplest method of mapping the discrete-time sampling to a continuous-time signal; at any given time, we consider the most recent sample of the output to be the current value of that output.  This turns out to be pretty reasonable in the context of many embedded system outputs.  On most microcontrollers, output values such as an electrical voltage are ``held" until a new output value is specified.
 
@@ -165,14 +192,14 @@ Our fundamental unit of output evaluation is the \textit{evaluation point}.  An 
 \item Condition (we'll discuss this later)
 \end{itemize}
 
-In order to evaluate an evaluation point, we consider the reconstructed continuous signal for the point's specified channel within the point's specified time interval.  The signal is considered ``correct" if TODO
+The check function takes an expected value and an observed value as input, and returns a boolean.  We consider that boolean to be the correctness of the observed value with respect to the expected value.
 
-How is an Evaluation Point evaluated?
+In order to evaluate an evaluation point, we consider the reconstructed continuous signal for the point's channel, during the point's time interval.  We then calculate the portion of the interval for which the observed value of the signal is correct, with respect to the point's expected value.  If that portion is greater than or equal to the point's ``required portion", then the point evaluates to |true|.  Otherwise, it evaluates to |false|.
 
-What are the possible results?
+The point's time interval isn't an absolute time interval, but rather a relative time interval, where $t=0$ is the time at which the point's ``condition" is met.  We'll discuss this is more detail in [TODO: fill in section link]
 
 \subsubsection{Aggregating point results}
-Explain.
+For any ... TODO
 
 \subsection{Relative timing}
 What's wrong with absolute timing?
