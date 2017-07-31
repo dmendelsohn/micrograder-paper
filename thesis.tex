@@ -203,7 +203,9 @@ The point's time interval isn't an absolute time interval, but rather a relative
 For any channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each channel.  This function takes the set of boolean point results for that channel as input, and returns a decimal score in the interval $[0,1]$.  The scores for each channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
 \subsection{Relative timing}
-What's wrong with absolute timing?
+In many embedded systems projects, there are subsystems with unknown latency.  Sometimes, this latency is highly variable.  This is especially true in the context of MIT's 6.S08, due to its focus on web-connected embedded systems.  Events with highly variable latency include obtaining a WiFi connection, making an HTTP request, and obtaining a GPS fix.
+
+In the current implementation of MicroGrader, web requests are not simulated.  Rather, they are considered to be a hidden ``internal" step between system inputs (e.g. a button is pressed) and system outputs (e.g. some text from the web is displayed).  It is not possible, at the time a test case is designed, to predict when this output ought to occur in absolute terms.  We can, however, specify when the output ought to occur in relative terms (e.g. when an HTTP response arrives).  For this reason, MicroGrader typically represents time relative to the time at which a pre-defined condition is met.
 
 \subsubsection{Data structure: Condition}
 \label{sec:condition}
