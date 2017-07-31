@@ -211,33 +211,40 @@ In the current implementation of MicroGrader, web requests are not simulated.  R
 \label{sec:condition}
 In MicroGrader, there are four basic types of conditions.  Conditions and be composed together to create more complex conditions, which can represent most events we care about.
 
-TODO: describe absolute condition
+The first type of condition is the \textit{basic condition}.  The time at which a \textit{basic condition} is met is defined by a \textit{cause}.  In this case, the cause is a boolean function of that takes a single input -- a representation of an embedded system event.  The boolean return value represents whether or not the input event is considered to satisfy the condition.  For example, we can use a \textit{cause} function that returns |true| if and only if the event is a ``system initialization" event.  Another possible \textit{cause} function would return |true| if and only if the system event is a ``Wifi response" event.  Once the condition is satisfied, it remains satisfied forever.  The details of how these events are observed will be discussed later in section \ref{sec:architecture}. 
 
-TODO: describe AFTER
+The second type of condition is the \textit{after condition}.  This type of condition has another condition (of any kind) as its ``precondition".  The \textit{cause} function of an \textit{after condition} is only invoked for system events that occur after the precondition is met.   In addition, the \textit{cause} of an \textit{after condition} can be a single number, rather than a function.  In this case, we consider this condition to be met a fixed amount of time after the precondition is met, as defined by this number.
 
-TODO: describe AND and OR
+The third type of condition is the \textit{and condition}.  This type of condition has no \textit{cause}, but rather just a set of \textit{sub-conditions}, which can be of any type.  This condition is considered to be met once \textbf{all} of the sub-conditions are met.
 
-\subsubsection{Relatively-specified inputs}
-How is a frame defined?
+The fourth and final type of condition is the \textit{or condition}.  It is analogous to the \textit{and condition}, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met.
 
-What if two frames overlap?
+\subsubsection{Data structure: Input Frames}
+Now that we have the ability to define time in a relative way, let's re-examine how a test case defines its inputs.  Specifically, input signals are fixed relative to a condition, rather than be fixed at an absolute time.  The principal data structure for accomplishing this is the \textit{frame}.
 
-What value does the input have if no frame is defined?
+A \textit{frame} is comprised of a \textit{start condition}, an \textit{end condition}, and a set of time-series signals (each of which is associated with a specific input channel).  The two conditions can be of any type described in section \ref{sec:condition}.  The signals must all be defined for all times $t>=0$.  The time at which the start condition is met is considered to be our ``anchor point", $t=0$.  A frame is considered \textit{active} at times at or after the start condition is met, and before the end condition is met.
+
+A test case can (and often requires) multiple frames, since different behaviors that we'd like to evaluate occur relative to different events.  During the execution of a test, is it possible for zero frames, one frame, or multiple frames to be active at a given time.  If exactly one frame is active, that frame's values for each input channel are the test inputs to the embedded system.
+
+If multiple frames are active at a time $t$, we must decide which frame is used to determine the system inputs.  To that end, each frame has a fixed integer \textit{priority}.  The active frame with the highest priority determines the system inputs.
+
+If no frame is active at a time $t$, then depending on the configuration of the test case, default values can be used for each input channel, or an error can be thrown (ending the test).
 
 \subsubsection{Relatively-evaluated outputs}
-Quick explanation
+Now, we can re-examine our Evaluation Point data structure.  The point's time interval is a relative time interval, where $t=0$ is the time at which the point's condition is met.  This interval can only be translated to an absolute time interval at run-time, not the time the test case is defined.
 
 \newpage
 \section{Implementation}
 
 \subsection{Architecture}
-How is the system organized?
-
-Why?
+\label{sec:architecture}
+How is the system organized? Why?
 
 What are the responsibilities of the client?
 
 What does the host do?
+
+What programming language is the host written in?  Why?
 
 \subsection{Two-stage testing}
 Describe the interactive session
