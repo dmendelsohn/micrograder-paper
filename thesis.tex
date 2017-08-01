@@ -31,7 +31,7 @@
 \lstMakeShortInline[columns=fixed]|
 
 
-\newcommand{\mytitle}{\textbf{An Automatic Grader for Embedded Systems Projects}}
+\newcommand{\mytitle}{\textbf{An Automatic Grader for Embedded Systems Courses}}
 \newcommand{\mydate}{August 18, 2017}
 
 \begin{document}
@@ -172,6 +172,7 @@ We label each individual input and output as a \textit{channel}.  Specifically, 
 \end{itemize}
 
 \subsection{Static inputs}
+\label{sec:static-inputs}
 In a test case, the inputs signals are more-or-less statically pre-defined.  This is in contrast to other automatic graders that deputize the student to perform actions that generate the inputs.  The details of how these pre-defined inputs are delivered to the student's program will be described later.  As mentioned above, input signals are modeled as a piecewise constant function in time, with arbitrarily high time resolution.
 
 Allowing for dynamic input generation at evaluation-time would greatly complicate the implementation and design of the system, and is outside the scope of this project.  Typically, this option is chosen out of necessity, as other automated graders lack a way to deliver pre-define inputs.  Dynamically generating inputs with human action is actually quite restrictive.
@@ -220,6 +221,7 @@ The third type of condition is the \textit{and condition}.  This type of conditi
 The fourth and final type of condition is the \textit{or condition}.  It is analogous to the \textit{and condition}, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met.
 
 \subsubsection{Data structure: Input Frames}
+\label{sec:frames}
 Now that we have the ability to define time in a relative way, let's re-examine how a test case defines its inputs.  Specifically, input signals are fixed relative to a condition, rather than be fixed at an absolute time.  The principal data structure for accomplishing this is the \textit{frame}.
 
 A \textit{frame} is comprised of a \textit{start condition}, an \textit{end condition}, and a set of time-series signals (each of which is associated with a specific input channel).  The two conditions can be of any type described in section \ref{sec:condition}.  The signals must all be defined for all times $t>=0$.  The time at which the start condition is met is considered to be our ``anchor point", $t=0$.  A frame is considered \textit{active} at times at or after the start condition is met, and before the end condition is met.
@@ -235,16 +237,27 @@ Now, we can re-examine our Evaluation Point data structure.  The point's time in
 
 \newpage
 \section{Implementation}
+We have defined what a test case is a fundamental level (namely, a verification of an input-to-output mapping).  We have also described MicroGrader's test case structure, which can represent a reasonable subset of all conceivable test cases.  So far, we understand \textit{what} MicroGrader does.  This section details \textit{how} MicroGrader does it.  The implementation imposes some additional restrictions on the kinds of systems MicroGrader can evaluate.  Most notably, the method in which MicroGrader ``injects" pre-defined inputs to the embedded system makes it unsuitable for grading some types of projects.
 
-\subsection{Architecture}
+\subsection{Overall architecture}
 \label{sec:architecture}
-How is the system organized? Why?
+MicroGrader uses a client-server model.  The server is not a web server, but rather a Python program running locally on a student's laptop or desktop machine.  That program connects to the client -- namely the embedded system being evaluated -- via USB serial.  The client is a thin wrapper of certain aspects of the embedded system's I/O functionality, which allows the server to ``drive" system inputs and observe results.
 
-What are the responsibilities of the client?
+This key design choice stemmed from a desire to change the execution of an embedded program as little as possible.  A lightweight approach on the embedded side reduces the chances of incorrect evaluations (both false positives and false negatives).
 
-What does the host do?
+\subsection{MicroGrader client}
+The embedded client has two modes of operation.  In \textit{test} mode, we need to inject pre-defined inputs into the system instead of taking real input readings.  The software, in lieu of taking a real reading, makes a request via USB serial to the server, which responds with the proper pre-defined input value.  In the current reference implementation of the client, requests are blocking -- the embedded system will simply wait for a response if it expects one.  Currently, MicroGrader only supports one request ``in-flight" at a time.
 
-What programming language is the host written in?  Why?
+For system outputs, the client really does produce the output (e.g. a digital write, or displaying something on a screen).  In addition to producing that output, the client reports the output to the server, for later evaluation.  The client also reports certain other system events, such as the beginning of program execution and various Wifi activity.
+
+The other mode of operation on the client-side is \textit{inactive} mode.  In this mode, the client makes no request to the server whatsoever.  That is, the program ought to operate completely normally.  Inputs are read from the actual sensors, and outputs are not reported.  This mode allows students to experiment with an in-progress assignment without worrying about the grader.
+
+The exact data that comprises client requests and reports varies depending on the type of request or report.  The communication protocol is detailed in Appendix A.  One commonality of all requests and reports is an integer timestamp, in milliseconds.  The server will trust this timestamp, and doesn't keep track of its own time during a live test.
+
+\subsection{MicroGrader server}
+The MicroGrader server does the heavy lifting.  It is responsible for interpreting a test case, and using that test case's information to respond promptly and correctly to requests from the client.  We described the details of how a test case specifies input values in sections \ref{sec:static-inputs} and \ref{sec:frames}.  The server is also responsible for observing the system outputs and grading them according to the test case's specification.  The client has no knowledge of the whole test case, it only knows the server responses to its requests.
+
+In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
 
 \subsection{Two-stage testing}
 Describe the interactive session
@@ -296,6 +309,13 @@ TODO: write this at the end...when I actually know what I haven't done yet
 
 \newpage
 \section{Appendix}
+
+\subsection{Appendix A: Client-server protocol}
+\label{sec:protocol}
+
+\subsection{Appendix B: Reference client implementation for Teensy}
+\label{sec:teensy}
+Describe
 
 \newpage
 \section{References}
