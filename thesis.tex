@@ -183,6 +183,7 @@ Outputs are evaluated ``offline" in the algorithmic sense.  That is, the outputs
 Collected outputs are samples of continuous-time signal.  We use the simplest method of mapping the discrete-time sampling to a continuous-time signal; at any given time, we consider the most recent sample of the output to be the current value of that output.  This turns out to be pretty reasonable in the context of many embedded system outputs.  On most microcontrollers, output values such as an electrical voltage are ``held" until a new output value is specified.
 
 \subsubsection{Data structure: Evaluation Point}
+\label{sec:eval-point}
 Our fundamental unit of output evaluation is the \textit{evaluation point}.  An evaluation point consists of:
 
 \begin{itemize}
@@ -254,25 +255,65 @@ The other mode of operation on the client-side is \textit{inactive} mode.  In th
 
 The exact data that comprises client requests and reports varies depending on the type of request or report.  The communication protocol is detailed in Appendix A.  One commonality of all requests and reports is an integer timestamp, in milliseconds.  The server will trust this timestamp, and doesn't keep track of its own time during a live test.
 
+Ideally, the functionality of the MicroGrader client should wrapped in a library and should mostly be invisible to the student writing code ``on top" of that library.  It may also be necessary to modify existing libraries that handle I/O functionality.  Details about the way this is accomplished in the reference implementation (for Teensy) can be found in Appendix B.
+
 \subsection{MicroGrader server}
 The MicroGrader server does the heavy lifting.  It is responsible for interpreting a test case, and using that test case's information to respond promptly and correctly to requests from the client.  We described the details of how a test case specifies input values in sections \ref{sec:static-inputs} and \ref{sec:frames}.  The server is also responsible for observing the system outputs and grading them according to the test case's specification.  The client has no knowledge of the whole test case, it only knows the server responses to its requests.
 
 In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
 
-\subsection{Two-stage testing}
-Describe the interactive session
+\subsubsection{Two-stage testing}
+Evaluation of a student's system occurs via a two-stage process.  First, the server and client engage in an interactive session to determine how the student's system responds.  The second stage assesses these responses and determines an overall score.
 
-Describe the evaluation stage
+In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, the server processes each message from the client and responds if necessary.  Typically, only requests for input values require responses, though the client may request an acknowledgement response for all messages.  For each incoming message, the server must update all \textit{conditions} in all of the test case's \textit{input frames}.  This will allow the server to determine which frames are currently \textit{active} and what response ought to be sent.  A test case also includes an \textit{end condition}.  Once the end condition is met, the interactive session ends, the server disconnects from the client, and all activity during the session is recorded.
 
-\subsection{Reporting results}
-What info do students get?
+In the evaluation stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
+
+\begin{itemize}
+\item Determine the time at which each \textit{evaluation point's} condition was met, if it was met at all.  This allows for a point's relative time interval to be converted to an absolute time interval.
+\item Reconstruct all the output signals.  Recall that we assume that each new output holds until the next output on the same channel.
+\end{itemize}
+Each \textit{evaluation point} is examined and evaluated.  Refer back to section \ref{sec:eval-point} for details.  If an point's \textit{condition} was never met, then that point automatically evaluates to |false|.  The boolean results of each point are then aggregated into an overall score for that output channel.  The scores for each output channel are averaged to generate a score for the test as a whole.
+
+MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
+
+
+\subsubsection{Reporting results}
+For grading purposes, we only care about the numeric final score.  A student, however, would be well served by examining a rich and readable description of the test results.  In the event that a student does not receive full credit, this description should make it clear which \textit{evaluation points} were |false| and why.
+
+Specifically, for each \textit{evaluation point}, the student can see:
+
+\begin{itemize}
+\item Whether that point passed, failed, or was not evaluated (which would occur only if a point's condition is not met).
+\item A text description of the point's time interval and the \textit{condition} with respect to which that relative interval is defined.
+\item The output channel being examined.
+\item The expected value on that channel during the specified interval.
+\item A description of the check function being used to determine correctness.
+\item The portion of the interval for which the observed values were correct.
+\item A summary of the observed values on that channel in the specified interval.  This summary is comprised of:
+\begin{itemize}
+\item The unique values observed during the interval.
+\item Whether or not each of those values was correct (as determined by the check function).
+\item The portion of the interval for which each of those values was observed.
+\end{itemize}
+\end{itemize}
+
+Some values do not lend themselves to a textual description.  For example, screen images (a very common type of output), don't readily convert to text.  To handle this, MicroGrader saves all screen images at PNG files in a special directory, and the text description of those images is just the file path.
+
+
+TODO: describe how results are made less verbose (i.e. PASSED results are shortened)
 
 How does this interact with centralized courseware (e.g. EdX) [Hint: UT Austin's method is good]
 
-\subsection{Configurability}
+\subsubsection{Screen analysis}
+[Describe nearness metric with shifts]
+
+[Describe text extraction and fonts]
+
+\subsubsection{Configurability}
 Describe what is configurable
 
-\subsection{Defaults}
+\subsubsection{Defaults}
 Describe how defaults make life easier
 
 \newpage
