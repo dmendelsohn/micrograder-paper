@@ -307,7 +307,7 @@ I considered a number of ways of reporting results to some online courseware (e.
 \subsubsection{Screen analysis}
 As previously mentioned, binary (i.e. no partial intensities) monochrome screens are a built-in type.  MicroGrader also includes some utilities for working with such outputs, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for this type of value.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
 
-MicroGrader includes a built-in distance metric for binary monochrome screens.  It's basic functionality is simple: for two screens of the same dimensions, the distance between them is the number of pixels that do not match.  In practice, this fails to identify two screens that are very similar, but slightly shifted relative to one another.  Therefore, MicroGrader's distance metric allows the user to specify a maximum allowable shift of one screen relative to another, in any direction.  The distance is the \textbf{minimum} number of mismatched pixels.  Essentially, the function tries all allowable shifts and picks the best one.
+MicroGrader includes a built-in distance metric for binary monochrome screens.  It's basic functionality is simple: for two screens of the same dimensions, the distance between them is the number of pixels that do not match.  In practice, this fails to identify two screens that are very similar, but slightly shifted relative to one another.  Therefore, MicroGrader's distance metric allows the user to specify a maximum allowable shift of one screen relative to another, in any direction.  The distance is the \textbf{minimum} number of mismatched pixels.  Essentially, the function tries all allowable shifts and picks the best one.  Yet another built-in function checks that if a screen is significantly closer than a blank screen to a given reference screen.  After all, a blank screen might match a large number of pixels but isn't very close in terms of informational content.
 
 Many assignments involving a screen are text-based.  That is, the screen is expected to contain printed text.  To that end, MicroGrader includes functionality to extract the text from the screen.  Various OCR engines were considered, but none worked acceptably well due to the tiny size of many fonts used in such contexts (potentially 5x7 pixels or smaller).  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
 
@@ -323,7 +323,10 @@ Certain design decisions were made in order to make MicroGrader compatible with 
 Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing pickled [TODO: ref] Python objects that implement all the functions a data type needs to have.  The minimum functions for a new data type are conversions to and from a byte encoding for transport, and a definition of the |==| operator.
 
 \subsubsection{Defaults}
-TODO: describe
+The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, the default aggregator function is ``portion of |true| values" (recall, an aggregator converts a set of boolean evaluation point results into a numeric channel score).  The default check function is the |==| operator.  Each built-in data type has a default value.
+
+Furthermore, defaults make it easy for instructors to dynamically construct a test case using a working implementation of assigned embedded project.  We'll discuss that more in section \ref{sec:scaffold}.
+
 
 \newpage
 \section{Limitations}
@@ -341,6 +344,7 @@ Explain how something like "check that integral of output is X" is incompatible 
 
 \newpage
 \section{Automatic Test Generation}
+\label{sec:scaffold}
 Explain what this is and why it is helpful
 
 Explain how we generate a recording (i.e. inputs are reported instead of requested)
