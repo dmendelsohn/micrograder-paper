@@ -300,21 +300,30 @@ Specifically, for each \textit{evaluation point}, the student can see:
 
 Some values do not lend themselves to a textual description.  For example, screen images (a very common type of output), don't readily convert to text.  To handle this, MicroGrader saves all screen images at PNG files in a special directory, and the text description of those images is just the file path.
 
+For further readability, test results can be summarized somewhat more succinctly by only giving the full details for \textit{evaluation points} that don't pass.  Furthermore, if all \textit{evaluation points} for a certain channel are correct, we can omit all the details for that channel.  Students have access to both the full results and summarized results.
 
-TODO: describe how results are made less verbose (i.e. PASSED results are shortened)
-
-How does this interact with centralized courseware (e.g. EdX) [Hint: UT Austin's method is good]
+I considered a number of ways of reporting results to some online courseware (e.g. EdX, Coursera, etc.).  In the end, I chose a simple but effective solution, inspired by UT Austin's Embedded Systems course on EdX.  Students receive an individualized code number for each test through the online courseware, and enter that number into MicroGrader.  When MicroGrader runs a test, the student's score is combined with that code and hashed.  The student can then copy that hash back into the courseware.  Since the number of possible scores is limited (only four digits or scoring precision are allowed), it's easy for the online courseware to determine the student's score.  This solution is elegant in that it discourages cheating without requiring direct communication between MicroGrader and online courseware.  To further discourage cheating, courses could require students to upload code.
 
 \subsubsection{Screen analysis}
-[Describe nearness metric with shifts]
+As previously mentioned, binary (i.e. no partial intensities) monochrome screens are a built-in type.  MicroGrader also includes some utilities for working with such outputs, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for this type of value.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
 
-[Describe text extraction and fonts]
+MicroGrader includes a built-in distance metric for binary monochrome screens.  It's basic functionality is simple: for two screens of the same dimensions, the distance between them is the number of pixels that do not match.  In practice, this fails to identify two screens that are very similar, but slightly shifted relative to one another.  Therefore, MicroGrader's distance metric allows the user to specify a maximum allowable shift of one screen relative to another, in any direction.  The distance is the \textbf{minimum} number of mismatched pixels.  Essentially, the function tries all allowable shifts and picks the best one.
+
+Many assignments involving a screen are text-based.  That is, the screen is expected to contain printed text.  To that end, MicroGrader includes functionality to extract the text from the screen.  Various OCR engines were considered, but none worked acceptably well due to the tiny size of many fonts used in such contexts (potentially 5x7 pixels or smaller).  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
+
+There are a few downsides to this text extraction approach.  First, any noise in the image or overlying element makes extraction impossible.  Furthermore, fonts must fixed-width.  This isn't a fundamental constraint of this technique, but it does massively help performance since the algorithm only has to consider rectangles of a specific size.  The biggest issue is that MicroGrader needs to know the bitmap for each character in the font.  Since its sometimes not easy to find detailed information for embedded fonts, MicroGrader includes a utility to ``record" the character bitmaps of a font using the actual screen output.
 
 \subsubsection{Configurability}
-Describe what is configurable
+MicroGrader was designed to be as configurable as possible.  This manifests itself in a variety of ways.
+
+Test cases themselves are highly configurable, as described earlier.  After all, each \textit{evaluation point} can have its own check function and its own condition to which its time interval is relative.  Each point can also have its own threshold for the portion of the interval that must be correct in order for the point to evaluate to |true|.
+
+Certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or report of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
+
+Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing pickled [TODO: ref] Python objects that implement all the functions a data type needs to have.  The minimum functions for a new data type are conversions to and from a byte encoding for transport, and a definition of the |==| operator.
 
 \subsubsection{Defaults}
-Describe how defaults make life easier
+TODO: describe
 
 \newpage
 \section{Limitations}
@@ -340,19 +349,18 @@ Explain how recording becomes a test case...this will be a hefty section
 
 \newpage
 \section{Results}
-TODO: write this once I try out a lot of student 6.S08 code on MicroGrader
+Later: write this once I try out a lot of student 6.S08 code on MicroGrader
 
 \newpage
 \section{Future Work}
-TODO: write this at the end...when I actually know what I haven't done yet
-
-``Derived output": where the output we care about is some time-dependent function of something the system produces (e.g. the system produces a motor voltage and we care about the position of the wheel driven by the motor)
+Later: write this at the end...when I actually know what I haven't done yet
 
 \newpage
 \section{Appendix}
 
 \subsection{Appendix A: Client-server protocol}
 \label{sec:protocol}
+Describe
 
 \subsection{Appendix B: Reference client implementation for Teensy}
 \label{sec:teensy}
