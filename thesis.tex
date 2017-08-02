@@ -330,17 +330,25 @@ Furthermore, defaults make it easy for instructors to dynamically construct a te
 
 \newpage
 \section{Limitations}
-[Intro sentence]
+Although MicroGrader is well-suited for grading many types of microcontroller projects, there are limitations that any instructor using this tool should know about.
 
 \subsection{Latency}
-Write about latency (which limits frequency and inhibits tapping into I2C, SPI, etc)
+In order to implement its side of the protocol, embedded clients must do some work.  Effort has been made to minimize this, but this issue nevertheless makes MicroGrader unusable for projects that have very sensitive timing, or that involve performing I/O operations at high frequencies.  In \textit{test} mode, the latency of reading an input is often orders of magnitude higher than in \textit{inactive} mode.  The embedded client must wait for the MicroGrader server to process and respond to a request for an input value.  Most of the latency is fundamentally due to the round-trip latency of the USB protocol, and due to the firmware on the server machine.
+
+The latency issue makes is impossible for MicroGrader to examine raw communication channels such as UART, I2C, or SPI, or to inject values into those channels at a reasonable rate.
+
+The specific constraints depend on the platform.  In building the reference implementation for Teensy, I observed that round-trip latency for relatively small messages ($<100$ bytes) was about a millisecond.  Therefore, the upper bound for the input sampling rate is around 1 KHz.  This is fast enough for many assignments that involve ``human" time scales, but woefully insufficient in other cases, such as audio sampling.
 
 \subsection{Point-by-point evaluation}
-Explain how we cant do things like cross correlation
+Our \textit{evaluation point} model inherently forces a test case to independently evaluate points of an output signal.  For any given interval, there is a single expected value.   More sophisticated correctness metric, involving the entire output signal at once, aren't possible in this framework.  For example, we cannot use \textit{evaluation points} to determine the cross-correlation between the observed output signal and an expected output signal.
 
-\subsection{Step-wise continuity restriction}
-Explain how something like "check that integral of output is X" is incompatible with current software...but not ruled out by the overall approach.
+\subsection{Step-wise constant restriction}
+MicroGrader assumes that the embedded system's outputs remain constant until the next output is observed.  While a step-wise constant function can approximate any step-wise continuous function to arbitrary precision, this can put an unacceptably high burden on the embedded client.  For example, both Arduino and Teensy have built-in functionality for creating square wave signals of a specified frequency for a specified duration, using a single user-facing instruction (|tone(pin, frequency)| or |tone(pin, frequency, duration)|).  In order for the embedded client to properly inform the server about the square wave signal, it would have to send a message on every rising and falling edge.  It is not possible, in a single message, to inform the server about the square wave that is being produced.
 
+\subsection{Derived outputs}
+In many systems, the embedded device produces outputs that serve as inputs to some physical plant, which then produces the outputs we actually care about.  For example, a microcontroller might drive the voltage across the terminals of a motor, connected to a wheel.  Perhaps we care only about the position of the wheel, not the motor's terminal voltage.  Even under the assumption that the motor's angular velocity is proportional to the terminal voltage, and the motor responds instantaneously, we would have to integrate the microcontroller's output to derive the pertinent physical output.
+
+It is currently impossible to evaluate derived outputs like this using MicroGrader (unless the derived output is zeroth order linear function of the microcontroller's output).  In a later version, MicroGrader will include the ability to add a custom physical model to convert the raw output into a derived output.
 
 \newpage
 \section{Automatic Test Generation}
