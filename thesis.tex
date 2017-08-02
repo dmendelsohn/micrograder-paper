@@ -354,10 +354,42 @@ It is currently impossible to evaluate derived outputs like this using MicroGrad
 \section{Automatic Test Generation}
 \label{sec:scaffold}
 
-\subsection{Motivation}
-Explain what this is and why it is helpful...
+Using CAT-SOOP [TODO: ref] as a TA for MIT's 6.S08, the process of building test cases is a quick and convenient one.  An important convenience is the ability to only specify inputs for test cases.  CAT-SOOP uses a staff solution to generate the correct outputs for those specified inputs.  MicroGrader takes this philosophy one step further: it is possible to automatically generate a test case, including the desired system inputs, using a functioning staff solution.
 
-Illustrate how the "wikipedia scroller" assignment would be quite annoying to build a test case for
+\subsection{Motivating example}
+Manually specifying the inputs and evaluation points for a test case can be quite tedious.  To illustrate this, let's us consider an exercise from the Spring 2017 offering of 6.S08 called ``Wikipedia Scroller".
+
+This exercise involves a digital input connected to a push-button switch, a nine-axis inertial measurement unit (though this exercise only requires x-axis acceleration) and a 128x64 pixel monochrome OLED screen.  It also requires web connectivity.
+
+\subsubsection{Problem description}
+
+Initially, the screen output is blank.  When the user performs a ``long press" of the push-button, the system enters ``text entry" mode.  By definition, a long press is a button press lasting at least two seconds.
+
+In text entry mode, a user builds up a query string character by character.  For the purposes of this exercise, we only use the lower case letters a-z, the digit characters 0-9, and the space character.  In text entry mode, the two relevant state variables are |query| (a string) and |next_character| (a single character).  Initially, |query| is the empty string, and |next_character| is the space character.  The text |query| + |next_character| should be displayed on the OLED (initially, this is just the string |" "|, so the screen is still empty).
+
+In order to change the value of |next_character| the user tilts the device left or right.  If it has been at least $150$ milliseconds since the last time |next_character| changed, and the tilt is at least $20^{\circ}$ to the right, then |next_character| should increment.  If it has been at least $150$ milliseconds since the last time |next_character| changed, and the tilt is at least $20^{\circ}$, then |next_chararacter| should decrement.  For the purposes of incrementing and decrementing, the character order is defined by the string (notice the leading space):
+
+|" abcdefghijklmnopqrstuvwxyz0123456789"|
+
+If the user performs a ``short press" (i.e. a push-button press less than two seconds long), |next_character| is locked in.  Specifically, the following operations are performed:
+
+\begin{lstlisting}
+query = query + next_character
+next_character = ' ' // The space character
+\end{lstlisting}
+
+
+If the user performs a long press, the current query string is sent via HTTP to a server-side component of the project (which is outside the scope of MicroGrader).  The server-side script returns the first 200 characters of the Wikipedia page with a name matching the original query string.  When the embedded system receives the response, it prints it onto the OLED screen.  Another long press takes the user back to text entry mode (with the same initial state values as before), and the cycle repeats.
+
+\subsubsection{Why manual test case creation is tedious}
+As a TA evaluating the student's system, I might perform the following procedure to ensure the assignment is implemented correctly:
+
+TODO: describe my proccess
+%TODO: describe procedure with pictures.  Blank (short press) blank (tilt left) '9' (tilt right) blank (tilt right) a->b->c (short press) c (tilt right) ca (short press) ca (tilt right) caa->cab->...->cat (short press) cat (long press, wait) wiki text (long press) blank
+
+It would be fairly tedious (though straightforward) to manually construct a test case for this with MicroGrader.  An instructor would have to specify the entirety of the accelerometer input signal with exact timestamps, as well as the button input with exact timestamps.  Both of these inputs change values about a dozen times.
+
+Constructing the evaluation points would be arduous as well.  The OLED changes at least 28 times in the above example.  While not all of these necessarily require checking, many of them do.  Even with MicroGrader's text extraction feature, it took quite a while for me to build a reasonable set of evaluation points.   Clearly, this process could use some automation.
 
 \subsection{Recording a reference solution}
 Explain how we generate a recording (i.e. inputs are reported instead of requested)
