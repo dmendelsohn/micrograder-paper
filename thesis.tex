@@ -392,7 +392,11 @@ It would be fairly tedious (though straightforward) to manually construct a test
 Constructing the evaluation points would be arduous as well.  The OLED changes at least 28 times in the above example.  While not all of these necessarily require checking, many of them do.  Even with MicroGrader's text extraction feature, it took quite a while for me to build a reasonable set of evaluation points.   Clearly, this process could use some automation.
 
 \subsection{Recording a reference solution}
-Explain how we generate a recording (i.e. inputs are reported instead of requested)
+In order to obtain a recording a correctly implemented solution, we use introduce a third client-side mode, which we'll call \textit{recording} mode (the first two modes were \textit{test} and \textit{inactive} modes). 
+
+Recording mode is quite similar to test mode, with one key difference.  In test mode, input sampling is replaced with requests to the MicroGrader server.  In recording mode, by contrast, input sampling occurs normally (i.e. sensors are actually used).  Those real-world values are then reported to the MicroGrader server.
+
+An instructor with a working solution can switch the client to recording mode, perform some set of tasks that fully demonstrate the functionality of the system.  Meanwhile, the MicroGrader server makes a full record of this activity, including both inputs observed and outputs generated.  That activity log is then used to programmatically construct a test case.
 
 \subsection{Constructing a test case}
 Introduce approach
