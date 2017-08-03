@@ -410,18 +410,25 @@ The most important two components of a frame template are the \textit{start cond
 
 In our Wikipedia Scroller exercise, we can use a scaffold with two frame templates for the evaluation procedure previously outlined.  The first frame could start when system initialization is complete, and end when the first Wifi request occurs.  The second frame could start when the first Wifi response arrives, and end when the recording ends (I usually end recordings by just unplugging the client system).  This two-frame structure allows the test case to ignore the variable latency period of time when the Wifi request is awaiting a response.  After all, the length of this time period shouldn't be relevant in determining the correctness of a student's solution.  If we tried to use one frame for this whole evaluation, the student solution's timing after the variable-latency event would certainly mismatch the staff solution's timing.
 
-Give an example for two frame templates for Wiki Scroller
+The other major aspect of a scaffold is the set of \textit{point templates}.  For each output channel, a point template is defined.  This template will indicate how the instructor wants each \textit{evaluation point} to be configured.
 
-Give basic info that each output observed becomes a eval point.  Describe need for a template.
+The three components of a point template are:
 
-Describe the components of EvalPointTemplate one-by-one (check function with text matching example, portion, and time interval...save details of the last one for later). 
+\begin{itemize}
+\item Check Function
+\item Required Portion
+\item Time Interval
+\end{itemize}
 
-Give example of point templates for Wiki Scroller
+Using these point templates, we can specify aspects we want all evaluation points (for a certain channel) to share.  For example, an instructor might want a special check function for values on the \textit{Screen} channel.  Perhaps in the case of our Wikipedia Scroller, that check function would verify that the text of the expected value and observed value are the same (regardless of where on the screen that text occurs).  Furthermore, an instructor might want to impose a strict evaluation of a specification, requiring that student's solutions match the staff solution for a high portion of the time interval.  On the other hand, an instructor may opt for a looser evaluation and reduce the required portion.
+
+The time interval component of the point template is somewhat difficult to describe without a worked example.  We'll get into that in section \ref{sec:using-point-templates}.
 
 \subsubsection{Constructing test inputs}
 Describe the process
 
 \subsubsection{Constructing evaluation points}
+\label{sec:using-point-templates}
 Bounds of each frame determined
 
 For each frame, consider each "new" output during its active phase.
