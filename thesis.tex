@@ -399,10 +399,12 @@ Recording mode is quite similar to test mode, with one key difference.  In test 
 An instructor with a working solution can switch the client to recording mode, perform some set of tasks that fully demonstrate the functionality of the system.  Meanwhile, the MicroGrader server makes a full record of this activity, including both inputs observed and outputs generated.  That activity log is then used to programmatically construct a test case.
 
 \subsection{Constructing a test case}
-Introduce approach
+Completely generating a test case from a log along turns out to produce poor results.  There are plenty of ambiguities in terms of how the instructor might want to the assignment to be graded.  MicroGrader uses a lightweight data structure called the \textit{scaffold} to allow for instructors to specify these preferences.  The scaffold and activity log, when combined, can be used to produce a full test case.
 
 \subsubsection{Data structure: Scaffold}
-Describe the need for a frame template (i.e. need instructor knowledge to tell what portions of operation are fixed-time and what portions are variable-time)
+The two primary aspects of the \textit{scaffold} are \textit{frame templates} and \textit{point templates}.
+
+Frame templates arise out of the need to specify which intervals of time are relevant from a grading standpoint.  Specifically, the generated test case needs to know when to ``care" about the system outputs, and when to ignore them (e.g. while waiting for a web request to resolve, or while waiting to get a GPS fix).  The relevant intervals might comprise only a small portion of the total operation of the system.
 
 Describe the contents of a frame template
 
