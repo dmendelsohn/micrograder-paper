@@ -425,7 +425,18 @@ Using these point templates, we can specify aspects we want all evaluation point
 The time interval component of the point template is somewhat difficult to describe without a worked example.  We'll get into that in section \ref{sec:using-point-templates}.
 
 \subsubsection{Constructing test inputs}
-Describe the process
+We construct a full set of input signals for each frame. First, the entire activity log is scanned to determined the times at which the start and end condition for each frame template were fulfilled.  We only generate a frame from a frame template if both the start and end condition were met, and the start condition was met first.
+
+For each generated frame, we consider all input values recorded by the client between the times that the start and end condition were met.  We convert the absolute times of these recorded inputs to relative times by subtracting the time at which the start condition was met.
+
+One issue we haven't addressed yet is interpolating the recorded inputs.  After all, those represent a sample of a continuous signal.  MicroGrader gives instructors several options as to how to interpolate the sampled input -- the following methods are all supported.  For the sake of clarity, consider a value recorded at time $t_n$.  The previous recording occurred at time $t_{n-1}$ and the subsequent recording occurred at time $t_{n+1}$.
+
+\begin{itemize}
+\item Start: a recorded value holds in the interval $[t_n, t_{n+1})$
+\item End: a recorded value holds in the interval $(t_{n-1}, t_n]$
+\item Mid: a recorded value holds in the interval $[(t_{n-1} + t_n)/2, (t_n + t_{n+1})/2)$
+\item Linear: perform linear interpolation with a specified resolution between each sample.  Note that this doesn't work for certain input types (namely digital inputs).
+\end{itemize}
 
 \subsubsection{Constructing evaluation points}
 \label{sec:using-point-templates}
