@@ -406,7 +406,9 @@ The two primary aspects of the \textit{scaffold} are \textit{frame templates} an
 
 Frame templates arise out of the need to specify which intervals of time are relevant from a grading standpoint.  Specifically, the generated test case needs to know when to ``care" about the system outputs, and when to ignore them (e.g. while waiting for a web request to resolve, or while waiting to get a GPS fix).  The relevant intervals might comprise only a small portion of the total operation of the system.
 
-Describe the contents of a frame template
+The most important two components of a frame template are the \textit{start condition} and \textit{end condition}.  These are instances of our familiar \textit{condition} data structure, and will serve as the start and end conditions for the frame that will be generated.  Refer back to section \ref{sec:frames} for more information.
+
+In our Wikipedia Scroller exercise, we can use a scaffold with two frame templates for the evaluation procedure previously outlined.  The first frame could start when system initialization is complete, and end when the first Wifi request occurs.  The second frame could start when the first Wifi response arrives, and end when the recording ends (I usually end recordings by just unplugging the client system).  This two-frame structure allows the test case to ignore the variable latency period of time when the Wifi request is awaiting a response.  After all, the length of this time period shouldn't be relevant in determining the correctness of a student's solution.  If we tried to use one frame for this whole evaluation, the student solution's timing after the variable-latency event would certainly mismatch the staff solution's timing.
 
 Give an example for two frame templates for Wiki Scroller
 
