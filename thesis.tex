@@ -112,11 +112,19 @@ Submitted to the Department of Electrical Engineering and Computer Science\\
 
 \newpage
 \section{Introduction}
+In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent if they produce the identical sequences of outputs for any sequence of inputs.  If we only care about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we ought to only evaluate the output sequences and not the internal state.
+
+While it is possible to exhaustively verify a black-box FSM, the number of steps required to do so is hyper-exponential, making this infeasible in practice.  Rather, we typically test FSMs by verifying that the system produces the correct output sequence for a useful subset of the possible input sequences.
+   
+What about time?
+
+What do general programming courses usually do?  Basically just test mapping from (state+input)->(state+output), for a subset of possible (state+input).  How is that subset picked?  Typically, manually.  How is the golden output determined?  Possibly, manually.  Also possibly, by recording the results of a correct implementation.
+
+Why is evaluating an embedded system hard?  Need access to inputs and outputs (normally just physically phenomena).  Talk about how we solve problem by injecting inputs and recording outputs.
+
+Given previous paragraph, problem reduces to typical case of verifying FSM behavior.  In practice, embedded systems tend to have time as an important input.  This gets tricky because it inherently changes during the execution of the program.  Inputs are not sampled at the same time.  Outputs are not produced at the same time.  Rather than verifying that a set of inputs yei
+
 Write about 6.S08, the current situation, how its a pain, etc
-
-Write about how ``regular" software checkers are a solved problem
-
-Write about unique challenges of embedded systems (computing platform challenges, physical vs digital abstractions, heavily time-dependent in a way typical software classes aren't)
 
 \newpage
 \section{Prior Work}
@@ -378,13 +386,12 @@ query = query + next_character
 next_character = ' ' // The space character
 \end{lstlisting}
 
-
 If the user performs a long press, the current query string is sent via HTTP to a server-side component of the project (which is outside the scope of MicroGrader).  The server-side script returns the first 200 characters of the Wikipedia page with a name matching the original query string.  When the embedded system receives the response, it prints it onto the OLED screen.  Another long press takes the user back to text entry mode (with the same initial state values as before), and the cycle repeats.
 
 \subsubsection{Why manual test case creation is tedious}
 As a TA evaluating the student's system, I might perform the following procedure to ensure the assignment is implemented correctly:
 
-TODO: describe my proccess
+TODO: describe my process
 %TODO: describe procedure with pictures.  Blank (short press) blank (tilt left) '9' (tilt right) blank (tilt right) a->b->c (short press) c (tilt right) ca (short press) ca (tilt right) caa->cab->...->cat (short press) cat (long press, wait) wiki text (long press) blank
 
 It would be fairly tedious (though straightforward) to manually construct a test case for this with MicroGrader.  An instructor would have to specify the entirety of the accelerometer input signal with exact timestamps, as well as the button input with exact timestamps.  Both of these inputs change values about a dozen times.
