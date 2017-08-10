@@ -114,17 +114,17 @@ Submitted to the Department of Electrical Engineering and Computer Science\\
 \section{Introduction}
 In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent if they produce the identical sequences of outputs for any sequence of inputs.  If we only care about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we ought to only evaluate the output sequences and not the internal state.
 
-While it is possible to exhaustively verify a black-box FSM, the number of steps required to do so is hyper-exponential, making this infeasible in practice.  Rather, we typically test FSMs by verifying that the system produces the correct output sequence for a useful subset of the possible input sequences.
+While it is possible to exhaustively verify a black-box FSM, the number of steps required to do so is hyper-exponential, making this infeasible in practice.  Rather, we typically test FSMs by verifying that the system produces the correct output sequence for a useful subset of the possible input sequences.  For purely functional (i.e. stateless) systems, we typically verify that a selection of inputs produce the expected output. 
+
+TODO: talk about how inputs are typically selected manually.  outputs can be manual, but better yet computed by a reference solution
    
-What about time?
+For general software problems, the system being evaluated and the software that's evaluating the system can run on the same computing platform (e.g. an x86 processor with a compiler/interpreter for the relevant language).  For embedded systems, the resource constraints of a microcontroller -- both in terms of memory and speed -- force us to separate the the evaluator and the evaluated system.  In the case of MicroGrader, the evaluator is a Python program running on a full-fledged processor, while the evaluated systems are embedded programs.
 
-What do general programming courses usually do?  Basically just test mapping from (state+input)->(state+output), for a subset of possible (state+input).  How is that subset picked?  Typically, manually.  How is the golden output determined?  Possibly, manually.  Also possibly, by recording the results of a correct implementation.
+This separation presents some new challenges.  The evaluator requires the ability to specify the inputs to the embedded system, which are typically real-world sensor readings.  Furthermore, it requires the ability to observe the outputs of the embedded system, which are typically physical output indicators (e.g. a motor, LED, etc).  In MicroGrader, a communication protocol between the evaluator and the embedded system enables this access.  The protocol is designed to be minimally intensive for the embedded system.  Specifically, a low-level library on the embedded side implements one side of this protocol, which allows it to ``request" inputs from the evaluator rather than performing actual sensor sampling.  We can consider this an injection of test inputs.  Furthermore, this library allows for the reporting of outputs to the evaluator.
 
-Why is evaluating an embedded system hard?  Need access to inputs and outputs (normally just physically phenomena).  Talk about how we solve problem by injecting inputs and recording outputs.
+TODO: talk about importance of time (i.e. asynchronous inputs and outputs).  Embedded system, not the evaluator, controls the timing.  This means we're comparing continuous signals, not simple sequences of values.
 
-Given previous paragraph, problem reduces to typical case of verifying FSM behavior.  In practice, embedded systems tend to have time as an important input.  This gets tricky because it inherently changes during the execution of the program.  Inputs are not sampled at the same time.  Outputs are not produced at the same time.  Rather than verifying that a set of inputs yei
-
-Write about 6.S08, the current situation, how its a pain, etc
+TODO: Write about 6.S08, the current situation, how its a pain, etc
 
 \newpage
 \section{Prior Work}
