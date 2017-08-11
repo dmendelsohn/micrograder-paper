@@ -126,15 +126,18 @@ This separation of evaluator and the evaluatee (an embedded system in our partic
 
 Beyond the separation of evaluator and evaluatee, there are additional differences between evaluating embedded and non-embedded software.  Principal among these is the importance of timing.  While the specification of a non-embedded program \textit{could} include strict rules for the timing of specific operations, it's fairly unusual.  Existing automatic graders may consider the overall program running time, but very few graders delve into the fine timing details. In embedded systems, timing is often of paramount importance.  For example, in computing a single state update, an embedded system may require multiple inputs and produce multiple outputs.  The inputs are not sampled at the exact same time, and the outputs are not produced at the exact same time.  Furthermore, the implementation of the embedded program determines the timing of these events; an evaluator has no ability to compel the embedded system to sample an input at exactly time $X$ or produce an output at exactly time $Y$.
 
-TODO: This means we're comparing continuous signals, not simple sequences of values.
+Our evaluator cannot control the timing of I/O events, nor can it ignore the timing of those events.  This forces us to modify our ``pure" FSM model, where I/O events occur at discrete time intervals.  Rather than examining how an embedded system converts a set of discrete input sequences to a set of discrete output sequences, we must examine how it converts a set of continuous input signals to a set of continuous output signals.
 
-TODO: Write about 6.S08, the current situation, how its a pain, etc
+At the end of this paper, we will deal with a critical usability feature.  In particular, it is often prohibitively tedious for instructors to specify the test inputs and expected outputs manually.  Therefore, MicroGrader includes a feature for ``recording" the operation of an instructor's system, and the use of that recording to programmatically generate test inputs and expected outputs. 
+
 
 \newpage
 \section{Prior Work}
 Write about UT Austin's EdX class, and the system they use
 
 Discuss strengths and weaknesses of the UT Austin approach
+
+Discuss current 6.S08 situation
 
 \newpage
 \section{Design Principles}
