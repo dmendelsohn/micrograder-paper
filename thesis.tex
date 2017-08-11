@@ -100,7 +100,9 @@ Submitted to the Department of Electrical Engineering and Computer Science\\
 \vspace{12pt}
 \textbf{ABSTRACT} \\
 
-\noindent TODO: write this
+\noindent In this thesis, we introduce MicroGrader, an automated grader for embedded systems projects.  The grader runs on a laptop or desktop computer, while the embedded system being evaluated runs on a microcontroller.  By implementing a custom communication protocol between the grader and the embedded system, we enable the grader to inject test inputs and observe the resulting outputs.
+
+We describe a specification format for instructors to define the technical requirements of an assignment.  This format is meant to be simple to use, but highly expressive to allow for a wide range of possible assignments.  We also outline the implementation of the MicroGrader system and the underlying communication protocol.  We discuss the constraints that the specification format and the technical implementation impose on instructors.  Finally, we describe a method to automatically generate specifications using a staff-built reference solution for a generic assignment. 
 
 \newpage
 \mbox{}
@@ -170,7 +172,7 @@ It's discouraging and perplexing for students when apparently correct solutions 
 
 \newpage
 \section{Defining a test case}
-We can think of a specification as a mapping from a set of input signals to a set of output signals.  In this system, signals are assumed to be piecewise constant.  A piecewise constant signal can approximate any piecewise continuous signal by increasing the resolution.  Not all possible specifications can be evaluated by MicroGrader.  For the sake of simplicity, the internal structures of MicroGrader only support a subset of all possible specifications, though this subset is quite broad.
+We can think of a specification as a mapping from a set of input signals to a set of output signals.  In this system, signals are assumed to be piecewise constant.  A piecewise constant signal can approximate any piecewise continuous signal to arbitrary precision by increasing the resolution sufficiently.  Not all possible specifications can be evaluated by MicroGrader.  For the sake of simplicity, the internal structures of MicroGrader only support a subset of all possible specifications, though this subset is quite broad.
 
 \subsection{Channels}
 We label each individual input and output as a \textit{channel}.  Specifically, a channel is comprised of a data type and a sub-channel.  For example, ``digital input" is a data type, the pin number is the sub-channel.  The built-in data types, and their associated sub-channels, are:
