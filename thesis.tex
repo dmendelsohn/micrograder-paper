@@ -510,16 +510,18 @@ The basic structure of a response is as follows:
 
 \textbf{response header ::= $<$uint8 code$>$$<$uint16 body length$>$}
 
-\noindent The second-least significant bit of the response code indicates whether or not an error occurred with the most recent request (1 indicates an error occurred, 0 indicates success).  The least significant bit indicates if the current session is complete (1 indicates yes, 0 indicates no).  The server disconnects immediately after sending a response indicating the session is complete.  Once again, the body length is measured in bytes.  Notice that the server does not include a timestamp in the response header.  The structure of the response body depends on the type of request to which the response corresponds.
+\noindent The second-least significant bit of the response code indicates whether or not an error occurred with the most recent request (1 indicates an error occurred, 0 indicates success).  The response body for an error response is always empty.
+
+The least significant bit indicates if the current session is complete (1 indicates yes, 0 indicates no).  The server disconnects immediately after sending a response indicating the session is complete.  Once again, the body length is measured in bytes.  Notice that the server does not include a timestamp in the response header.  The structure of the response body depends on the type of request to which the response corresponds.
 
 Broadly speaking, there are three kinds of requests: inputs, outputs, and events.
 
 \subsection{Inputs}
-TODO: text
+Input requests are typically used to ``inject" pre-determined test values, in place of true sensor readings.  Alternatively, input requests can be used to record observed sensor values on an instructor's system, for the purpose of building tests.  The following table describes the message bodies for input requests.
 
 \begin{center}
 \begin{tabular}{l l l}
-code & name & message body \\ \hline
+code & name & request body \\ \hline
 0x20 & Digital Read & $<$uint8 pin$>$[$<$uint8 value$>$] \\
 0x22 & Analog Read & $<$uint8 pin$>$$<$analog params$>$[$<$int32 value$>$] \\
 0x30 & Accelerometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
@@ -528,22 +530,45 @@ code & name & message body \\ \hline
 \end{tabular}
 \end{center}
 
+If the optional value or values are included, this message is passing recorded sensor readings from the client to the server.  In that case, the body of the response (if there is a response) is empty.  
+
+If the optional values are not included, this message is requesting test values.  In that case, the body of the response (if there is a response), is just the requested values.  For digital reads, the response is a single byte containing a 0 or a 1.  For analog reads, the response is a 32-bit integer.  For the accelerometer, gyroscope, and magnetometer requests, the response is a sequence of three 32-bit bit integers representing the x-value, y-value, and z-value respectively.
+
+\subsubsection{Encoding Values}
+TODO: describe analog params and digital values
+
 \subsection{Outputs}
 TODO: text
 
 \begin{center}
 \begin{tabular}{l l l}
-code & name & message body \\ \hline
+code & name & request body \\ \hline
 0x21 & Digital Write & $<$uint8 pin$>$$<$uint8 value$>$ \\
 0x23 & Analog Write & $<$uint8 pin$>$$<$analog params$>$$<$int32 value$>$ \\
-0x41 & Screen Full & TODO \\
-0x42 & Screen Tile & TODO \\
+0x41 & Screen Full & $<$tile$>$* \\
+0x42 & Screen Tile & $<$uint8 x position$>$$<$uint8 y position$>$$<$tile$>$ \\
 \end{tabular}
 \end{center}
+
+\subsubsection{Screen Encoding}
+TODO
 
 \subsection{Events}
 TODO: text
 
+\begin{center}
+\begin{tabular}{l l l}
+code & name & request body \\ \hline
+0x00 & Init & (\textit{empty}) \\
+0x01 & Print & TODO \\
+0x40 & Screen Init & TODO \\
+0x50 & GPS Fix & (\textit{empty}) \\
+0x60 & Wifi Request & (\textit{empty}) \\
+0x61 & Wifi Response & (\textit{empty}) \\
+\end{tabular}
+\end{center}
+
+\newpage
 \section{Appendix B: Reference client implementation for Teensy}
 \label{sec:teensy}
 Describe overall
