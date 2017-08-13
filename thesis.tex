@@ -1,5 +1,6 @@
 \documentclass[12pt]{article}
 \usepackage{textcomp}
+\usepackage{amsmath}
 \usepackage[margin=1.0in]{geometry}
 \usepackage[utf8]{inputenc}
 \usepackage{setspace}
@@ -526,16 +527,39 @@ code & name & request body \\ \hline
 0x22 & Analog Read & $<$uint8 pin$>$$<$analog params$>$[$<$int32 value$>$] \\
 0x30 & Accelerometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
 0x31 & Gyroscope & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
-0x32 & Magnetometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
+0x32 & Magnetometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\ \hline
 \end{tabular}
 \end{center}
+
+\vspace{5mm}
 
 If the optional value or values are included, this message is passing recorded sensor readings from the client to the server.  In that case, the body of the response (if there is a response) is empty.  
 
 If the optional values are not included, this message is requesting test values.  In that case, the body of the response (if there is a response), is just the requested values.  For digital reads, the response is a single byte containing a 0 or a 1.  For analog reads, the response is a 32-bit integer.  For the accelerometer, gyroscope, and magnetometer requests, the response is a sequence of three 32-bit bit integers representing the x-value, y-value, and z-value respectively.
 
-\subsubsection{Encoding Values}
-TODO: describe analog params and digital values
+\subsubsection{Value Encoding}
+Encoding for digital values is simple: a single byte containing the value 0 or 1.  For analog values, however, MicroGrader uses a system by which the client decides how an analog value becomes discretized.  In particular, the client specifies the \textit{analog params} which are defined as follows:
+
+\footnotesize
+\textbf{analog params ::= $<$int32 min bin$>$$<$int32 max bin$>$$<$int32 min value$>$$<$int32 max value$>$}
+\normalsize
+
+\noindent These parameters indicate that the physical quantity in the range (min value, max value) should be mapped to the range (min bin, max bin) for discretization.
+
+To illustrate, let's examine the behavior of the Teensy client for analog read requests.  It uses the values 0 and 3300 for min value and max value respectively.  These represent the minimum and maximum voltages, in millivolts, that the Teensy's analog-to-digital converter (ADC) can process.  For min bin and max bin, the values depend on the Teensy's current analog resolution.  If the resolution is 10 bits for example, the Teensy client would use the values 0 and 1023 for min bin and max bin.
+
+Let's suppose the Teensy makes a request for an analog read using these parameters, and the server observes that the true value to ``inject" is $x$.  Let $b_{\text{min}}$, $b_{\text{max}}$, $v_{\text{min}}$, and $v_{\text{max}}$ represent the min bin, max bin, min value, and max value respectively.  The server must convert the value $x$ to a ``bin number", $y$, in accordance with the given parameters:
+
+$$y = \left \lfloor b_{\text{min}} + \frac{x_{\text{bound}}-v_{\text{min}}}{v_{\text{max}}-v_{\text{min}}} * (b_{\text{max}}-b_{\text{min}}) \right \rfloor$$
+
+where
+
+$$x_{\text{bound}} = \min(v_{\text{max}}, \max(v_{\text{min}}, x))$$
+
+The server responds with the value $y$.  This example discussed a true input request for injecting a value.  For input ``recordings", the value supplied by the client should also be the bin number as described by the above formula (typically this math would be calculated in hardware by the ADC).
+
+\subsubsection{Units}
+The units for analog requests are not specified.  There is no built-in unit for the relevant physical quantities (namely voltage, acceleration, angular velocity, and magnetic flux density).  The client implementation and the constructed test cases just need to be consistent.  For example, the reference Teensy client implementation uses millivolts for voltage, and any test cases written for this client should use values expressed in millivolts.
 
 \subsection{Outputs}
 TODO: text
@@ -546,9 +570,13 @@ code & name & request body \\ \hline
 0x21 & Digital Write & $<$uint8 pin$>$$<$uint8 value$>$ \\
 0x23 & Analog Write & $<$uint8 pin$>$$<$analog params$>$$<$int32 value$>$ \\
 0x41 & Screen Full & $<$tile$>$* \\
-0x42 & Screen Tile & $<$uint8 x position$>$$<$uint8 y position$>$$<$tile$>$ \\
+0x42 & Screen Tile & $<$uint8 x position$>$$<$uint8 y position$>$$<$tile$>$ \\ \hline
 \end{tabular}
 \end{center}
+
+\vspace{5mm}
+
+TODO: talk about how first two requests should be familiar
 
 \subsubsection{Screen Encoding}
 TODO
@@ -564,9 +592,11 @@ code & name & request body \\ \hline
 0x40 & Screen Init & $<$uint8 width$>$$<$uint8 height$>$ \\
 0x50 & GPS Fix & (\textit{empty}) \\
 0x60 & Wifi Request & (\textit{empty}) \\
-0x61 & Wifi Response & (\textit{empty}) \\
+0x61 & Wifi Response & (\textit{empty}) \\ \hline
 \end{tabular}
 \end{center}
+
+\vspace{5mm}
 
 \newpage
 \section{Appendix B: Reference client implementation for Teensy}
