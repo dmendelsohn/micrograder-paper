@@ -489,13 +489,62 @@ Later: write this once I try out a lot of student 6.S08 code on MicroGrader
 Later: write this at the end...when I actually know what I haven't done yet 
 
 \newpage
-\section{Appendix}
 
-\subsection{Appendix A: Client-server protocol}
+\section{Appendix A: Client-server protocol}
 \label{sec:protocol}
-Describe
+All client-server communication occurs over a USB serial connection.  All multi-byte integers are transmitted in a little-endian fashion.  In general, we refer to a message from the client to the server as a \textit{request}.  Some requests result in server-to-client \textit{response}.
 
-\subsection{Appendix B: Reference client implementation for Teensy}
+All messages consist of a header and a body.  The header contains important information about the request or response, and specifies the length of the body. Thus, our protocol requires no termination byte.  A message is considered complete once the expected number of bytes is received.  As a result, all message bodies must have the specified length, or further communication will fail.
+
+The basic structure of a request is as follows:
+
+\textbf{request ::= $<$request header$>$$<$request body$>$}
+
+\textbf{request header ::= $<$uint8 code$>$$<$uint32 timestamp$>$$<$uint16 body length$>$}
+
+\noindent The most significant bit of the request code determines whether or not the server should send a response.  If the bit is 0, a response should be sent.  If the bit is 1, a response should be omitted.  The lower seven bits of the code determine the type of request, and therefore, how the request body should be interpreted.  The structure of the request body depends on the particular type of request.  The timestamp is measured in milliseconds, and the body length is measured in bytes.
+
+The basic structure of a response is as follows:
+
+\textbf{response ::= $<$response header$>$$<$response body$>$}
+
+\textbf{response header ::= $<$uint8 code$>$$<$uint16 body length$>$}
+
+\noindent The second-least significant bit of the response code indicates whether or not an error occurred with the most recent request (1 indicates an error occurred, 0 indicates success).  The least significant bit indicates if the current session is complete (1 indicates yes, 0 indicates no).  The server disconnects immediately after sending a response indicating the session is complete.  Once again, the body length is measured in bytes.  Notice that the server does not include a timestamp in the response header.  The structure of the response body depends on the type of request to which the response corresponds.
+
+Broadly speaking, there are three kinds of requests: inputs, outputs, and events.
+
+\subsection{Inputs}
+TODO: text
+
+\begin{center}
+\begin{tabular}{l l l}
+code & name & message body \\ \hline
+0x20 & Digital Read & $<$uint8 pin$>$[$<$uint8 value$>$] \\
+0x22 & Analog Read & $<$uint8 pin$>$$<$analog params$>$[$<$int32 value$>$] \\
+0x30 & Accelerometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
+0x31 & Gyroscope & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
+0x32 & Magnetometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
+\end{tabular}
+\end{center}
+
+\subsection{Outputs}
+TODO: text
+
+\begin{center}
+\begin{tabular}{l l l}
+code & name & message body \\ \hline
+0x21 & Digital Write & $<$uint8 pin$>$$<$uint8 value$>$ \\
+0x23 & Analog Write & $<$uint8 pin$>$$<$analog params$>$$<$int32 value$>$ \\
+0x41 & Screen Full & TODO \\
+0x42 & Screen Tile & TODO \\
+\end{tabular}
+\end{center}
+
+\subsection{Events}
+TODO: text
+
+\section{Appendix B: Reference client implementation for Teensy}
 \label{sec:teensy}
 Describe overall
 
