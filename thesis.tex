@@ -518,7 +518,7 @@ The least significant bit indicates if the current session is complete (1 indica
 Broadly speaking, there are three kinds of requests: inputs, outputs, and events.
 
 \subsection{Inputs}
-Input requests are typically used to ``inject" pre-determined test values, in place of true sensor readings.  Alternatively, input requests can be used to record observed sensor values on an instructor's system, for the purpose of building tests.  The following table describes the message bodies for input requests.
+Input requests are typically used to ``inject" pre-determined test values, in place of true sensor readings.  Alternatively, input requests can be used to record observed sensor values on an instructor's system, for the purpose of building tests.  The following table describes the request bodies for input requests.
 
 \begin{center}
 \begin{tabular}{l l l}
@@ -562,7 +562,7 @@ The server responds with the value $y$.  This example discussed a true input req
 The units for analog requests are not specified.  There is no built-in unit for the relevant physical quantities (namely voltage, acceleration, angular velocity, and magnetic flux density).  The client implementation and the constructed test cases just need to be consistent.  For example, the reference Teensy client implementation uses millivolts for voltage, and any test cases written for this client should use values expressed in millivolts.
 
 \subsection{Outputs}
-TODO: text
+Output requests aren't really ``requests" in the traditional sense.  They are used to report outputs to the server.  The following table describes the request bodies for output requests.
 
 \begin{center}
 \begin{tabular}{l l l}
@@ -576,13 +576,13 @@ code & name & request body \\ \hline
 
 \vspace{5mm}
 
-TODO: talk about how first two requests should be familiar
+If the client expects a response, the body of the response is empty.  The encoding of values for digital writes is the same as for digital reads (a single byte, 0 or 1).  The encoding of values for analog writes is the same as for analog reads.  Recall that the value reported is a ``bin number".
 
 \subsubsection{Screen Encoding}
-TODO
+TODO: describe tiles and such
 
 \subsection{Events}
-TODO: text
+Event requests are similar to output requests in that they are used to report information to the server, not receive information from the server.  Responses to event requests have empty bodies, just as with output requests.  The following table describes the request bodies for event requests.
 
 \begin{center}
 \begin{tabular}{l l l}
@@ -597,6 +597,8 @@ code & name & request body \\ \hline
 \end{center}
 
 \vspace{5mm}
+
+TODO: describe each request
 
 \newpage
 \section{Appendix B: Reference client implementation for Teensy}
