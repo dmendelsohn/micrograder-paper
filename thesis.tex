@@ -602,7 +602,9 @@ code & name & request body \\ \hline
 
 \vspace{5mm}
 
-TODO: describe each request
+The Init request is sent when the embedded client initializes.  In addition, the Screen Init request is used upon initialization to inform the server of the width and height of the screen, as measured in 8x8 tiles.  The Print request is used to send custom text (ASCII-encoded) from the client to the server.  This is particularly helpful for debugging, since it is impossible to perform regular debugging via USB serial when MicroGrader is in use.
+
+It is important to inform the server of certain events, especially ones that have highly variable latencies.  The GPS Fix request is used to inform the server that the client has acquired a GPS fix.  The Wifi Request request is used to inform the server that a web request has been sent.  The Wifi Response request is used to inform the server that a web response has been received.
 
 \newpage
 \section{Appendix B: Reference client implementation for Teensy}
