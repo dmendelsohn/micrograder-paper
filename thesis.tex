@@ -569,8 +569,8 @@ Output requests aren't really ``requests" in the traditional sense.  They are us
 code & name & request body \\ \hline
 0x21 & Digital Write & $<$uint8 pin$>$$<$uint8 value$>$ \\
 0x23 & Analog Write & $<$uint8 pin$>$$<$analog params$>$$<$int32 value$>$ \\
-0x41 & Screen Full & $<$tile$>$* \\
-0x42 & Screen Tile & $<$uint8 x position$>$$<$uint8 y position$>$$<$tile$>$ \\ \hline
+0x41 & Screen & $<$tile$>$* \\
+%0x42 & Screen Tile & $<$uint8 x position$>$$<$uint8 y position$>$$<$tile$>$ \\ \hline
 \end{tabular}
 \end{center}
 
@@ -579,7 +579,11 @@ code & name & request body \\ \hline
 If the client expects a response, the body of the response is empty.  The encoding of values for digital writes is the same as for digital reads (a single byte, 0 or 1).  The encoding of values for analog writes is the same as for analog reads.  Recall that the value reported is a ``bin number".
 
 \subsubsection{Screen Encoding}
-TODO: describe tiles and such
+Since the built-in screen type is a monochrome display, in which each pixel is on-or-off, our screen is essentially a bitmap.  We represent each pixel using a single bit.  Our encoding for the screen is inspired by the U8x8 embedded library (TODO: external ref), and it makes it simple for embedded clients to transmit screen information if their display libraries are U8x8 compatible.
+
+We code encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted over serial, note that this unsigned 64-bit integer, like all our other primitives, are transmitted in a little-endian fashion.  So the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
+
+The screen can be considered a grid of non-overlapping tiles (though padding might be necessary so that tiles perfectly cover the entire screen.  When transmitting the screen, the tiles are transmitted by row, from top to bottom (lowest y-coordinate to highest y-coordinate.  Within each row, tiles are transmitted from right to left (highest x-coordinate to lowest x-coordinate).  Note that the Screen request does not specify the shape of the screen (just the overall number of tile).  Therefore, it is imperative that, before sending any Screen requests, the client informs the server of the screen shape using a ``Screen Init" request (see the section below).
 
 \subsection{Events}
 Event requests are similar to output requests in that they are used to report information to the server, not receive information from the server.  Responses to event requests have empty bodies, just as with output requests.  The following table describes the request bodies for event requests.
