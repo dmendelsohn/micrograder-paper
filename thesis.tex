@@ -481,10 +481,6 @@ A subsequent version of MicroGrader will include tools for instructors to avoid 
 
 
 \newpage
-\section{Results}
-Later: write this once I try out a lot of student 6.S08 code on MicroGrader
-
-\newpage
 \section{Future Work}
 Later: write this at the end...when I actually know what I haven't done yet 
 
@@ -606,17 +602,19 @@ The Init request is sent when the embedded client initializes.  In addition, the
 It is important to inform the server of certain events, especially ones that have highly variable latencies.  The GPS Fix request is used to inform the server that the client has acquired a GPS fix.  The Wifi Request request is used to inform the server that a web request has been sent.  The Wifi Response request is used to inform the server that a web response has been received.
 
 \newpage
-\section{Appendix B: Reference client implementation for Teensy}
+\section{Appendix B: Client implementation for Teensy}
 \label{sec:teensy}
 MicroGrader is built to be cross-platform and is should work with a wide variety of microcontrollers.  As of now, the client side of the communication protocol is implemented for only one microcontroller: the Teensy, an Arduino variant.  The key for any client implementation is to be as invisible to students as possible.  In the case of the Teensy implementation, students write implement projects in a |.ino| file, which has access to a built-in functions.  In order to properly implement the protocol, I wrote a library that overrides many of these built-in functions to perform the proper communication with the server.  The required changes to the student's |.ino| file are minimal.
 
-At it's core, the client consists of a communication library that interacts with the server.  It provides functionality for other libraries to send messages to the server; the core communication library adds the request header to the message.  If the request requires a response, the communication library waits, and processes, that response, and returns its contents.  If the request does not require a response, the communication library returns immediately after sending a request.
+At its core, the client consists of a communication library that interacts with the server.  It provides functionality for other libraries to send messages to the server; the core communication library adds the request header to the message.  If the request requires a response, the communication library waits, and processes, that response, and returns its contents.  If the request does not require a response, the communication library returns immediately after sending a request.
 
-The Teensy includes built-in functions to send and receive data over USB Serial.  TODO: describe problem and replacement
+The Teensy includes built-in functions to send and receive data over USB Serial.  The MicroGrader client for Teensy replaces the built-in |Serial| object with a wrapper object.  When in \textit{test} mode or \textit{recording} mode, any print statements made using |Serial| have no effect.  For cases where a student or instructor wishes to print some text for debugging, the library includes a |debug| function, which sends a Print message in accordance with the MicroGrader protocol.  When the client is in \textit{inactive} mode, |Serial| print statements work normally.  Therefore, students can use |Serial| print statements when not connected to the MicroGrader server, but they don't have to worry about those statements interfering with MicroGrader communication when actual testing is happening.
 
-Describe modified libs (pins, IMU, OLED, Wifi)
+The fundamental general purpose I/O functionality (GPIO) is also wrapped.  This allows for recording GPIO events and for injecting test inputs from the host.  As with |Serial|, the regular GPIO functions work normally when the client is in \textit{inactive} mode. 
 
-Describe necessary / sufficient code changes for the .ino file %(#include, begin())
+For input from the inertial measurement unit (IMU), I modified the MPU9250 library for Arduino/Teensy.  For output to a display, I modified the U8g2 library for Arduino/Teensy.  If a course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is not complicated.
+
+From a student's perspective, very few changes need to be made in order to run the MicroGrader client.  He or she needs to install the core library and the modified versions of the third-party libraries.  The line |#include <MicroGrader.h>| must be added to the top of the |.ino| file and an initialization function, |MicroGrader.begin()| must be called at the beginning of the Teensy |setup()| routine.
 
 \newpage
 \section{References}
