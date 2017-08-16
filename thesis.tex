@@ -150,10 +150,8 @@ In MIT's 6.S08 (Interconnected Embedded Systems), microcontroller grading is com
 
 \newpage
 \section{Motivating example: ``Wikipedia Scroller"}
-TODO: intro paragraph
-
-Manually specifying the inputs and evaluation points for a test case can be quite tedious.  To illustrate this, let's us consider an exercise from the Spring 2017 offering of 6.S08 called ``Wikipedia Scroller".
-
+\label{sec:wiki-scroller}
+Before diving into technical details of the automated grader, it helps to have a motivating example in mind.  The spring 2017 offering of 6.S08 at MIT included an exercise called ``Wikipedia Scroller".
 This exercise involves a digital input connected to a push-button switch, a nine-axis inertial measurement unit (though this exercise only requires x-axis acceleration) and a 128x64 pixel monochrome OLED screen.  It also requires web connectivity.
 
 \subsection{Problem description}
@@ -178,10 +176,10 @@ If the user performs a long press, the current query string is sent via HTTP to 
 \subsection{Manually grading Wikipedia Scroller}
 As a TA evaluating the student's system, I might perform the following procedure to ensure the assignment is implemented correctly:
 
-TODO: describe my process (see comment in .tex file)
-%TODO: describe procedure with pictures.  Blank (short press) blank (tilt left) '9' (tilt right) blank (tilt right) a->b->c (short press) c (tilt right) ca (short press) ca (tilt right) caa->cab->...->cat (short press) cat (long press, wait) wiki text (long press) blank
+TODO: describe my process (see comment in .tex file), with grid of images to help
+%Blank (short press) blank (tilt left) '9' (tilt right) blank (tilt right) a->b->c (short press) c (tilt right) ca (short press) ca (tilt right) caa->cab->...->cat (short press) cat (long press, wait) wiki text (long press) blank
 
-TODO: motivate automation
+In this paper, I will describe the approach I took with MicroGrader, and how it can be used to automatically grade this assignment.  This automatic process would give students instant feedback, and save many hours of the teaching assistants' time. 
 
 \newpage
 \section{Design Principles}
@@ -191,7 +189,7 @@ Before building MicroGrader, I outlined a set of design principles to serve as a
 The microcontroller ecosystem is fractured and changes quickly.  Unsurprisingly, a wide variety of platforms are currently used in embedded systems education.  For example, MIT's 6.S08 uses the Teensy (a third-party Arduino variant) while UT Austin's Embedded Systems course on EdX uses the TM4C123 (an ARM-based board made by Texas Instruments).  Ideally, the automated grader should not care if a project is implemented on a Teensy or a TM4C123, as long as it meets the appropriate specification. The architecture of the grader must not be intrinsically tied to any one microcontroller or any specific sensors.  The interfaces ought to be as generic as possible.
 
 \subsection{Extensibility}
-It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital GPIO, analog GPIO, and a nine-axis IMU.  The automatic grader should \textbf{not} be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader ought to be handle that.
+It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital GPIO, analog GPIO, and a nine-axis IMU.  The automatic grader should \textbf{not} be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader should be handle that.
 
 This extensibility could even make it possible to use the grader in domains other than EECS.  In principle, an embedded system provides an interface between the physical world and the digital world.  MicroGrader could therefore be used to grade a project with any kind of electronically measurable output.
 
@@ -416,12 +414,12 @@ It is currently impossible to evaluate derived outputs like this using MicroGrad
 
 Using CAT-SOOP as a TA for MIT's 6.S08, the process of building test cases is a quick and convenient one.  An important convenience is the ability to only specify inputs for test cases.  CAT-SOOP uses a staff solution to generate the correct outputs for those specified inputs.  MicroGrader takes this philosophy one step further: it is possible to automatically generate a test case, including the desired system inputs, using a functioning staff solution.
 
-\subsubsection{Why manual test case creation is tedious}
-TODO: refer back to earlier stuff
+\subsubsection{Re-examining Wikipedia Scroller}
+Let's refer back to the Wikipedia Scroller exercise described in section \ref{sec:wiki-scroller}.  MicroGrader is capable of grading this assignment in a manner similar to a human grader.  It injects a representative sequence of inputs, and then checks to see that each expected output is observed on the screen at the correct time.
 
-It would be fairly tedious (though straightforward) to manually construct a test case for this with MicroGrader.  An instructor would have to specify the entirety of the accelerometer input signal with exact timestamps, as well as the button input with exact timestamps.  Both of these inputs change values about a dozen times.
+It would be fairly tedious, however, to manually construct a test case for this with MicroGrader.  An instructor would have to specify the entirety of the accelerometer input signal with exact timestamps, as well as the button input with exact timestamps.  Both of these inputs change values about a dozen times.
 
-Constructing the evaluation points would be arduous as well.  The OLED changes at least 28 times in the above example.  While not all of these necessarily require checking, many of them do.  Even with MicroGrader's text extraction feature, it took quite a while for me to build a reasonable set of evaluation points.   Clearly, this process could use some automation.
+Constructing the evaluation points would be arduous as well.  The OLED changes at least 28 times in the above example.  While not all of these necessarily require checking, many of them do.  Even with MicroGrader's text extraction feature, it took quite a while for me to build a reasonable set of evaluation points.   Clearly, this process could use some further automation.
 
 \subsection{Recording a reference solution}
 In order to obtain a recording a correctly implemented solution, we use introduce a third client-side mode, which we'll call \textit{recording} mode (the first two modes were \textit{test} and \textit{inactive} modes). 
@@ -485,10 +483,14 @@ A fixed-width time interval, like the one mentioned in the previous paragraph, i
 To give instructors the ability to tune the width of evaluation intervals in a dynamic way, elements of the template time interval can be mathematical formulae (represented in string form) rather than just integers.  In particular, this string can include a special variable, |T|, representing the length of time for which the recorded output was sustained.  For example, a point template might have the time interval |("0.2*T", "0.8*T")|, which indicates that the evaluation point's interval should cover the middle 60\% of the observed interval. 
 
 \subsection{Auto-generated test case for Wikipedia Scroller}
-TODO Describe test case generated by aforementioned scaffold and log
+For an instructor to automatically generate a test case, he or she would first have to record a correctly implemented system performing the relevant operations (in our example, creating the query string ``cat" and fetching the relevant information from the internet).  For this assignment, a fairly simple scaffold would do.  Consider the following possible scaffold:
+
+The scaffold has has templates specifying the beginning and end of two separate frames.  The first frame should begin upon system initialization and end upon the first web request.  The second frame should begin upon the response to that web request, and end a few seconds afterward.  For point templates, the default point template suffices, with a time of interval of |("0.2*T", "0.8*T")| as mentioned above.  This gives a bit of leniency on the exact timing of state transitions in the student's solution.
+
+With this simple scaffold, and the recording of the staff solution, MicroGrader can generate a test case that checks for all the outputs that a human grader would look for.  Furthermore, the test case's use of two separate frames ensures that students would not be penalized for web requests that are quicker or slower than the one in the original recording.
 
 \subsection{Resolving ambiguous cases}
-\label{sec:resolve-amiguity}
+\label{sec:resolve-ambiguity}
 There is a major potential problem when recording a canonically correct staff solution.  First, the reconstruction of the input signals from the recorded input samples is inevitably imperfect.  Staff members ought to keep this in mind designing their solutions.  Specifically, it's a good idea for the staff solution to sample (and therefore report) the input at a relatively high frequency even if such a high frequency isn't necessary for a correct implementation.  This will give the MicroGrader server a maximally high resolution view of the inputs that the staff member physically created.
 
 Even if we could, somehow, record an infinitely high resolution input signal, some recordings could have problems.  Namely, the desired system output could be ambiguous for that particular input signal.  This commonly happens in edge cases.  It is possible to make the specification stricter to avoid such ambiguities, but that might be undesirable from a pedagogical standpoint.  The instructor's solution would record one acceptable output.  As a result, other acceptable outputs would be seen as incorrect.
@@ -646,8 +648,5 @@ The fundamental general purpose I/O functionality (GPIO) is also wrapped.  This 
 For input from the inertial measurement unit (IMU), I modified the MPU9250 \footnote{https://github.com/sparkfun/SparkFun\_MPU-9250-DMP\_Arduino\_Library} library for Arduino/Teensy.  For output to a display, I modified the U8g2 \footnote{https://github.com/olikraus/u8g2/wiki} library for Arduino/Teensy.  If a course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is not complicated.
 
 From a student's perspective, very few changes need to be made in order to run the MicroGrader client.  He or she needs to install the core library and the modified versions of the third-party libraries.  The line |#include <MicroGrader.h>| must be added to the top of the |.ino| file and an initialization function, |MicroGrader.begin()| must be called at the beginning of the Teensy |setup()| routine.
-
-\newpage
-\section{References}
 
 \end{document}
