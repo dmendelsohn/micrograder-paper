@@ -232,10 +232,24 @@ In this particular example, presuming the digital input is connected to an activ
 In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the HTTP response, whether it takes one second or five seconds, before performing additional test actions.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.
 
 \subsection{Dynamically defined inputs}
-TODO: intro paragraph
+TODO: introduce concept of "primitive event".  But we need to describe unique events to make relative time make sense...
 
 \subsubsection{Data structure: ``Condition"}
-TODO: condition data structure.  Similar to old version, but give more examples and talk more explicitly about composition.  E.g. how would you use conditions to say "the second HTTP response"?  Also need to discuss what sorts of events we have access to  (reading inputs, actuating outputs, and a selection of internal events)
+In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the condition's satisfaction.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
+
+Our condition data structure can express unique events such as: ``The first HTTP request", ``The second HTTP request", and ``The first button press after the second HTTP response".  It achieves this with a recursive design; complex conditions can be built by composing simpler ones.  There are four fundamental types of conditions.
+
+The first type of condition is the \textit{basic condition}.  A basic condition's $t_{\text{satisfied}}$ is defined by a \textit{cause}. A cause is boolean function that takes a single input representing a MicroGrader primitive event.  As MicroGrader processes each primitive event during the execution of an embedded program, the cause function is invoked with that primitive event as its input.  The condition's $t_{\text{satisfied}}$ is the \textbf{first} time at which the cause function returns \texttt{true}.  TODO: give ``first HTTP request" example
+
+The second type of condition is the \textit{after condition}.  After conditions have another condition (of any kind) as a ``precondition".  Like basic conditions, after conditions have a cause function.  This cause function is only invoked for primitive events that occur after the precondition is satisfied.  As before, the after condition's $t_{\text{satisfied}}$ is the first time at which the cause function returns \texttt{true}.  TODO: give ``second HTTP request" example
+
+Alternatively, the cause of an after condition can be a single number, $t_{\text{cause}}$, instead of a function.  In this case, we consider this condition's $t_{\text{satisfied}}$ to be the precondition's $t_{\text{satisfied}}$ plus $t_{\text{cause}}$.  In general, an after condition cannot be satisfied without its precondition being satisfied.
+
+The third type of condition is the \textit{and condition}.  This type of condition has no \textit{cause}, but rather a set of subconditions, which can be of any condition type.  This condition is considered to be met once \textbf{all} of the subconditions are met.  Equivalently, this condition's $t_{\text{satisfied}}$ is the maximum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if any subcondition has an undefined $t_{\text{satisfied}}$.
+
+The fourth and final type of condition is the \textit{or condition}.  It is analogous to the \textit{and condition}, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met. Equivalently, this condition's $t_{\text{satisfied}}$ is the minimum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if all subconditions have an undefined $t_{\text{satisfied}}$.
+
+TODO: Give a big example with a sequence of primitive events and various conditions
 
 \subsubsection{Data structure: ``Input Frame"}
 TODO: introduce InputFrame, together with examples of the two inputs frames for Wikipedia Scroller.  Use images!  Fundamentally, input frame is function: (channel, t) -> value.  Channel is a label that specifies a signal (give relevant examples).  Values can have different forms depending on type (e.g. digital vs analog)
