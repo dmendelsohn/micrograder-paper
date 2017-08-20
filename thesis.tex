@@ -235,6 +235,7 @@ In practice, we found that statically defined inputs limited scope of assignment
 TODO: introduce concept of "primitive event".  But we need to describe unique events to make relative time make sense...
 
 \subsubsection{Data structure: ``Condition"}
+\label{sec:condition}
 In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the condition's satisfaction.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
 
 Our condition data structure can express unique events such as: ``The first HTTP request", ``The second HTTP request", and ``The first button press after the second HTTP response".  It achieves this with a recursive design; complex conditions can be built by composing simpler ones.  There are four fundamental types of conditions.
@@ -323,16 +324,7 @@ In many embedded systems projects, there are subsystems with unknown latency.  S
 In the current implementation of MicroGrader, internet requests are not simulated.  Rather, they are considered to be a hidden ``internal" step between system inputs (e.g. a button is pressed) and system outputs (e.g. some text from the internet is displayed).  It is not possible, at the time a test case is designed, to predict when outputs should occur in absolute terms, because variable latency events cause unpredictable timing.  We can, however, specify when the output should occur in relative terms (e.g. relative to the arrival of an HTTP response).  For this reason, MicroGrader typically represents time relative to the time at which some condition is met.
 
 \subsubsection{Data structure: Condition}
-\label{sec:condition}
-In MicroGrader, there are four basic types of conditions.  Conditions and be composed together to create more complex conditions, which can represent most events we care about.
-
-The first type of condition is the \textit{basic condition}.  The time at which a basic condition is met is defined by a \textit{cause}.  In this case, the cause is a boolean function of that takes a single input -- a representation of an embedded system event.  The boolean return value represents whether or not the input event is considered to satisfy the condition.  For example, we can use a \textit{cause} function that returns \texttt{true} if and only if the event is a ``system initialization" event.  Another possible \textit{cause} function would return \texttt{true} if and only if the system event is a ``Wifi response" event.  Once the condition is satisfied, it remains satisfied forever.  The details of how these events are observed will be discussed later in section \ref{sec:architecture}.
-
-The second type of condition is the \textit{after condition}.  This type of condition has another condition (of any kind) as its ``precondition".  The \textit{cause} function of an \textit{after condition} is only invoked for system events that occur after the precondition is met.   In addition, the \textit{cause} of an \textit{after condition} can be a single number, rather than a function.  In this case, we consider this condition to be met a fixed amount of time after the precondition is met, as defined by this number.
-
-The third type of condition is the \textit{and condition}.  This type of condition has no \textit{cause}, but rather just a set of \textit{sub-conditions}, which can be of any type.  This condition is considered to be met once \textbf{all} of the sub-conditions are met.
-
-The fourth and final type of condition is the \textit{or condition}.  It is analogous to the \textit{and condition}, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met.
+Moved
 
 \subsubsection{Data structure: Input Frames}
 \label{sec:frames}
