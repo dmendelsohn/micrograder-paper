@@ -213,36 +213,47 @@ After verifying that the scrolling behavior was correct, he entered a short quer
 In this manner, the author was able to grade each student's work in under two minutes.  In a class of 180 students, six hours of grading time was required for this assignment alone.  Furthermore, it was difficult to give students detailed feedback, and students only received feedback after it was too late to fix any mistakes.  An automated grader would solve these problems.
 
 \newpage
-\section{Design principles}
-Before building MicroGrader, I outlined a set of design principles to serve as a foundation for my technical design.
+\section{Defining a test}
+In this chapter, we describe the design of the \textit{test case} data structure, and explain the reasoning behind it.  At an abstract level, a grader's role is to assign a score to an embedded system.  A human grader might rely on intuition or a checklist in order to assign a score.  For MicroGrader, the test case defines the process by which a score is assigned.  A MicroGrader test case serves two primary functions.  First, it specifies any necessary input signal signals.  Second, it specifies how the resulting output signals should be graded.
 
-\subsection{Platform agnosticism}
-The microcontroller ecosystem is fractured and changes quickly.  Unsurprisingly, a wide variety of platforms are currently used in embedded systems education.  For example, MIT's 6.S08 uses the Teensy (a third-party Arduino variant).  UT Austin's Embedded Systems course on EdX uses the TM4C123, a Texas Instruments microcontroller with an Advanced RISC Machine (ARM) instruction set. [TODO: add reference]  Ideally, the automated grader should not care if a project is implemented on a Teensy or a TM4C123, as long as it meets the appropriate specification. The architecture of the grader must not be intrinsically tied to any one microcontroller or any specific sensors.  The interfaces should be as generic as possible.
+\subsection{The shortcomings of statically defined inputs}
+While developing MicroGrader, we first explored a static approach to specifying inputs.  In this design, all input signals would be completely predefined.  For example, a test case could specify a digital input as seen in Figure \ref{fig:static-input}.
 
-\subsection{Extensibility}
-It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital general-purpose input/output (GPIO), analog GPIO, and a nine-axis IMU.  The automatic grader should not be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader should be handle that.
+\begin{figure}[h]
+\centering
+%\includegraphics[scale=0.125]{pigeons.png}
+\vspace{5mm}
+\caption{TODO: Figure and caption of simple digital signal}
+\label{fig:static-input}
+\end{figure}
 
-This extensibility could even make it possible to use the grader in domains other than EECS.  In principle, an embedded system provides an interface between the physical world and the digital world.  MicroGrader could therefore be used to grade a project with any kind of electronically measurable output.
+In this particular example, presuming the digital input is connected to an active-low push-button switch, the test case indicates the button is pressed in the interval $(0,0)$ and $(0,0)$ (TODO: fill in values) and not pressed at all other times.  We would define $t=0$ as the time at which the microcontroller last powered on or reset.  In this static paradigm, the input signals would not depend upon the behavior of the embedded system.
 
-\subsection{Actionable feedback for students}
-Students should be able to get explanations of each passed and failed test case.  This may require significant technical work -- the internal representation of a test case might be complicated, but the explanations should be simple.  Based on the description of a failed test, a student should know exactly what output the system observed and what output the system expected to observe.
+In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the HTTP response, whether it takes one second or five seconds, before performing additional test actions.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.
 
-\subsection{Ease of use for students}
-In terms of the student experience, MicroGrader should be seamless to use.  Running tests should be as simple as setting a flag at the top of the program.  Any embedded libraries that the students use should be configured to use that flag to determine whether to run normally or to run in ``test" mode.  Students should not have to reorganize or rewrite a functioning project in order to coax the grader into working properly.
+\subsection{Dynamically defined inputs}
+TODO: intro paragraph
 
-\subsection{Ease of use for course staff}
-My experience with tedious manual grading in 6.S08 inspired this project, in large part.  If building test cases in MicroGrader is actually more time-intensive than manual grading, this project will have failed its primary purpose.  The time required to customize the grader for a specific assignment should be roughly proportional to the complexity of the assignment.  If possible, a working implementation of the assignment should be sufficient to programmatically generate a test.
+\subsubsection{Data structure: ``Condition"}
+TODO: condition data structure.  Similar to old version, but give more examples and talk more explicitly about composition.  E.g. how would you use conditions to say "the second HTTP response"?  Also need to discuss what sorts of events we have access to  (reading inputs, actuating outputs, and a selection of internal events)
 
-MicroGrader should impose as few constraints as possible on the assignments it grades.  It should be able to evaluate a broad range of technical specifications.
+\subsubsection{Data structure: ``Input Frame"}
+TODO: introduce InputFrame, together with examples of the two inputs frames for Wikipedia Scroller.  Use images!  Fundamentally, input frame is function: (channel, t) -> value.  Channel is a label that specifies a signal (give relevant examples).  Values can have different forms depending on type (e.g. digital vs analog)
 
-\subsection{Minimize false positives}
-Although few students would complain about invalid solutions occasionally passing automated tests, it inevitably does them a disservice.  In 6.S08, for example, the students are mostly newcomers to programming and have not yet developed sophisticated debugging skills or proper testing disciplines.  Students have difficulty shedding the assumption that code is correct just because it passed the tests.  If that code is critical in a future exercise, it will cause problems.
+\subsubsection{Determining input values}
+TODO: how are input frames used?
 
-\subsection{Minimize false negatives}
-It's discouraging and perplexing for students when apparently correct solutions fail automated tests.  Ideally, any functional solution -- not just the intended one -- should pass the tests.  It's a challenge to avoid ``Heisenbugs", wherein the system works under normal operation, but fails during testing due to changes introduced by the test itself.
+TODO: what about times when 0 or 2+ frames are active?  What then?
+
+\subsection{Grading system outputs}
+TODO: like old version, but better visual presentation of eval point data structure, and a worked example using Wikipedia Scroller (second frame is easier)
+
+\subsection{Complete test case for Wikipedia Scroller}
+TODO: fill this in, with pretty formatting
+
 
 \newpage
-\section{Defining a test case}
+\section{Defining a test case (old)}
 We can think of an embedded system as a mapping from a set of input signals to a set of output signals.  We define a specification to be a set of permissible mappings.  In MicroGrader, signals are assumed to be piecewise constant.  A piecewise constant signal can approximate any piecewise continuous signal to arbitrary precision by increasing the resolution sufficiently.
 
 \subsection{Channels}
@@ -326,6 +337,37 @@ Now, we can re-examine our Evaluation Point data structure.  The point's time in
 
 \subsection{Example test case for Wikipedia Scroller}
 TODO: fill this in
+
+\newpage
+\section{Design principles}
+TODO: merge this chapter and the "Implementation" chapter into one called "Technical Design"
+
+Before building MicroGrader, I outlined a set of design principles to serve as a foundation for my technical design.
+
+\subsection{Platform agnosticism}
+The microcontroller ecosystem is fractured and changes quickly.  Unsurprisingly, a wide variety of platforms are currently used in embedded systems education.  For example, MIT's 6.S08 uses the Teensy (a third-party Arduino variant).  UT Austin's Embedded Systems course on EdX uses the TM4C123, a Texas Instruments microcontroller with an Advanced RISC Machine (ARM) instruction set. [TODO: add reference]  Ideally, the automated grader should not care if a project is implemented on a Teensy or a TM4C123, as long as it meets the appropriate specification. The architecture of the grader must not be intrinsically tied to any one microcontroller or any specific sensors.  The interfaces should be as generic as possible.
+
+\subsection{Extensibility}
+It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital general-purpose input/output (GPIO), analog GPIO, and a nine-axis IMU.  The automatic grader should not be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader should be handle that.
+
+This extensibility could even make it possible to use the grader in domains other than EECS.  In principle, an embedded system provides an interface between the physical world and the digital world.  MicroGrader could therefore be used to grade a project with any kind of electronically measurable output.
+
+\subsection{Actionable feedback for students}
+Students should be able to get explanations of each passed and failed test case.  This may require significant technical work -- the internal representation of a test case might be complicated, but the explanations should be simple.  Based on the description of a failed test, a student should know exactly what output the system observed and what output the system expected to observe.
+
+\subsection{Ease of use for students}
+In terms of the student experience, MicroGrader should be seamless to use.  Running tests should be as simple as setting a flag at the top of the program.  Any embedded libraries that the students use should be configured to use that flag to determine whether to run normally or to run in ``test" mode.  Students should not have to reorganize or rewrite a functioning project in order to coax the grader into working properly.
+
+\subsection{Ease of use for course staff}
+My experience with tedious manual grading in 6.S08 inspired this project, in large part.  If building test cases in MicroGrader is actually more time-intensive than manual grading, this project will have failed its primary purpose.  The time required to customize the grader for a specific assignment should be roughly proportional to the complexity of the assignment.  If possible, a working implementation of the assignment should be sufficient to programmatically generate a test.
+
+MicroGrader should impose as few constraints as possible on the assignments it grades.  It should be able to evaluate a broad range of technical specifications.
+
+\subsection{Minimize false positives}
+Although few students would complain about invalid solutions occasionally passing automated tests, it inevitably does them a disservice.  In 6.S08, for example, the students are mostly newcomers to programming and have not yet developed sophisticated debugging skills or proper testing disciplines.  Students have difficulty shedding the assumption that code is correct just because it passed the tests.  If that code is critical in a future exercise, it will cause problems.
+
+\subsection{Minimize false negatives}
+It's discouraging and perplexing for students when apparently correct solutions fail automated tests.  Ideally, any functional solution -- not just the intended one -- should pass the tests.  It's a challenge to avoid ``Heisenbugs", wherein the system works under normal operation, but fails during testing due to changes introduced by the test itself.
 
 \newpage
 \section{Implementation}
