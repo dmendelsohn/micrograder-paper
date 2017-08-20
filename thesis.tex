@@ -229,7 +229,7 @@ While developing MicroGrader, we first explored a static approach to specifying 
 
 In this particular example, presuming the digital input is connected to an active-low push-button switch, the test case indicates the button is pressed in the interval $(0,0)$ and $(0,0)$ (TODO: fill in values) and not pressed at all other times.  We would define $t=0$ as the time at which the microcontroller last powered on or reset.  In this static paradigm, the input signals would not depend upon the behavior of the embedded system.
 
-In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the HTTP response, whether it takes one second or five seconds, before performing additional test actions.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.
+In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the HTTP response, whether it takes one second or five seconds, before performing additional test actions.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.  More generally, dynamically defined inputs allow MicroGrader to deal with variable latencies that are not within the student's control.
 
 \subsection{Dynamically defined inputs}
 TODO: introduce concept of "primitive event".  But we need to describe unique events to make relative time make sense...
@@ -269,27 +269,7 @@ TODO: fill this in, with pretty formatting
 
 \newpage
 \section{Defining a test case (old)}
-We can think of an embedded system as a mapping from a set of input signals to a set of output signals.  We define a specification to be a set of permissible mappings.  In MicroGrader, signals are assumed to be piecewise constant.  A piecewise constant signal can approximate any piecewise continuous signal to arbitrary precision by increasing the resolution sufficiently.
-
-\subsection{Channels}
-We label each individual input and output as a \textit{channel}.  Specifically, a channel is comprised of a data type and a sub-channel.  For example, ``digital input" is a data type; the pin number is the sub-channel.  The built-in data types, and their associated sub-channels, are:
-
-\begin{itemize}
-\item Digital Input (sub-channels are pin numbers)
-\item Digital Output (sub-channels are pin numbers)
-\item Analog Input (sub-channels are pin numbers)
-\item Analog Output (sub-channels are pin numbers)
-\item Accelerometer Input (sub-channels are axes)
-\item Gyroscope Input (sub-channels are axes)
-\item Magnetometer Input (sub-channels are axes)
-\item Monochrome Display Output (no sub-channels)
-\end{itemize}
-
-\subsection{Static inputs}
-\label{sec:static-inputs}
-In a test case, the inputs signals are more-or-less statically predefined.  This is in contrast to UT Austin's TExaS grader, which deputizes students to perform physical actions that generate the inputs.  For example, if a TExaS test case calls for a button press, the system would prompt students to physically press the button themselves.  MicroGrader can specify inputs without student action. The details of how these pre-defined inputs are delivered to the student's program will be described later.  As mentioned above, input signals are modeled as a piecewise constant function in time, with arbitrarily high time resolution.
-
-Allowing for human-driven input generation would greatly complicate the implementation and design of the system, and is outside the scope of this project.  Typically, this option is chosen out of necessity, as other automated graders lack a way to deliver predefined inputs.  Dynamically generating inputs with human action is actually quite restrictive.
+deleted stuff
 
 \subsection{Evaluation of outputs}
 Outputs are evaluated ``offline" in the algorithmic sense.  That is, the outputs of the embedded system are collected in full, and then evaluated once the test is finished (for some definition of ``finished").  Furthermore, for the sake of simplicity, MicroGrader considers each output channel independently.  Currently, there is no cross-modal evaluation of separate output channels.
