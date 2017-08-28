@@ -347,9 +347,24 @@ In the next section, we introduce a data structure called an \textit{evaluation 
 \subsubsection{Basic attributes of an evaluation point}
 An evaluation point has a channel (digital output 13 in the example above) and an expected value.  It must also have an attribute that defines the time at which we expect this value.  To that end, an evaluation point has a time interval.
 
-Since the timing of test inputs can be defined relative to run-time events, the timing of outputs can be sensitive to run-time events.  Therefore, an evaluation point also has a condition (TODO: backref).  The evaluation point's time interval should be considered relative to the time at which the condition is met.
+Since the timing of test inputs can be defined relative to run-time events, the timing of outputs can be sensitive to run-time events.  Therefore, an evaluation point also has a condition (as defined in section \ref{sec:condition}).  The evaluation point's time interval should be considered relative to the time at which the condition is met.
 
-TODO: refer back to above example
+For ``Blinky", an instructor might consider using the four evaluation points described in Table \ref{table:blinky-basic-points} to assess a student's work.
+
+\begin{table}[ht]
+\begin{center}
+\caption{A basic set of evaluation points for Blinky.}
+\vspace{2mm}
+\label{table:blinky-basic-points}
+\begin{tabular}{c|cccc}
+& Channel & Expected Value & Condition & Interval \\ \hline
+Point 1 & Digital output 13 & 0 & System initialization & (0,500) \\
+Point 2 & Digital output 13 & 1 & System initialization & (500,1000) \\
+Point 3 & Digital output 13 & 0 & System initialization & (1000,1500) \\
+Point 4 & Digital output 13 & 1 & System initialization & (1500,2000) \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
 
 An evaluation point evaluates to either \texttt{true} or \texttt{false} with respect to a set of observed output signals.  There is no ``partial credit", since an evaluation point is our fundamental unit of grading.  If instructors want finer detail, they should create multiple separate evaluation points. 
 
