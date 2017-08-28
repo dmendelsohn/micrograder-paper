@@ -331,14 +331,29 @@ MicroGrader has access to a sequence of output observations.  Output observation
 
 
 \subsubsection{Breaking up the grading task}
-TODO: blinky example, with 2 blinks
+Let us consider a simple exercise, involving no inputs at all.  We will refer to this exercise as ``Blinky".  In this exercise, the microcontroller outputs a 1 Hz digital square wave on digital output 13, starting with a value of 0.  As graders, let us suppose that we only care to check the first two periods of this square wave; if these first two periods occur correctly, we will give the exercise full credit.
 
-TODO: break up problem into HI LO HI LO, introduce evaluation point to check each part
+We define $t_{\text{start}}$ to be the time, in milliseconds, at which the embedded system finishes initializing.  Fundamentally, a grader performs four checks
+
+\begin{itemize}
+\item digital output 13 must have a value of 0 in the interval $[t_{\text{start}},t_{\text{start}}+500)$.
+\item digital output 13 must have a value of 1 in the interval $[t_{\text{start}}+500,t_{\text{start}}+1000)$.
+\item digital output 13 must have a value of 0 in the interval $[t_{\text{start}}+1000,t_{\text{start}}+1500)$.
+\item digital output 13 must have a value of 1 in the interval $[t_{\text{start}}+1500,t_{\text{start}}+2000)$.
+\end{itemize}
+
+In the next section, we introduce a data structure called an \textit{evaluation point}, which can specify each of these four checks.
 
 \subsubsection{Basic attributes of an evaluation point}
-TODO: evaluation point has channel and expected value, obviously.  What about timing?  Interval relative to a condition.  Result? A boolean.
+An evaluation point has a channel (digital output 13 in the example above) and an expected value.  It must also have an attribute that defines the time at which we expect this value.  To that end, an evaluation point has a time interval.
 
-\subsubsection{Augmenting the evaluation point for increased flexibility}
+Since the timing of test inputs can be defined relative to run-time events, the timing of outputs can be sensitive to run-time events.  Therefore, an evaluation point also has a condition (TODO: backref).  The evaluation point's time interval should be considered relative to the time at which the condition is met.
+
+TODO: refer back to above example
+
+An evaluation point evaluates to either \texttt{true} or \texttt{false} with respect to a set of observed output signals.  There is no ``partial credit", since an evaluation point is our fundamental unit of grading.  If instructors want finer detail, they should create multiple separate evaluation points. 
+
+\subsubsection{Augmenting the evaluation point for less restrictive specifications}
 TODO: portion allows for timing flexibility
 
 TODO: check function allows for value flexibility
