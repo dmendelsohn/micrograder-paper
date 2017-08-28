@@ -325,37 +325,31 @@ If multiple input frames are active, we must choose which one determines the inj
 If MicroGrader needs to inject an input value, and there are no active input frames, then a default value is used.  An instructor can specify a default value for any input channel.  In the case of an active-low push-button switch, it typically makes sense to use 1 as a default, indicating an unpressed button.  In the case of accelerometer readings, an instructor might want to use a default of 0 $\text{m}/\text{s}^2$ for two of the axes, and a default of 9.81 $\text{m}/\text{s}^2$ for the ``up-down" axis (due to gravity).
 
 \subsection{Grading system outputs}
-TODO: like old version, but better visual presentation of eval point in a table, and a worked example using Wikipedia Scroller (build on frame example above)
+So far, we have established how MicroGrader specifies input values for a test case.  Now, we must describe how it grades the outputs of the embedded system.
 
-\subsection{Evaluation of outputs (depracated)}
-Outputs are evaluated ``offline" in the algorithmic sense.  That is, the outputs of the embedded system are collected in full, and then evaluated once the test is finished (for some definition of ``finished").  Furthermore, for the sake of simplicity, MicroGrader considers each output channel independently.  Currently, there is no cross-modal evaluation of separate output channels.
+MicroGrader has access to a sequence of output observations.  Output observations occur when the microcontroller generates an output.  For example, MicroGrader can observe the execution of a \texttt{digitalWrite} or \texttt{analogWrite} command on the Arduino platform, both of which specify an output voltage on a GPIO pin.  MicroGrader can also observe commands that change the embedded system's display.  Using this discrete set of output observations, MicroGrader recovers continuous output signals by assuming that outputs are constant until the next observation on the same channel.  Now, we need a method of grading a set of continuous output signals.
 
-Collected outputs are samples of a continuous-time signal.  We use the discrete-time sampling to reconstruct an approximation of the continuous-time signal.  Specifically, at any given time, we consider the most recent sample of the output to be the current value of that output.  This turns out to be reasonable in the context of many embedded system outputs.  Often, microcontrollers hold output values constant until a new output value is specified.
 
-\subsubsection{Data structure: Evaluation Point}
-\label{sec:eval-point}
-Our fundamental unit of output evaluation is the \textit{evaluation point}.  An evaluation point consists of:
+\subsubsection{Breaking up the grading task}
+TODO: blinky example, with 2 blinks
 
-\begin{itemize}
-\item Output Channel (e.g. ``analog output on pin 5")
-\item Time Interval (a numeric start time and end time)
-\item Expected Value (the ``correct" value of the given output channel in this interval)
-\item Check Function (a boolean function of two arguments)
-\item Required Portion (a float between 0 and 1, inclusive)
-\item Condition (we will discuss this later)
-\end{itemize}
+TODO: break up problem into HI LO HI LO, introduce evaluation point to check each part
 
-The check function takes an expected value and an observed value as input, and returns a boolean.  We consider that boolean to be the correctness of the observed value with respect to the expected value.
+\subsubsection{Basic attributes of an evaluation point}
+TODO: evaluation point has channel and expected value, obviously.  What about timing?  Interval relative to a condition.  Result? A boolean.
 
-In order to evaluate an evaluation point, we consider the reconstructed continuous signal for the point's channel, during the point's time interval.  We then calculate the portion of the interval for which the observed value of the signal is correct, with respect to the point's expected value.  If that portion is greater than or equal to the point's ``required portion", then the point evaluates to \texttt{true}.  Otherwise, it evaluates to \texttt{false}.
+\subsubsection{Augmenting the evaluation point for increased flexibility}
+TODO: portion allows for timing flexibility
 
-The point's time interval isn't an absolute time interval, but rather a relative time interval, where $t=0$ is the time at which the point's ``condition" is met.  This is described in more detail in section \ref{sec:condition}.
+TODO: check function allows for value flexibility
 
-\subsubsection{Aggregating point results}
-For any channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
+\subsubsection{Evaluation point examples}
+TODO: Complete table for blinky problem, 4 points
 
-\subsection{Complete test case for Wikipedia Scroller}
-TODO: fill this in, with pretty formatting
+TODO: example of "A" right after first Wikipedia scroller long press
+
+\subsubsection{Aggregating individual point results}
+For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
 \newpage
 \section{Design principles}
