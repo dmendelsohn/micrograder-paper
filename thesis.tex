@@ -218,15 +218,15 @@ In this chapter, we describe the design of the \textit{test case} data structure
 \subsection{The shortcomings of statically defined inputs}
 While developing MicroGrader, we first explored a static approach to specifying inputs.  In this design, all input signals would be completely predefined.  For example, a test case could specify a digital input as seen in Figure \ref{fig:static-input}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
-%\includegraphics[scale=0.125]{pigeons.png}
+\includegraphics[scale=0.75]{button-signal.png}
 \vspace{5mm}
-\caption{TODO: Figure and caption of simple digital signal, see below for timing details}
+\caption{A simple digital signal.}
 \label{fig:static-input}
 \end{figure}
 
-In this particular example, presuming the digital input is connected to an active-low push-button switch, the test case indicates the button is pressed in the interval $[1,2)$ and $[3,4)$ and not pressed at all other times.  We would define $t=0$ as the time at which the microcontroller last powered on or reset.  In this static paradigm, the input signals would not depend upon the behavior of the embedded system.
+In this particular example, presuming the digital input is connected to an active-low push-button switch, the test case indicates the button is pressed in the interval $[1000,2000)$ and $[3000,4000)$ and not pressed at all other times.  We would define $t=0$ as the time at which the microcontroller last powered on or reset.  In this static paradigm, the input signals would not depend upon the behavior of the embedded system.
 
 In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the Wikipedia text to appear (indicating an HTTP response has arrived), before performing additional test actions.  The HTTP response might arrive less than a second after the request, or it might arrive several seconds later.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.  More generally, dynamically defined inputs allow MicroGrader to deal with variable latencies that are not within the student's control.
 
@@ -303,35 +303,31 @@ Condition 5 & Digital output 13 has been set to 1 after second HTTP request sent
 \end{table}
 
 \subsubsection{Data structure: ``Input Frame"}
-Now that we have a structure for specifying run-time events, we can describe input signals relative to such events.  To do so, we introduce a new data structure called the \textit{input frame}.  An input frame consists of a start condition, an end condition, and a \textit{value generator function}.  We will refer to the start condition's $t_{\text{satisfied}}$ as $t_{\text{start}}$, and the end condition's $t_{\text{satisfied}}$ as $t_{\text{end}}$.
+Now that we have a structure for specifying run-time events, we can describe input signals relative to such events.  To do so, we introduce a new data structure called the \textit{input frame}.  An input frame consists of a start condition, an end condition, and a \textit{value generator function}.  We will refer to the start condition's $t_{\text{satisfied}}$ as $t_{\text{start}}$, and the end condition's $t_{\text{satisfied}}$ as $t_{\text{end}}$.  We say that an input frame is \textit{active} in the time interval $[t_{\text{start}}, t_{\text{end}})$.
 
-The value generator function has two inputs: a channel, $c$, and time, $t$.  The channel, more specifically, is an input channel such as ``analog input 5" or ``accelerometer x-axis".  The value generator function returns a valid value for channel $c$ (i.e. a float for an analog channel, or $\{0,1\}$ for a digital channel).  We interpret this returned value to be the value of the input signal on channel $c$ at time $t_{\text{start}}+t$.
+The value generator function has two inputs: a channel, $c$, and time, $t$.  The channel, more specifically, is an input channel such as ``analog input 5" or ``accelerometer x-axis".  The value generator function returns a valid value for channel $c$ (i.e. a float for an analog channel, or $\{0,1\}$ for a digital channel).  We interpret this returned value to be the value of the input signal on channel $c$ at time $t_{\text{start}}+t$.  The value generator function should be defined for all input channels used in the exercise, and for all $t>0$.
 
-TODO: describe example
+In the context of the Wikipedia Scroller exercise, we consider an example input frame.  Suppose the frame's start condition is ``system initialization" and the end condition is ``the first HTTP request".  The two-channel value generator function, shown in Figure \ref{fig:value-gen}, specifies the input signals relative to $t_{\text{start}}$.  When a properly designed ``Wikipedia Scroller" system processes those input signals, it should: start in the display state (with a blank screen), transition to the query entry state after the long button press, scroll through a few letters due to the subsequent tilting, lock in the selected letter due to the short press, and send the one-character query string to the project's backend due to the final long press.  This process supposes a certain orientation for the IMU, which should be specified in the instructions for the exercise.
 
-\noindent TODO: Wikipedia Scroller frame 1...query letter "D" \\
-Start: system init \\
-End: HTTP request sent \\
-Button input: press from 1000 to 3000,  from 4000 to 4600, from 5000 to 7000 \\
-X axis: 0.5 if [3200, 3600), else 0 \\
+\begin{figure}[h]
+\centering
+\includegraphics[scale=1]{wiki-frame.png}
+\vspace{5mm}
+\caption{Value generator function with two input channels.}
+\label{fig:value-gen}
+\end{figure}
 
 \subsubsection{Determining input values}
-TODO: how are input frames used?
+A single test case usually contains multiple input frames.  At any time, MicroGrader might need to inject an input value into the embedded system.  If, at that time, a single input frame is active, we use that frame's value generator function to determine the value to inject.  We must consider the possibility that multiple input frames are active at the same time, as well as the possibility that no input frames are active.
 
-TODO: what about times when 0 or 2+ frames are active?  What then?
+If multiple input frames are active, we must choose which one determines the injected input value.  For this purpose, we add another attribute called \textit{priority} to our input frame data structure.  The highest priority active frame is used to determine the injected input value.  If there is a tie for the highest priority, the frame with the latest $t_{\text{start}}$ is used.  MicroGrader can be configured to instead use the frame with the earliest $t_{\text{start}}$ in a tie-breaker scenario.
+
+If MicroGrader needs to inject an input value, and there are no active input frames, then a default value is used.  An instructor can specify a default value for any input channel.  In the case of an active-low push-button switch, it typically makes sense to use 1 as a default, indicating an unpressed button.  In the case of accelerometer readings, an instructor might want to use a default of 0 $\text{m}/\text{s}^2$ for two of the axes, and a default of 9.81 $\text{m}/\text{s}^2$ for the ``up-down" axis (due to gravity).
 
 \subsection{Grading system outputs}
-TODO: like old version, but better visual presentation of eval point data structure, and a worked example using Wikipedia Scroller (second frame is easier)
+TODO: like old version, but better visual presentation of eval point in a table, and a worked example using Wikipedia Scroller (build on frame example above)
 
-\subsection{Complete test case for Wikipedia Scroller}
-TODO: fill this in, with pretty formatting
-
-
-\newpage
-\section{Defining a test case (old)}
-deleted stuff
-
-\subsection{Evaluation of outputs}
+\subsection{Evaluation of outputs (depracated)}
 Outputs are evaluated ``offline" in the algorithmic sense.  That is, the outputs of the embedded system are collected in full, and then evaluated once the test is finished (for some definition of ``finished").  Furthermore, for the sake of simplicity, MicroGrader considers each output channel independently.  Currently, there is no cross-modal evaluation of separate output channels.
 
 Collected outputs are samples of a continuous-time signal.  We use the discrete-time sampling to reconstruct an approximation of the continuous-time signal.  Specifically, at any given time, we consider the most recent sample of the output to be the current value of that output.  This turns out to be reasonable in the context of many embedded system outputs.  Often, microcontrollers hold output values constant until a new output value is specified.
@@ -358,31 +354,8 @@ The point's time interval isn't an absolute time interval, but rather a relative
 \subsubsection{Aggregating point results}
 For any channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
-\subsection{Relative timing}
-In many embedded systems projects, there are subsystems with unknown latency.  Sometimes, this latency is highly variable.  This is especially true in the context of MIT's 6.S08, due to its focus on internet-connected embedded systems.  Events with highly variable latency include obtaining a WiFi connection, making an HTTP request, and obtaining a GPS fix.
-
-In the current implementation of MicroGrader, internet requests are not simulated.  Rather, they are considered to be a hidden ``internal" step between system inputs (e.g. a button is pressed) and system outputs (e.g. some text from the internet is displayed).  It is not possible, at the time a test case is designed, to predict when outputs should occur in absolute terms, because variable latency events cause unpredictable timing.  We can, however, specify when the output should occur in relative terms (e.g. relative to the arrival of an HTTP response).  For this reason, MicroGrader typically represents time relative to the time at which some condition is met.
-
-\subsubsection{Data structure: Condition}
-Moved
-
-\subsubsection{Data structure: Input Frames}
-\label{sec:frames}
-Now that we have the ability to define time in a relative way, let's re-examine how a test case defines its inputs.  Specifically, input signals are fixed relative to a condition, rather than be fixed at an absolute time.  The principal data structure for accomplishing this is the \textit{frame}.
-
-A \textit{frame} is comprised of a \textit{start condition}, an \textit{end condition}, and a set of time-series signals (each of which is associated with a specific input channel).  The two conditions can be of any type described in section \ref{sec:condition}.  The signals must all be defined for all times $t>=0$.  The time at which the start condition is met is considered to be our ``anchor point", $t=0$.  A frame is considered \textit{active} at times at or after the start condition is met, and before the end condition is met.
-
-A test case can (and often requires) multiple frames, since different behaviors that we'd like to evaluate occur relative to different events.  During the execution of a test, is it possible for zero frames, one frame, or multiple frames to be active at a given time.  If exactly one frame is active, that frame's values for each input channel are the test inputs to the embedded system.
-
-If multiple frames are active at a time $t$, we must decide which frame is used to determine the system inputs.  To that end, each frame has a fixed integer \textit{priority}.  The active frame with the highest priority determines the system inputs.
-
-If no frame is active at a time $t$, then depending on the configuration of the test case, default values can be used for each input channel, or an error can be thrown (ending the test).
-
-\subsubsection{Relatively-evaluated outputs}
-Now, we can re-examine our Evaluation Point data structure.  The point's time interval is a relative time interval, where $t=0$ is the time at which the point's condition is met.  This interval can only be translated to an absolute time interval at run-time, not the time the test case is defined.
-
-\subsection{Example test case for Wikipedia Scroller}
-TODO: fill this in
+\subsection{Complete test case for Wikipedia Scroller}
+TODO: fill this in, with pretty formatting
 
 \newpage
 \section{Design principles}
