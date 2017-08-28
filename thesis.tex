@@ -34,7 +34,6 @@
   breakatwhitespace=true,
   tabsize=3
 }
-\lstMakeShortInline[columns=fixed]|
 
 
 \newcommand{\mytitle}{\textbf{An Automatic Grader for Embedded Systems Courses}}
@@ -156,9 +155,9 @@ In MIT's 6.S08 (Interconnected Embedded Systems), microcontroller grading is com
 \newpage
 \section{Motivating example: ``Wikipedia Scroller"}
 \label{sec:wiki-scroller}
-Before diving into technical details of the automated grader, it helps to have a motivating example in mind.  MIT's 6.S08 includes an exercise called ``Wikipedia Scroller", in which students build a digital encyclopedia using a microcontroller, a push-button switch, a nine-axis inertial measurement unit (IMU) and a 128x64 organic light-emitting diode (OLED) display.
+Before diving into technical details of the automated grader, it helps to have a motivating example in mind;  MIT's 6.S08 includes an exercise called ``Wikipedia Scroller", in which students build a digital encyclopedia using a microcontroller, a push-button switch, a nine-axis inertial measurement unit (IMU) and a 128x64 organic light-emitting diode (OLED) display.
 
-Each student implements a tilt-based interface that allows the device's user to build an alphanumeric query string.  Using the ESP8266 chip, the device transmits the query string to a server-side Python program.  That Python program uses the query to formulate a query to the Wikipedia API, parses the response from the Wikipedia API, and transmits the first 200 characters of the relevant Wikipedia description to the embedded device.
+Each student implements a tilt-based interface that allows the device's user to build an alphanumeric query string.  Using the ESP8266 chip, the device transmits the query string to a server-side Python program.  That Python program uses the query string to formulate a query to the Wikipedia API, parses the response from the Wikipedia API, and transmits the first 200 characters of the relevant Wikipedia description to the embedded device.
 
 \begin{figure}[h]
 \centering
@@ -223,26 +222,28 @@ While developing MicroGrader, we first explored a static approach to specifying 
 \centering
 %\includegraphics[scale=0.125]{pigeons.png}
 \vspace{5mm}
-\caption{TODO: Figure and caption of simple digital signal}
+\caption{TODO: Figure and caption of simple digital signal, see below for timing details}
 \label{fig:static-input}
 \end{figure}
 
-In this particular example, presuming the digital input is connected to an active-low push-button switch, the test case indicates the button is pressed in the interval $(0,0)$ and $(0,0)$ (TODO: fill in values) and not pressed at all other times.  We would define $t=0$ as the time at which the microcontroller last powered on or reset.  In this static paradigm, the input signals would not depend upon the behavior of the embedded system.
+In this particular example, presuming the digital input is connected to an active-low push-button switch, the test case indicates the button is pressed in the interval $[1,2)$ and $[3,4)$ and not pressed at all other times.  We would define $t=0$ as the time at which the microcontroller last powered on or reset.  In this static paradigm, the input signals would not depend upon the behavior of the embedded system.
 
-In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the HTTP response, whether it takes one second or five seconds, before performing additional test actions.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.  More generally, dynamically defined inputs allow MicroGrader to deal with variable latencies that are not within the student's control.
+In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the Wikipedia text to appear (indicating an HTTP response has arrived), before performing additional test actions.  The HTTP response might arrive less than a second after the request, or it might arrive several seconds later.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.  More generally, dynamically defined inputs allow MicroGrader to deal with variable latencies that are not within the student's control.
 
 \subsection{Dynamically defined inputs}
-TODO: introduce concept of "primitive event".  But we need to describe unique events to make relative time make sense...
+We have established that MicroGrader must dynamically generate microcontroller inputs, based on the previous activity of the embedded system.  Human graders can only use system outputs to determine future input actions.  An automated grader could go further, relying on internal embedded system events in addition to system outputs.  For Wikipedia Scroller, human graders use the appearance of Wikipedia text to indicate that the HTTP response has arrived; an automated grader could, in principal, observe the arrival of the HTTP response directly and not rely on an indirect indicator.
+
+Observing internal events directly can simplify the logic for test cases.  It is important to carefully decide which internal events MicroGrader should observe; since the grader is remotely assessing embedded system, it is impractical to observe low-level events that occur frequently.  In the current implementation of MicroGrader, the observed internal events are: ``system initialized", ``Wifi connected", ``HTTP request sent", ``HTTP response received", and ``GPS fix acquired".  In addition, MicroGrader supports a ``print" event, which allows the embedded system to send a string to the automated grader.  In general, we define a MicroGrader \textit{observation} to be one of these internal events or any external output.
 
 \subsubsection{Data structure: ``Condition"}
 \label{sec:condition}
-In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the condition's satisfaction.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
+We want the ability to specify the timing of system inputs relative to a specific, unique event that occurs during the execution of an embedded system.  In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the condition's satisfaction.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
 
-Our condition data structure can express unique events such as: ``The first HTTP request", ``The second HTTP request", and ``The first button press after the second HTTP response".  It achieves this with a recursive design; complex conditions can be built by composing simpler ones.  There are four fundamental types of conditions.
+Our condition data structure can express unique events such as: ``The first HTTP request", ``the second HTTP request", and ``the first time that the word `cat' appears on the embedded display".  It achieves this with a recursive design; complex conditions can be built by composing simpler ones.  There are four fundamental types of conditions.
 
-The first type of condition is the \textit{basic condition}.  A basic condition's $t_{\text{satisfied}}$ is defined by a \textit{cause}. A cause is boolean function that takes a single input representing a MicroGrader primitive event.  As MicroGrader processes each primitive event during the execution of an embedded program, the cause function is invoked with that primitive event as its input.  The condition's $t_{\text{satisfied}}$ is the \textbf{first} time at which the cause function returns \texttt{true}.  TODO: give ``first HTTP request" example
+The first type of condition is the \textit{basic condition}.  A basic condition's $t_{\text{satisfied}}$ is defined by a \textit{cause}. A cause is boolean function that takes a single input representing a MicroGrader observation.  As MicroGrader processes each observation during the execution of an embedded program, the cause function is invoked with that observation as its input.  The condition's $t_{\text{satisfied}}$ is the \textbf{first} time at which the cause function returns \texttt{true}.  For example, we can describe ``the first HTTP request" using a basic condition; the cause function would return \texttt{true} if and only if the observation is an HTTP request.
 
-The second type of condition is the \textit{after condition}.  After conditions have another condition (of any kind) as a ``precondition".  Like basic conditions, after conditions have a cause function.  This cause function is only invoked for primitive events that occur after the precondition is satisfied.  As before, the after condition's $t_{\text{satisfied}}$ is the first time at which the cause function returns \texttt{true}.  TODO: give ``second HTTP request" example
+The second type of condition is the \textit{after condition}.  After conditions have another condition (of any kind) as a ``precondition".  Like basic conditions, after conditions have a cause function.  This cause function is only invoked for observations that occur after the precondition is satisfied.  As before, the after condition's $t_{\text{satisfied}}$ is the first time at which the cause function returns \texttt{true}.  We can describe ``the second HTTP request" using this type of condition.  In particular, the precondition would be a condition signifying ``the first HTTP request", as described above.  The cause function would return \texttt{true} if any only if the observation is an HTTP request.  Note that this condition has the same cause function as the condition for ``the first HTTP request", the existence of a precondition is the only difference.  In a similar manner, we could define the nth occurrence of any event.
 
 Alternatively, the cause of an after condition can be a single number, $t_{\text{cause}}$, instead of a function.  In this case, we consider this condition's $t_{\text{satisfied}}$ to be the precondition's $t_{\text{satisfied}}$ plus $t_{\text{cause}}$.  In general, an after condition cannot be satisfied without its precondition being satisfied.
 
@@ -250,10 +251,69 @@ The third type of condition is the \textit{and condition}.  This type of conditi
 
 The fourth and final type of condition is the \textit{or condition}.  It is analogous to the \textit{and condition}, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met. Equivalently, this condition's $t_{\text{satisfied}}$ is the minimum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if all subconditions have an undefined $t_{\text{satisfied}}$.
 
-TODO: Give a big example with a sequence of primitive events and various conditions
+In Tables \ref{table:observations}, \ref{table:conditions}, and \ref{table:condition-descs}, we examine a concrete example showing a sequence of observations and a set of conditions, including each condition's value for $t_{\text{satisfied}}$ with respect to this set of observations.  Here, $f_{\text{httpreq}}$ and $f_{\text{high}}$ are cause functions, which take a single observation as input.  In particular, $f_{\text{httpreq}}$ returns \texttt{true} if the observation represents the sending of an HTTP request, and $f_{\text{high}}$ returns \texttt{true} if the observation represents the setting of digital output 13 to 1.  Notice that condition 4 is satisfied at $t=4000$, since both its subconditions are satisfied and the maximum of the subconditions' $t_{\text{satisfied}}$ is 4000.  By contrast, condition 5 is never satisfied since its cause function is only invoked for observations 5, 6, and 7.
+
+\begin{table}
+\begin{center}
+\caption{Example observations}
+\label{table:observations}
+\begin{tabular}{l|lr}
+& Description & Timestamp (ms) \\ \hline
+Observation 1 & System initialization & 0 \\
+Observation 2 & Digital output 13 set to 1 & 1000 \\
+Observation 3 & HTTP request sent & 2000 \\
+Observation 4 & HTTP response received & 3000 \\
+Observation 5 & HTTP request sent & 4000 \\
+Observation 6 & HTTP response received & 5000 \\
+Observation 7 & Digital output 13 set to 0 & 6000 \\ \hline
+\end{tabular}
+
+\vspace{5mm}
+
+\caption{Example conditions, with $t_{\text{satisfied}}$ calculated with respect to Table \ref{table:observations}}
+\label{table:conditions}
+
+\vspace{3mm}
+
+\begin{tabular}{l|llllr}
+& Type & Cause & Precondition & Subconditions & $t_{\text{satisfied}}$ (ms) \\ \hline
+Condition 1 & Basic & $f_{\text{httpreq}}$ & N/A & N/A & 2000 \\
+Condition 2 & After & $f_{\text{httpreq}}$ & Condition 1 & N/A & 4000 \\
+Condition 3 & Basic & $f_{\text{high}}$ & N/A & N/A & 1000 \\
+Condition 4 & And & N/A & N/A & Conditions 2 \& 3 & 4000 \\
+Condition 5 & After & $f_{\text{high}}$ & Condition 2 & N/A & Undefined \\ \hline
+\end{tabular}
+
+\vspace{5mm}
+
+\caption{Text descriptions of example conditions from Table \ref{table:conditions}}
+\label{table:condition-descs}
+
+\vspace{3mm}
+
+\begin{tabular}{l|l}
+& Description \\ \hline
+Condition 1 & First HTTP request sent \\
+Condition 2 & Second HTTP request sent \\
+Condition 3 & Digital output 13 has been set to 1 \\
+Condition 4 & Digital output 13 has been set to 1 and second HTTP request sent \\
+Condition 5 & Digital output 13 has been set to 1 after second HTTP request sent \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
 
 \subsubsection{Data structure: ``Input Frame"}
-TODO: introduce InputFrame, together with examples of the two inputs frames for Wikipedia Scroller.  Use images!  Fundamentally, input frame is function: (channel, t) -> value.  Channel is a label that specifies a signal (give relevant examples).  Values can have different forms depending on type (e.g. digital vs analog)
+Now that we have a structure for specifying run-time events, we can describe input signals relative to such events.  To do so, we introduce a new data structure called the \textit{input frame}.  An input frame consists of a start condition, an end condition, and a \textit{value generator function}.  We will refer to the start condition's $t_{\text{satisfied}}$ as $t_{\text{start}}$, and the end condition's $t_{\text{satisfied}}$ as $t_{\text{end}}$.
+
+The value generator function has two inputs: a channel, $c$, and time, $t$.  The channel, more specifically, is an input channel such as ``analog input 5" or ``accelerometer x-axis".  The value generator function returns a valid value for channel $c$ (i.e. a float for an analog channel, or $\{0,1\}$ for a digital channel).  We interpret this returned value to be the value of the input signal on channel $c$ at time $t_{\text{start}}+t$.
+
+TODO: describe example
+
+\noindent TODO: Wikipedia Scroller frame 1...query letter "D" \\
+Start: system init \\
+End: HTTP request sent \\
+Button input: press from 1000 to 3000,  from 4000 to 4600, from 5000 to 7000 \\
+X axis: tilt right from 3200 to 3600 \\
 
 \subsubsection{Determining input values}
 TODO: how are input frames used?
@@ -671,7 +731,7 @@ If the client expects a response, the body of the response is empty.  The encodi
 \subsubsection{Screen Encoding}
 Since the built-in screen type is a monochrome display, in which each pixel is on-or-off, our screen is essentially a bitmap.  We represent each pixel using a single bit.  Our encoding for the screen is inspired by the U8x8 embedded library \footnote{https://github.com/olikraus/u8g2/wiki/u8x8setupcpp}, and it makes it simple for embedded clients to transmit screen information if their display libraries are U8x8 compatible.
 
-We code encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted over serial, note that this unsigned 64-bit integer, like all our other primitives, are transmitted in a little-endian fashion.  So the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
+We code encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted over serial, note that this unsigned 64-bit integer, like all our other multi-byte integers, are transmitted in a little-endian fashion.  So the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
 
 The screen can be considered a grid of non-overlapping tiles (though padding might be necessary so that tiles perfectly cover the entire screen.  When transmitting the screen, the tiles are transmitted by row, from top to bottom (lowest y-coordinate to highest y-coordinate.  Within each row, tiles are transmitted from right to left (highest x-coordinate to lowest x-coordinate).  Note that the Screen request does not specify the shape of the screen (just the overall number of tile).  Therefore, it is imperative that, before sending any Screen requests, the client informs the server of the screen shape using a ``Screen Init" request (see the section below).
 
