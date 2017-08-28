@@ -369,14 +369,30 @@ Point 4 & Digital output 13 & 1 & System initialization & (1500,2000) \\ \hline
 An evaluation point evaluates to either \texttt{true} or \texttt{false} with respect to a set of observed output signals.  There is no ``partial credit", since an evaluation point is our fundamental unit of grading.  If instructors want finer detail, they should create multiple separate evaluation points. 
 
 \subsubsection{Augmenting the evaluation point for less restrictive specifications}
-TODO: portion allows for timing flexibility
+The evaluation points in Table \ref{table:blinky-basic-points} can verify that an embedded system implements the Blinky exercise.  In order to satisfy all four points, however, an implementation must be perfect.  That is, the rising and falling edges of the square wave must occur at exactly the correct times, to millisecond precision.  This rigidity is often undesirable in an educational context; some degree of lenience is often required in order for an academic course to avoid becoming bogged down with the finest details.
 
-TODO: check function allows for value flexibility
+First, we augment the evaluation point data structure to allow for some timing flexibility.  Specifically, we add a new attribute called the \textit{required portion} (sometimes we will just refer to this attribute as the ``portion" for short), which is a float in the range $[0,1]$.  Using this attribute, we can relax the requirement that the student's system outputs have to be correct for the entire interval of an evaluation point.  Rather, the output value is only required to be correct for at least the specified (not necessarily contiguous) portion of the interval.  In an extreme case, a portion value of 1 implies the output must be correct for the whole interval.  At the other extreme, a portion value of $\epsilon$, a small positive value, implies the output must be correct at any time during the interval.  In our Blinky exercise, an instructor might decide to use 0.9 as the required portion, to allow for small deviations from the desired timing.
 
-\subsubsection{Evaluation point examples}
-TODO: Complete table for blinky problem, 4 points
+Second, we augment the evaluation point data structure to allow for value flexibility.  For certain output types, such as analog outputs, it is not appropriate to check for an exact output value.  Rather, it is usually desirable to allow for a range of allowable values.  We introduce the \textit{check function} attribute of an evaluation point to address this concern.  This function takes two inputs: the expected value and the observed value.  It returns a boolean output, indicates whether the observed value should be considered ``correct" with respect to the expected value.  For example, a check function for analog output voltages might return true if the observed value is within 0.1V of the expected value.  By default, the check function is simply the equality operator.
 
-TODO: example of "A" right after first Wikipedia scroller long press
+In Table \ref{table:blinky-lenient-points}, we can see an example of a set of points that assess the Blinky exercise with some timing flexibility.  Note that the ``channel" field has been omitted for the sake of brevity.  All of the points have ``digital output 13" as their channel.
+
+\begin{table}[ht]
+\begin{center}
+\caption{A more lenient set of evaluation points for Blinky.}
+\vspace{2mm}
+\label{table:blinky-lenient-points}
+\begin{tabular}{c|cccccc}
+& Expected & Check Function & Condition & Interval & Portion \\ \hline
+Point 1 & 0 & Equality operator & System initialization & (0,500) & 0.9 \\
+Point 2 & 1 & Equality operator & System initialization & (500,1000) & 0.9 \\
+Point 3 & 0 & Equality operator & System initialization & (1000,1500) & 0.9 \\
+Point 4 & 1 & Equality operator & System initialization & (1500,2000) & 0.9 \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+Non-default check functions can be useful for evaluating screen output.  Consider our Wikipedia Scroller exercise.  An instructor might only care about the text on the screen, but not the exact positioning of the text.  In the context of this exercise, the screen is a bitmap.  The equality operator would not be an appropriate check function in this case, because it would require an exact pixel-for-pixel match between the expected bitmaps and the observed bitmaps to assess correctness.  Rather, an instructor might consider using a check function that extracts text from the bitmaps and compares the text for equality.  In fact, this particular check function is built into MicroGrader, and its implementation is detailed later in this paper.
 
 \subsubsection{Aggregating individual point results}
 For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
