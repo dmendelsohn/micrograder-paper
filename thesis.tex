@@ -325,6 +325,7 @@ If multiple input frames are active, we must choose which one determines the inj
 If MicroGrader needs to inject an input value, and there are no active input frames, then a default value is used.  An instructor can specify a default value for any input channel.  In the case of an active-low push-button switch, it typically makes sense to use 1 as a default, indicating an unpressed button.  In the case of accelerometer readings, an instructor might want to use a default of 0 $\text{m}/\text{s}^2$ for two of the axes, and a default of 9.81 $\text{m}/\text{s}^2$ for the ``up-down" axis (due to gravity).
 
 \subsection{Grading system outputs}
+\label{sec:eval-point}
 So far, we have established how MicroGrader specifies input values for a test case.  Now, we must describe how it grades the outputs of the embedded system.
 
 MicroGrader has access to a sequence of output observations.  Output observations occur when the microcontroller generates an output.  For example, MicroGrader can observe the execution of a \texttt{digitalWrite} or \texttt{analogWrite} command on the Arduino platform, both of which specify an output voltage on a GPIO pin.  MicroGrader can also observe commands that change the embedded system's display.  Using this discrete set of output observations, MicroGrader recovers continuous output signals by assuming that outputs are constant until the next observation on the same channel.  Now, we need a method of grading a set of continuous output signals.
@@ -397,40 +398,90 @@ Non-default check functions can be useful for evaluating screen output.  Conside
 \subsubsection{Aggregating individual point results}
 For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
-\newpage
-\section{Design principles}
-TODO: merge this chapter and the "Implementation" chapter into one called "Technical Design"
 
-Before building MicroGrader, I outlined a set of design principles to serve as a foundation for my technical design.
+
+
+
+
+
+
+
+\newpage
+\section{Technical design}
+\subsection{Overall architecture}
+TODO: reminder of remote evaluation paradigm and why.  Introduce client-server terminology
+
+TODO: describe overall role of server
+
+TODO: describe overall role of client.  Describe how its desirable to make the communication layer as invisible to students as possible. 
+
+TODO: describe data flow with block diagram for "test" mode.
+
+TODO: describe data flow with block diagram for "inactive" mode.
+
+TODO: describe timestamp definition (embedded system clock is master)
 
 \subsection{Platform agnosticism}
-The microcontroller ecosystem is fractured and changes quickly.  Unsurprisingly, a wide variety of platforms are currently used in embedded systems education.  For example, MIT's 6.S08 uses the Teensy (a third-party Arduino variant).  UT Austin's Embedded Systems course on EdX uses the TM4C123, a Texas Instruments microcontroller with an Advanced RISC Machine (ARM) instruction set. [TODO: add reference]  Ideally, the automated grader should not care if a project is implemented on a Teensy or a TM4C123, as long as it meets the appropriate specification. The architecture of the grader must not be intrinsically tied to any one microcontroller or any specific sensors.  The interfaces should be as generic as possible.
+TODO: describe why platform agnosticism is good
 
-\subsection{Extensibility}
-It should be possible to define new data types for assessment.  In 6.S08, students learn to work with a fairly standard set of sensors and other peripherals.  The main system inputs are digital general-purpose input/output (GPIO), analog GPIO, and a nine-axis IMU.  The automatic grader should not be restricted to these types of inputs.  For example, if a course assignment involves interfacing with a temperature sensor, the grader should be handle that.
+TODO: describe why Python 3 for server makes us agnostic
 
-This extensibility could even make it possible to use the grader in domains other than EECS.  In principle, an embedded system provides an interface between the physical world and the digital world.  MicroGrader could therefore be used to grade a project with any kind of electronically measurable output.
+TODO: describe why reference client is Teensy-based
 
-\subsection{Actionable feedback for students}
-Students should be able to get explanations of each passed and failed test case.  This may require significant technical work -- the internal representation of a test case might be complicated, but the explanations should be simple.  Based on the description of a failed test, a student should know exactly what output the system observed and what output the system expected to observe.
+TODO: describe how thin client makes us more agnostic
 
-\subsection{Ease of use for students}
-In terms of the student experience, MicroGrader should be seamless to use.  Running tests should be as simple as setting a flag at the top of the program.  Any embedded libraries that the students use should be configured to use that flag to determine whether to run normally or to run in ``test" mode.  Students should not have to reorganize or rewrite a functioning project in order to coax the grader into working properly.
 
-\subsection{Ease of use for course staff}
-My experience with tedious manual grading in 6.S08 inspired this project, in large part.  If building test cases in MicroGrader is actually more time-intensive than manual grading, this project will have failed its primary purpose.  The time required to customize the grader for a specific assignment should be roughly proportional to the complexity of the assignment.  If possible, a working implementation of the assignment should be sufficient to programmatically generate a test.
+\subsection{Two-stage testing}
+Evaluation of a student's system occurs via a two-stage process.  First, the MicroGrader server and the embedded system engage in an interactive session to determine how the embedded system responds to test inputs.  The second stage assesses these responses and determines an overall score.
 
-MicroGrader should impose as few constraints as possible on the assignments it grades.  It should be able to evaluate a broad range of technical specifications.
+In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, the server processes each message from the client.  TODO: sentence about two types of messages
 
-\subsection{Minimize false positives}
-Although few students would complain about invalid solutions occasionally passing automated tests, it inevitably does them a disservice.  In 6.S08, for example, the students are mostly newcomers to programming and have not yet developed sophisticated debugging skills or proper testing disciplines.  Students have difficulty shedding the assumption that code is correct just because it passed the tests.  If that code is critical in a future exercise, it will cause problems.
+If the message is an observation, such as an embedded system output or an important internal event, the observation and its timestamp are logged.  TODO: in addition, each input frame's conditions are updated live
 
-\subsection{Minimize false negatives}
-It's discouraging and perplexing for students when apparently correct solutions fail automated tests.  Ideally, any functional solution -- not just the intended one -- should pass the tests.  It's a challenge to avoid ``Heisenbugs", wherein the system works under normal operation, but fails during testing due to changes introduced by the test itself.
+If the message is a request for an input value, TODO: paragraph
+
+TODO: paragraph about test case end condition
+
+In the evaluation stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
+
+\begin{itemize}
+\item Determine the time at which each evaluation point's condition was met, if it was met at all.  This allows for a point's relative time interval to be converted to an absolute time interval.
+\item Reconstruct all the output signals.  Recall that we assume that each the output on each channel holds until the next output on the same channel.
+\end{itemize}
+
+Each evaluation point is examined and evaluated.  Refer back to section \ref{sec:eval-point} for details.  If an point's condition was never met, then that point automatically evaluates to \texttt{false}.  The boolean results of each evaluation point are aggregated into an overall score, as per TODO: section ref.
+
+
+TODO: edit paragraph MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
+
+\subsection{Reporting results}
+TODO: copy over and edit
+
+\subsection{Screen analysis}
+TODO: copy over and edit, add tons of pics (just use numpy to generate)
+
+\subsection{Configurability}
+TODO: copy over and edit
+
+\subsection{Defaults}
+TODO: copy over and edit
+
+
+
+
+
+
+
+
+
+
+
+
 
 \newpage
-\section{Implementation}
-We have defined what a test case is a fundamental level (namely, a verification of an input-to-output mapping).  We have also described MicroGrader's test case structure, which can represent a reasonable subset of all conceivable test cases.  So far, we understand \textit{what} MicroGrader does.  This section details \textit{how} MicroGrader does it.  The implementation imposes some additional restrictions on the kinds of systems MicroGrader can evaluate.  Most notably, the method in which MicroGrader ``injects" pre-defined inputs to the embedded system makes it unsuitable for grading some types of projects.
+\section{Technical design (deprecated)}
+\subsection{Design principles}
+Removed, merged into other sections
 
 \subsection{Overall architecture}
 \label{sec:architecture}
@@ -455,19 +506,7 @@ The MicroGrader server does the heavy lifting.  It is responsible for interpreti
 In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
 
 \subsubsection{Two-stage testing}
-Evaluation of a student's system occurs via a two-stage process.  First, the server and client engage in an interactive session to determine how the student's system responds.  The second stage assesses these responses and determines an overall score.
-
-In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, the server processes each message from the client and responds if necessary.  Typically, only requests for input values require responses, though the client may request an acknowledgement response for all messages.  For each incoming message, the server must update all \textit{conditions} in all of the test case's \textit{input frames}.  This will allow the server to determine which frames are currently \textit{active} and what response should be sent.  A test case also includes an \textit{end condition}.  Once the end condition is met, the interactive session ends, the server disconnects from the client, and all activity during the session is recorded.
-
-In the evaluation stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
-
-\begin{itemize}
-\item Determine the time at which each \textit{evaluation point's} condition was met, if it was met at all.  This allows for a point's relative time interval to be converted to an absolute time interval.
-\item Reconstruct all the output signals.  Recall that we assume that each new output holds until the next output on the same channel.
-\end{itemize}
-Each \textit{evaluation point} is examined and evaluated.  Refer back to section \ref{sec:eval-point} for details.  If an point's \textit{condition} was never met, then that point automatically evaluates to \texttt{false}.  The boolean results of each point are then aggregated into an overall score for that output channel.  The scores for each output channel are averaged to generate a score for the test as a whole.
-
-MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
+Moved
 
 
 \subsubsection{Reporting results}
@@ -518,6 +557,20 @@ Later, it will be possible to add additional data types, beyond the built-in one
 The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, the default aggregator function is ``portion of \texttt{true} values" (recall, an aggregator converts a set of boolean evaluation point results into a numeric channel score).  The default check function is the equivalence operator.  Each built-in data type has a default value.
 
 Furthermore, defaults make it easy for instructors to dynamically construct a test case using a working implementation of assigned embedded project.  We'll discuss that more in section \ref{sec:scaffold}.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 \newpage
@@ -783,5 +836,9 @@ The fundamental general purpose I/O functionality (GPIO) is also wrapped.  This 
 For input from the inertial measurement unit (IMU), I modified the MPU9250 \footnote{https://github.com/sparkfun/SparkFun\_MPU-9250-DMP\_Arduino\_Library} library for Arduino/Teensy.  For output to a display, I modified the U8g2 \footnote{https://github.com/olikraus/u8g2/wiki} library for Arduino/Teensy.  If a course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is not complicated.
 
 From a student's perspective, very few changes need to be made in order to run the MicroGrader client.  He or she needs to install the core library and the modified versions of the third-party libraries.  The line \verb+#include "MicroGrader.h"+ must be added to the top of the \texttt{.ino} file and an initialization function, \texttt{MicroGrader.begin()} must be called at the beginning of the Teensy \texttt{setup()} routine.
+
+\newpage
+\section{References}
+TODO
 
 \end{document}
