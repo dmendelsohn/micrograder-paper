@@ -399,13 +399,6 @@ Non-default check functions can be useful for evaluating screen output.  Conside
 For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
 
-
-
-
-
-
-
-
 \newpage
 \section{Technical design}
 \subsection{Overall architecture}
@@ -417,7 +410,12 @@ TODO: describe overall role of client.  Describe how its desirable to make the c
 
 TODO: describe data flow with block diagram for "test" mode.
 
-TODO: describe data flow with block diagram for "inactive" mode.
+\begin{figure}[h]
+\centering
+\includegraphics[scale=0.8]{test-mode.png}
+\caption{Block diagram of MicroGrader in test mode.}
+\label{fig:test-mode}
+\end{figure}
 
 TODO: describe timestamp definition (embedded system clock is master).  Also describe message contents in some reasonable detail
 
@@ -436,7 +434,7 @@ Evaluation of a student's system occurs via a two-stage process.  First, the Mic
 
 In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, the server processes each message from the client and sends the appropriate response.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.
 
-If the message is an observation, such as an embedded system output or an important internal event, the observation and its timestamp are logged.  TODO: in addition, each input frame's conditions are updated live.  TODO: respond or nah?
+If the message is an observation, such as an embedded system output or an important internal event, the observation and its timestamp are logged.  TODO: in addition, each input frame's conditions are updated live.  TODO: respond or not?
 
 If the message is a request for an input value, TODO: paragraph
 
@@ -480,21 +478,12 @@ We considered a number of ways of reporting results to some online courseware (e
 \subsection{Screen analysis}
 TODO: copy over and edit, add tons of pics (just use numpy to generate)
 
-\subsection{Configurability}
+\subsection{Configurability and defaults}
 MicroGrader is designed to be as configurable as possible.  This manifests itself in a variety of ways.  Test cases themselves are highly configurable, as described earlier.  Furthermore, certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or observation of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
 
 Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \footnote{https://docs.python.org/3/library/pickle.html} Python objects that include implementations of all the functions a data type needs to have.  The minimum functions for a new data type are: serialization, deserialization, and a definition of the equivalence operator.
 
-\subsection{Defaults (TODO: edit)}
-The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, the default aggregator function is ``portion of \texttt{true} values" (recall, an aggregator converts a set of boolean evaluation point results into a numeric channel score).  The default check function is the equivalence operator.  Each built-in data type has a default value.
-
-Furthermore, defaults make it easy for instructors to dynamically construct a test case using a working implementation of assigned embedded project.  We'll discuss that more in section \ref{sec:scaffold}.
-
-
-
-
-
-
+The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, consider the aggregator function, which maps a list of evaluation point results to a score.  By default, each channel uses a ``proportional" aggregator function, where the score is just the fraction of points that evaluate to \texttt{true}.  An instructor could replace this with any valid aggregator, such as an ``all-or-nothing" function which returns 1 if all points evaluate to \texttt{true} and 0 otherwise.
 
 
 
@@ -504,9 +493,6 @@ Furthermore, defaults make it easy for instructors to dynamically construct a te
 
 \newpage
 \section{Technical design (deprecated)}
-\subsection{Design principles}
-Removed, merged into other sections
-
 \subsection{Overall architecture}
 \label{sec:architecture}
 MicroGrader uses a client-server model.  The server is not a internet server, but rather a Python program running locally on a student's laptop or desktop machine.  That program connects to the client -- namely the embedded system being evaluated -- via USB serial.  The client is a thin wrapper of certain aspects of the embedded system's I/O functionality, which allows the server to ``drive" system inputs and observe results.
@@ -528,13 +514,6 @@ Ideally, the functionality of the MicroGrader client should wrapped in a library
 The MicroGrader server does the heavy lifting.  It is responsible for interpreting a test case, and using that test case's information to respond promptly and correctly to requests from the client.  We described the details of how a test case specifies input values in sections \ref{sec:static-inputs} and \ref{sec:frames}.  The server is also responsible for observing the system outputs and grading them according to the test case's specification.  The client has no knowledge of the whole test case, it only knows the server responses to its requests.
 
 In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
-
-\subsubsection{Two-stage testing}
-Moved
-
-
-\subsubsection{Reporting results}
-Moved
 
 \subsubsection{Screen analysis}
 As previously mentioned, binary (i.e. no partial intensities) monochrome screens are a built-in type.  MicroGrader also includes some utilities for working with such outputs, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for this type of value.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
