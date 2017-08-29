@@ -396,7 +396,7 @@ Point 4 & 1 & Equality operator & System initialization & (1500,2000) & 0.9 \\ \
 Non-default check functions can be useful for evaluating screen output.  Consider our Wikipedia Scroller exercise.  An instructor might only care about the text on the screen, but not the exact positioning of the text.  In the context of this exercise, the screen is a bitmap.  The equality operator would not be an appropriate check function in this case, because it would require an exact pixel-for-pixel match between the expected bitmaps and the observed bitmaps to assess correctness.  Rather, an instructor might consider using a check function that extracts text from the bitmaps and compares the text for equality.  In fact, this particular check function is built into MicroGrader, and its implementation is detailed later in this paper.
 
 \subsubsection{Aggregating individual point results}
-For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
+For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numerical score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
 \subsection{Determining the end of a test}
 Embedded systems typically run indefinitely; there is no inherent ``end" to the execution of an embedded system.  Any test of an embedded system must, however, have an end.  A MicroGrader test case has an attribute called the \textit{termination condition}.  This is an instance of our usual condition data structure that, when satisfied, indicates that the test case is complete.  When constructing a test case, it is a good idea to use an end condition that is always satisfied eventually, regardless of the correctness of the student's system.  Otherwise, a test might run indefinitely, must to the student's consternation.
@@ -412,7 +412,7 @@ In the introduction of this paper, we discussed that the grader and the system b
 
 The MicroGrader \textit{client} is software running on the embedded system that allows the server to interact with the student's implementation of an exercise.  It is a thin wrapper around the input/output functionality of the embedded system.  When the student's embedded code is running, and a function is called to sample an input, the client software makes a request to the server instead of actually sampling an input from the physical sensor.  The server, in turn, responds with the test input value.  In this way, the client allows for 	``simulated" test inputs.  From the perspective of the student's code, this should be transparent; it should appear that the embedded system is receiving these inputs from sensors, even though that is not actually true.
 
-Furthermore, the client reports observations to the server.  Whenever a student's code calls a function to generate an output, the client sends a message informing the server of this new output.  In addition, the client is responsible for reporting some internal events, such as the transmission and reception of HTTP requests.  Figure \ref{fig:test-mode} illustrates the architecture of the MicroGrader system as a whole.
+Furthermore, the client reports observations to the server.  Whenever a student's code calls a function to generate an output, the client sends a message informing the server of this new output.  In addition, the client is responsible for reporting some internal events, such as the transmission and reception of HTTP requests.  Figure \ref{fig:test-mode} illustrates the architecture of the MicroGrader system as a whole.  All communication between the client and the server occurs via a universal serial bus (USB) connection.
 
 \begin{figure}[h]
 \centering
@@ -422,18 +422,18 @@ Furthermore, the client reports observations to the server.  Whenever a student'
 \end{figure}
 
 \subsection{Two-stage process}
-Evaluation of a student's system occurs via a two-stage process.  First, the MicroGrader server and the embedded system engage in an interactive session to determine how the embedded system responds to test inputs.  The second stage assesses these responses and determines an overall score.
+Evaluation of a student's system occurs via a two-stage process.  First, the MicroGrader server and client engage in an interactive session to determine how the embedded system responds to test inputs.  The outputs and a narrow selection of internal microcontroller events are logged.  In the second stage, the MicroGrader server assesses the logged observations and determines an overall score for the exercise.
 
-\subsubsection{Stage 1: the interactive stage}
-In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, it begins executing the embedded program and sending messages to the server.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.
+\subsubsection{Stage 1: The interactive session}
+In this stage, the server loads the relevant test case from a file and waits for the client to connect.  Once the client connects, it begins executing the student's embedded program, sending messages to the server when appropriate.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.
 
 TODO: describe observation messages better (timestamp + observation(?)).  When the server receives an observation message, the observation and its timestamp are logged.  In addition, for each of the test's input frames, the server examines the frame's start and end conditions, and updates them.  That is, it determines if the new observation causes these conditions to be met.  In this way, the server can keep track of which input frames are currently active, and which frame should be used to generate test inputs.  The test's termination condition is also examined, to determine if the interactive session should end.
 
-An input request is a message from the client to the server that specifies one or more input channels for which a value is required.  Typically, this means that the student's program is attempting to sample a TODO: describe input requests.  When the server receiv...
+An input request is a message from the client to the server that specifies one or more input channels for which a value is required.  Typically, this means that the student's program is attempting to sample a TODO: describe input requests
 
 
-\subsubsection{Stage 2: the evaluation stage}
-In the evaluation stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
+\subsubsection{Stage 2: Assessment}
+In this stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
 
 \begin{itemize}
 \item Determine the time at which each evaluation point's condition was met, if it was met at all.  This allows for a point's relative time interval to be converted to an absolute time interval.
@@ -445,17 +445,9 @@ Each evaluation point is examined and evaluated.  Refer back to section \ref{sec
 
 TODO: edit paragraph MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
 
-
-\subsubsection{Role of the server}
-In broad terms, the server uses a test's input frames to generates test inputs, communicates those inputs to the client when necessary, and collects observations from the client.  When the test's termination condition is met, the server uses the test's evaluation points to grade the observed embedded system outputs. 
-
-TODO: describe why Python 3 was used for the server
-
-\subsubsection{Role of the client}
-TODO discuss overall role
-
-TODO discuss how its a thin wrapper, and why
-
+\subsection{Implementation decisions}
+\subsubsection{Client implementation}
+TODO discuss why a thin wrapper client is used, and how that works
 
 TODO describe how we have developed one implementation, but others are possible.
 
@@ -465,16 +457,11 @@ TODO: discuss general principles for a client.  Invisible communication layer + 
 
 TODO: describe timestamp definition (embedded system clock is master).  Also describe message contents in some reasonable detail
 
-\subsection{Platform agnosticism (remove)}
-TODO: describe why platform agnosticism is good
-
-TODO: describe why reference client is Teensy-based
-
-TODO: describe how thin client makes us more agnostic
-
+\subsubsection{Server implementation}
+TODO
 
 \subsection{Reporting results}
-For grading purposes, we only care about the numeric final score.  A student, however, would be well served by examining a rich and readable description of the test results.  In the event that a student does not receive full credit, this description should make it clear which points evaluated to \texttt{false} and why.
+For grading purposes, we only care about the numerical final score.  A student, however, would be well served by examining a rich and readable description of the test results.  In the event that a student does not receive full credit, this description should make it clear which points evaluated to \texttt{false} and why.
 
 Specifically, for each evaluation point, the student can see:
 
