@@ -402,47 +402,37 @@ For any output channel, we calculate an overall test result in a flexible way.  
 Embedded systems typically run indefinitely; there is no inherent ``end" to the execution of an embedded system.  Any test of an embedded system must, however, have an end.  A MicroGrader test case has an attribute called the \textit{termination condition}.  This is an instance of our usual condition data structure that, when satisfied, indicates that the test case is complete.  When constructing a test case, it is a good idea to use an end condition that is always satisfied eventually, regardless of the correctness of the student's system.  Otherwise, a test might run indefinitely, must to the student's consternation.
 
 
+
+
+
+
 \newpage
-\section{Technical design}
-\subsection{Overall architecture}
-In the introduction of this paper, we discussed that the grader and the system being graded exist in separate computing environments.  To help us describe the implementation of MicroGrader, additional terminology is helpful.  We will refer to the grader, running on a full-fledged computer, as the MicroGrader \textit{server}.  We will refer to the embedded system being graded as the MicroGrader \textit{client}.  Let us first discuss these two components in broad terms, before continuing in greater detail.
+\section{Technical design }
+In the introduction of this paper, we discussed that the grader and the system being graded exist in separate computing environments.  To help us describe the implementation of MicroGrader, additional terminology is helpful.  The MicroGrader \textit{server} runs on a computer, presumably a student's personal machine.  It runs the actual test case, generating inputs and collecting observations.  These observations are evaluated with respect to the test case to compute a numerical grade.
 
-The server uses a test's input frames to generates test inputs, communicates those inputs to the client when necessary, and collects observations from the client.  When the test's termination condition is met, the server uses the test's evaluation points to grade the observed embedded system outputs. 
+The MicroGrader \textit{client} is software running on the embedded system that allows the server to interact with the student's implementation of an exercise.  It is a thin wrapper around the input/output functionality of the embedded system.  When the student's embedded code is running, and a function is called to sample an input, the client software makes a request to the server instead of actually sampling an input from the physical sensor.  The server, in turn, responds with the test input value.  In this way, the client allows for 	``simulated" test inputs.  From the perspective of the student's code, this should be transparent; it should appear that the embedded system is receiving these inputs from sensors, even though that is not actually true.
 
-TODO: describe overall role of client.  Describe how its desirable to make the communication layer as invisible to students as possible. 
-
-TODO: describe data flow with block diagram for "test" mode.
+Furthermore, the client reports observations to the server.  Whenever a student's code calls a function to generate an output, the client sends a message informing the server of this new output.  In addition, the client is responsible for reporting some internal events, such as the transmission and reception of HTTP requests.  Figure \ref{fig:test-mode} illustrates the architecture of the MicroGrader system as a whole.
 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.8]{test-mode.png}
-\caption{Block diagram of the server assessing a program on the client.}
+\caption{MicroGrader block diagram.}
 \label{fig:test-mode}
 \end{figure}
 
-TODO: describe timestamp definition (embedded system clock is master).  Also describe message contents in some reasonable detail
-
-\subsection{Platform agnosticism}
-TODO: describe why platform agnosticism is good
-
-TODO: describe why Python 3 for server makes us agnostic
-
-TODO: describe why reference client is Teensy-based
-
-TODO: describe how thin client makes us more agnostic
-
-
-\subsection{Two-stage testing}
+\subsection{Two-stage process}
 Evaluation of a student's system occurs via a two-stage process.  First, the MicroGrader server and the embedded system engage in an interactive session to determine how the embedded system responds to test inputs.  The second stage assesses these responses and determines an overall score.
 
-In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, the server processes each message from the client and sends the appropriate response.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.
+\subsubsection{Stage 1: the interactive stage}
+In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, it begins executing the embedded program and sending messages to the server.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.
 
-If the message is an observation, such as an embedded system output or an important internal event, the observation and its timestamp are logged.  TODO: in addition, each input frame's conditions are updated live.  TODO: respond or not?
+TODO: describe observation messages better (timestamp + observation(?)).  When the server receives an observation message, the observation and its timestamp are logged.  In addition, for each of the test's input frames, the server examines the frame's start and end conditions, and updates them.  That is, it determines if the new observation causes these conditions to be met.  In this way, the server can keep track of which input frames are currently active, and which frame should be used to generate test inputs.  The test's termination condition is also examined, to determine if the interactive session should end.
 
-If the message is a request for an input value, TODO: paragraph
+An input request is a message from the client to the server that specifies one or more input channels for which a value is required.  Typically, this means that the student's program is attempting to sample a TODO: describe input requests.  When the server receiv...
 
-TODO: paragraph about test case end condition
 
+\subsubsection{Stage 2: the evaluation stage}
 In the evaluation stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
 
 \begin{itemize}
@@ -454,6 +444,34 @@ Each evaluation point is examined and evaluated.  Refer back to section \ref{sec
 
 
 TODO: edit paragraph MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
+
+
+\subsubsection{Role of the server}
+In broad terms, the server uses a test's input frames to generates test inputs, communicates those inputs to the client when necessary, and collects observations from the client.  When the test's termination condition is met, the server uses the test's evaluation points to grade the observed embedded system outputs. 
+
+TODO: describe why Python 3 was used for the server
+
+\subsubsection{Role of the client}
+TODO discuss overall role
+
+TODO discuss how its a thin wrapper, and why
+
+
+TODO describe how we have developed one implementation, but others are possible.
+
+TODO: quickly describe our implementation and why we used Teensy
+
+TODO: discuss general principles for a client.  Invisible communication layer + minimal changes to code.  Good idea to have an inactive mode
+
+TODO: describe timestamp definition (embedded system clock is master).  Also describe message contents in some reasonable detail
+
+\subsection{Platform agnosticism (remove)}
+TODO: describe why platform agnosticism is good
+
+TODO: describe why reference client is Teensy-based
+
+TODO: describe how thin client makes us more agnostic
+
 
 \subsection{Reporting results}
 For grading purposes, we only care about the numeric final score.  A student, however, would be well served by examining a rich and readable description of the test results.  In the event that a student does not receive full credit, this description should make it clear which points evaluated to \texttt{false} and why.
