@@ -480,14 +480,10 @@ We considered a number of ways of reporting results to some online courseware (e
 \subsection{Screen analysis}
 TODO: copy over and edit, add tons of pics (just use numpy to generate)
 
-\subsection{Configurability (TODO: edit)}
-MicroGrader was designed to be as configurable as possible.  This manifests itself in a variety of ways.
+\subsection{Configurability}
+MicroGrader is designed to be as configurable as possible.  This manifests itself in a variety of ways.  Test cases themselves are highly configurable, as described earlier.  Furthermore, certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or observation of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
 
-Test cases themselves are highly configurable, as described earlier.  After all, each \textit{evaluation point} can have its own check function and its own condition to which its time interval is relative.  Each point can also have its own threshold for the portion of the interval that must be correct in order for the point to evaluate to \texttt{true}.
-
-Certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or report of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
-
-Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \footnote{https://docs.python.org/3/library/pickle.html} Python objects that implement all the functions a data type needs to have.  The minimum functions for a new data type are conversions to and from a byte encoding for transport, and a definition of the equivalence operator.
+Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \footnote{https://docs.python.org/3/library/pickle.html} Python objects that include implementations of all the functions a data type needs to have.  The minimum functions for a new data type are: serialization, deserialization, and a definition of the equivalence operator.
 
 \subsection{Defaults (TODO: edit)}
 The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, the default aggregator function is ``portion of \texttt{true} values" (recall, an aggregator converts a set of boolean evaluation point results into a numeric channel score).  The default check function is the equivalence operator.  Each built-in data type has a default value.
