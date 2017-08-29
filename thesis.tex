@@ -425,12 +425,13 @@ Furthermore, the client reports observations to the server.  Whenever a student'
 Evaluation of a student's system occurs via a two-stage process.  First, the MicroGrader server and client engage in an interactive session to determine how the embedded system responds to test inputs.  The outputs and a narrow selection of internal microcontroller events are logged.  In the second stage, the MicroGrader server assesses the logged observations and determines an overall score for the exercise.
 
 \subsubsection{Stage 1: The interactive session}
-In this stage, the server loads the relevant test case from a file and waits for the client to connect.  Once the client connects, it begins executing the student's embedded program, sending messages to the server when appropriate.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.
+In this stage, the server loads the relevant test case from a file and waits for the client to connect.  Once the client connects, it begins executing the student's embedded program, sending messages to the server when appropriate.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.  All messages include a timestamp, which is the number of milliseconds elapsed between the microcontroller's last reset and the time at which the message is sent.  On many microcontrollers, there is a built-in function for this (e.g. \texttt{millis()} on Arduino microcontrollers).
 
-TODO: describe observation messages better (timestamp + observation(?)).  When the server receives an observation message, the observation and its timestamp are logged.  In addition, for each of the test's input frames, the server examines the frame's start and end conditions, and updates them.  That is, it determines if the new observation causes these conditions to be met.  In this way, the server can keep track of which input frames are currently active, and which frame should be used to generate test inputs.  The test's termination condition is also examined, to determine if the interactive session should end.
+The exact contents of an observation message depend on the nature of that observation.  Output observations, for example, include the output channel and value.  Output observations are sent whenever the student's code generates an output, even if that output is redundant (i.e. the output value is identical to the previous value on the same channel).  Some observation messages contain information about internal events on the microcontroller, rather information about outputs.
 
-An input request is a message from the client to the server that specifies one or more input channels for which a value is required.  Typically, this means that the student's program is attempting to sample a TODO: describe input requests
+When the server receives an observation message, the observation and its timestamp are logged.  In addition, for each of the test's input frames, the server examines the frame's start and end conditions, and updates them.  That is, it determines if the new observation causes these conditions to be met.  In this way, the server can keep track of which input frames are currently active, and which frame should be used to generate test inputs.  The test's termination condition is also examined, to determine if the interactive session should end.
 
+An input request is a message from the client to the server that specifies an input channel for which a value is required.  The client sends these messages when the student's program executes a function to sample an input.  Instead of actually sampling the sensor input, the client requests a test input value.  When the server receives an input request, it determines which input frame to use to find the proper value.  It invokes the frame's value generator function, using the channel and timestamp indicated in the message.  That function returns a value, which is then sent back to the client and returned to the student's program.
 
 \subsubsection{Stage 2: Assessment}
 In this stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
@@ -443,19 +444,17 @@ In this stage, the MicroGrader server considers all the activity that occurred d
 Each evaluation point is examined and evaluated.  Refer back to section \ref{sec:eval-point} for details.  If an point's condition was never met, then that point automatically evaluates to \texttt{false}.  The boolean results of each evaluation point are aggregated into an overall score, as per TODO: section ref.
 
 
-TODO: edit paragraph MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
+TODO: edit paragraph... MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
 
 \subsection{Implementation decisions}
 \subsubsection{Client implementation}
-TODO discuss why a thin wrapper client is used, and how that works
+TODO discuss why a thin wrapper client is used (minimal interference)
 
-TODO describe how we have developed one implementation, but others are possible.
+TODO describe how we have developed one implementation, but others are possible.  The communication protocol itself is not platform-specific
 
 TODO: quickly describe our implementation and why we used Teensy
 
 TODO: discuss general principles for a client.  Invisible communication layer + minimal changes to code.  Good idea to have an inactive mode
-
-TODO: describe timestamp definition (embedded system clock is master).  Also describe message contents in some reasonable detail
 
 \subsubsection{Server implementation}
 TODO
