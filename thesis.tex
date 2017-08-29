@@ -398,13 +398,16 @@ Non-default check functions can be useful for evaluating screen output.  Conside
 \subsubsection{Aggregating individual point results}
 For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numeric score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
+\subsection{Determining the end of a test}
+Embedded systems typically run indefinitely; there is no inherent ``end" to the execution of an embedded system.  Any test of an embedded system must, however, have an end.  A MicroGrader test case has an attribute called the \textit{termination condition}.  This is an instance of our usual condition data structure that, when satisfied, indicates that the test case is complete.  When constructing a test case, it is a good idea to use an end condition that is always satisfied eventually, regardless of the correctness of the student's system.  Otherwise, a test might run indefinitely, must to the student's consternation.
+
 
 \newpage
 \section{Technical design}
 \subsection{Overall architecture}
-In the introduction of this paper, we discussed that the grader and the system being graded exist in separate computing environments.  To help us describe the implementation of MicroGrader, additional terminology is helpful.  We will refer to the grader, running on a full-fledged computer, as the MicroGrader \textit{server}.  We will refer to the embedded system being graded as the MicroGrader \textit{client}.
+In the introduction of this paper, we discussed that the grader and the system being graded exist in separate computing environments.  To help us describe the implementation of MicroGrader, additional terminology is helpful.  We will refer to the grader, running on a full-fledged computer, as the MicroGrader \textit{server}.  We will refer to the embedded system being graded as the MicroGrader \textit{client}.  Let us first discuss these two components in broad terms, before continuing in greater detail.
 
-TODO: describe overall role of server
+The server uses a test's input frames to generates test inputs, communicates those inputs to the client when necessary, and collects observations from the client.  When the test's termination condition is met, the server uses the test's evaluation points to grade the observed embedded system outputs. 
 
 TODO: describe overall role of client.  Describe how its desirable to make the communication layer as invisible to students as possible. 
 
@@ -413,7 +416,7 @@ TODO: describe data flow with block diagram for "test" mode.
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.8]{test-mode.png}
-\caption{Block diagram of MicroGrader in test mode.}
+\caption{Block diagram of the server assessing a program on the client.}
 \label{fig:test-mode}
 \end{figure}
 
@@ -474,9 +477,14 @@ For further readability, test results can be summarized somewhat more succinctly
 
 We considered a number of ways of reporting results to some online courseware (e.g. EdX, Coursera, etc.).  In the end, we chose a simple but effective solution, inspired by UT Austin's Embedded Systems course on EdX.  Students receive an individualized codeword for each test through the online courseware, and enter that codeword into MicroGrader.  When MicroGrader runs a test, the student's score is combined with that codeword and hashed.  The student can then copy that hash back into the courseware.  Since the number of possible scores is limited (scores are limited to four digits of precision), it's easy for the online courseware to determine the student's score.  This solution discourages cheating without requiring direct communication between MicroGrader and online courseware.  To further discourage cheating, courses could require students to upload their solutions to the online courseware for later reference.
 
+\subsection{Screen analysis (TODO: edit and add images)}
+As previously mentioned, binary (i.e. no partial intensities) monochrome screens are a built-in type.  MicroGrader also includes some utilities for working with such outputs, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for this type of value.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
 
-\subsection{Screen analysis}
-TODO: copy over and edit, add tons of pics (just use numpy to generate)
+MicroGrader includes a built-in distance metric for binary monochrome screens.  It's basic functionality is simple: for two screens of the same dimensions, the distance between them is the number of pixels that do not match.  In practice, this fails to identify two screens that are very similar, but slightly shifted relative to one another.  Therefore, MicroGrader's distance metric allows the user to specify a maximum allowable shift of one screen relative to another, in any direction.  The distance is the \textbf{minimum} number of mismatched pixels.  Essentially, the function tries all allowable shifts and picks the best one.  Yet another built-in function checks that if a screen is significantly closer than a blank screen to a given reference screen.  After all, a blank screen might match a large number of pixels but isn't very close in terms of informational content.
+
+Many assignments involving a screen are text-based.  That is, the screen is expected to contain printed text.  To that end, MicroGrader includes functionality to extract the text from the screen.  Various OCR engines were considered, but none worked acceptably well due to the tiny size of many fonts used in such contexts (potentially 5x7 pixels or smaller).  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
+
+There are a few downsides to this text extraction approach.  First, any noise in the image or overlying element makes extraction impossible.  Furthermore, fonts must fixed-width.  This isn't a fundamental constraint of this technique, but it does massively help performance since the algorithm only has to consider rectangles of a specific size.  The biggest issue is that MicroGrader needs to know the bitmap for each character in the font.  Since its sometimes not easy to find detailed information for embedded fonts, MicroGrader includes a utility to ``record" the character bitmaps of a font using the actual screen output.
 
 \subsection{Configurability and defaults}
 MicroGrader is designed to be as configurable as possible.  This manifests itself in a variety of ways.  Test cases themselves are highly configurable, as described earlier.  Furthermore, certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or observation of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
@@ -511,26 +519,7 @@ The exact data that comprises client requests and reports varies depending on th
 Ideally, the functionality of the MicroGrader client should wrapped in a library and should mostly be invisible to the student writing code ``on top" of that library.  It may also be necessary to modify existing libraries that handle I/O functionality.  Details about the way this is accomplished in the reference implementation (for Teensy) can be found in Appendix B.
 
 \subsection{MicroGrader server}
-The MicroGrader server does the heavy lifting.  It is responsible for interpreting a test case, and using that test case's information to respond promptly and correctly to requests from the client.  We described the details of how a test case specifies input values in sections \ref{sec:static-inputs} and \ref{sec:frames}.  The server is also responsible for observing the system outputs and grading them according to the test case's specification.  The client has no knowledge of the whole test case, it only knows the server responses to its requests.
-
 In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
-
-\subsubsection{Screen analysis}
-As previously mentioned, binary (i.e. no partial intensities) monochrome screens are a built-in type.  MicroGrader also includes some utilities for working with such outputs, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for this type of value.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
-
-MicroGrader includes a built-in distance metric for binary monochrome screens.  It's basic functionality is simple: for two screens of the same dimensions, the distance between them is the number of pixels that do not match.  In practice, this fails to identify two screens that are very similar, but slightly shifted relative to one another.  Therefore, MicroGrader's distance metric allows the user to specify a maximum allowable shift of one screen relative to another, in any direction.  The distance is the \textbf{minimum} number of mismatched pixels.  Essentially, the function tries all allowable shifts and picks the best one.  Yet another built-in function checks that if a screen is significantly closer than a blank screen to a given reference screen.  After all, a blank screen might match a large number of pixels but isn't very close in terms of informational content.
-
-Many assignments involving a screen are text-based.  That is, the screen is expected to contain printed text.  To that end, MicroGrader includes functionality to extract the text from the screen.  Various OCR engines were considered, but none worked acceptably well due to the tiny size of many fonts used in such contexts (potentially 5x7 pixels or smaller).  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
-
-There are a few downsides to this text extraction approach.  First, any noise in the image or overlying element makes extraction impossible.  Furthermore, fonts must fixed-width.  This isn't a fundamental constraint of this technique, but it does massively help performance since the algorithm only has to consider rectangles of a specific size.  The biggest issue is that MicroGrader needs to know the bitmap for each character in the font.  Since its sometimes not easy to find detailed information for embedded fonts, MicroGrader includes a utility to ``record" the character bitmaps of a font using the actual screen output.
-
-
-
-
-
-
-
-
 
 
 
