@@ -419,7 +419,7 @@ TODO: describe data flow with block diagram for "test" mode.
 
 TODO: describe data flow with block diagram for "inactive" mode.
 
-TODO: describe timestamp definition (embedded system clock is master)
+TODO: describe timestamp definition (embedded system clock is master).  Also describe message contents in some reasonable detail
 
 \subsection{Platform agnosticism}
 TODO: describe why platform agnosticism is good
@@ -434,9 +434,9 @@ TODO: describe how thin client makes us more agnostic
 \subsection{Two-stage testing}
 Evaluation of a student's system occurs via a two-stage process.  First, the MicroGrader server and the embedded system engage in an interactive session to determine how the embedded system responds to test inputs.  The second stage assesses these responses and determines an overall score.
 
-In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, the server processes each message from the client.  TODO: sentence about two types of messages
+In the interactive stage, the server loads the relevant test case and waits for the client to connect.  Once the client connects, the server processes each message from the client and sends the appropriate response.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.
 
-If the message is an observation, such as an embedded system output or an important internal event, the observation and its timestamp are logged.  TODO: in addition, each input frame's conditions are updated live
+If the message is an observation, such as an embedded system output or an important internal event, the observation and its timestamp are logged.  TODO: in addition, each input frame's conditions are updated live.  TODO: respond or nah?
 
 If the message is a request for an input value, TODO: paragraph
 
@@ -455,16 +455,44 @@ Each evaluation point is examined and evaluated.  Refer back to section \ref{sec
 TODO: edit paragraph MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
 
 \subsection{Reporting results}
-TODO: copy over and edit
+For grading purposes, we only care about the numeric final score.  A student, however, would be well served by examining a rich and readable description of the test results.  In the event that a student does not receive full credit, this description should make it clear which points evaluated to \texttt{false} and why.
+
+Specifically, for each evaluation point, the student can see:
+
+\begin{itemize}
+\item A text description of all the attributes of the point.
+\item Whether that point evaluated to \texttt{true} or \texttt{false}.
+\item A summary of the observed values on the point's channel in the point's interval.  This summary is comprised of:
+\begin{itemize}
+\item The unique values observed during the interval.
+\item Whether or not each of those values was correct (as determined by the check function).
+\item The portion of the interval for which each of those values was observed.
+\end{itemize}
+\end{itemize}
+
+Some values do not lend themselves to a textual description.  For example, screen images (a very common type of output), are not easily converted to text.  To handle this, MicroGrader saves all screen images as image files in a special directory, and the text description of those images is just the file path.
+
+For further readability, test results can be summarized somewhat more succinctly by only giving the full details for evaluation points that evaluate to \texttt{false}.  For points that evaluate to \texttt{true}, an abbreviated description can be used instead.  Students have access to both the full results and summarized results.
+
+We considered a number of ways of reporting results to some online courseware (e.g. EdX, Coursera, etc.).  In the end, we chose a simple but effective solution, inspired by UT Austin's Embedded Systems course on EdX.  Students receive an individualized codeword for each test through the online courseware, and enter that codeword into MicroGrader.  When MicroGrader runs a test, the student's score is combined with that codeword and hashed.  The student can then copy that hash back into the courseware.  Since the number of possible scores is limited (scores are limited to four digits of precision), it's easy for the online courseware to determine the student's score.  This solution discourages cheating without requiring direct communication between MicroGrader and online courseware.  To further discourage cheating, courses could require students to upload their solutions to the online courseware for later reference.
+
 
 \subsection{Screen analysis}
 TODO: copy over and edit, add tons of pics (just use numpy to generate)
 
-\subsection{Configurability}
-TODO: copy over and edit
+\subsection{Configurability (TODO: edit)}
+MicroGrader was designed to be as configurable as possible.  This manifests itself in a variety of ways.
 
-\subsection{Defaults}
-TODO: copy over and edit
+Test cases themselves are highly configurable, as described earlier.  After all, each \textit{evaluation point} can have its own check function and its own condition to which its time interval is relative.  Each point can also have its own threshold for the portion of the interval that must be correct in order for the point to evaluate to \texttt{true}.
+
+Certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or report of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
+
+Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \footnote{https://docs.python.org/3/library/pickle.html} Python objects that implement all the functions a data type needs to have.  The minimum functions for a new data type are conversions to and from a byte encoding for transport, and a definition of the equivalence operator.
+
+\subsection{Defaults (TODO: edit)}
+The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, the default aggregator function is ``portion of \texttt{true} values" (recall, an aggregator converts a set of boolean evaluation point results into a numeric channel score).  The default check function is the equivalence operator.  Each built-in data type has a default value.
+
+Furthermore, defaults make it easy for instructors to dynamically construct a test case using a working implementation of assigned embedded project.  We'll discuss that more in section \ref{sec:scaffold}.
 
 
 
@@ -510,30 +538,7 @@ Moved
 
 
 \subsubsection{Reporting results}
-For grading purposes, we only care about the numeric final score.  A student, however, would be well served by examining a rich and readable description of the test results.  In the event that a student does not receive full credit, this description should make it clear which \textit{evaluation points} were \texttt{false} and why.
-
-Specifically, for each \textit{evaluation point}, the student can see:
-
-\begin{itemize}
-\item Whether that point passed, failed, or was not evaluated (which would occur only if a point's condition is not met).
-\item A text description of the point's time interval and the \textit{condition} with respect to which that relative interval is defined.
-\item The output channel being examined.
-\item The expected value on that channel during the specified interval.
-\item A description of the check function being used to determine correctness.
-\item The portion of the interval for which the observed values were correct.
-\item A summary of the observed values on that channel in the specified interval.  This summary is comprised of:
-\begin{itemize}
-\item The unique values observed during the interval.
-\item Whether or not each of those values was correct (as determined by the check function).
-\item The portion of the interval for which each of those values was observed.
-\end{itemize}
-\end{itemize}
-
-Some values do not lend themselves to a textual description.  For example, screen images (a very common type of output), don't readily convert to text.  To handle this, MicroGrader saves all screen images at image files in a special directory, and the text description of those images is just the file path.
-
-For further readability, test results can be summarized somewhat more succinctly by only giving the full details for \textit{evaluation points} that don't pass.  Furthermore, if all \textit{evaluation points} for a certain channel are correct, we can omit all the details for that channel.  Students have access to both the full results and summarized results.
-
-I considered a number of ways of reporting results to some online courseware (e.g. EdX, Coursera, etc.).  In the end, I chose a simple but effective solution, inspired by UT Austin's Embedded Systems course on EdX.  Students receive an individualized code number for each test through the online courseware, and enter that number into MicroGrader.  When MicroGrader runs a test, the student's score is combined with that code and hashed.  The student can then copy that hash back into the courseware.  Since the number of possible scores is limited (only four digits or scoring precision are allowed), it's easy for the online courseware to determine the student's score.  This solution is elegant in that it discourages cheating without requiring direct communication between MicroGrader and online courseware.  To further discourage cheating, courses could require students to upload code.
+Moved
 
 \subsubsection{Screen analysis}
 As previously mentioned, binary (i.e. no partial intensities) monochrome screens are a built-in type.  MicroGrader also includes some utilities for working with such outputs, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for this type of value.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
@@ -543,23 +548,6 @@ MicroGrader includes a built-in distance metric for binary monochrome screens.  
 Many assignments involving a screen are text-based.  That is, the screen is expected to contain printed text.  To that end, MicroGrader includes functionality to extract the text from the screen.  Various OCR engines were considered, but none worked acceptably well due to the tiny size of many fonts used in such contexts (potentially 5x7 pixels or smaller).  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
 
 There are a few downsides to this text extraction approach.  First, any noise in the image or overlying element makes extraction impossible.  Furthermore, fonts must fixed-width.  This isn't a fundamental constraint of this technique, but it does massively help performance since the algorithm only has to consider rectangles of a specific size.  The biggest issue is that MicroGrader needs to know the bitmap for each character in the font.  Since its sometimes not easy to find detailed information for embedded fonts, MicroGrader includes a utility to ``record" the character bitmaps of a font using the actual screen output.
-
-\subsubsection{Configurability}
-MicroGrader was designed to be as configurable as possible.  This manifests itself in a variety of ways.
-
-Test cases themselves are highly configurable, as described earlier.  After all, each \textit{evaluation point} can have its own check function and its own condition to which its time interval is relative.  Each point can also have its own threshold for the portion of the interval that must be correct in order for the point to evaluate to \texttt{true}.
-
-Certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or report of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
-
-Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \footnote{https://docs.python.org/3/library/pickle.html} Python objects that implement all the functions a data type needs to have.  The minimum functions for a new data type are conversions to and from a byte encoding for transport, and a definition of the equivalence operator.
-
-\subsubsection{Defaults}
-The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, the default aggregator function is ``portion of \texttt{true} values" (recall, an aggregator converts a set of boolean evaluation point results into a numeric channel score).  The default check function is the equivalence operator.  Each built-in data type has a default value.
-
-Furthermore, defaults make it easy for instructors to dynamically construct a test case using a working implementation of assigned embedded project.  We'll discuss that more in section \ref{sec:scaffold}.
-
-
-
 
 
 
