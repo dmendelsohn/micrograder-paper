@@ -4,3 +4,5 @@
 \contentsline {figure}{\numberline {4}{\ignorespaces A simple digital signal.\relax }}{18}
 \contentsline {figure}{\numberline {5}{\ignorespaces Value generator function with two input channels.\relax }}{24}
 \contentsline {figure}{\numberline {6}{\ignorespaces MicroGrader block diagram.\relax }}{31}
+\contentsline {figure}{\numberline {7}{\ignorespaces Example of using bitmap XOR to find number of pixel differences.\relax }}{37}
+\contentsline {figure}{\numberline {8}{\ignorespaces Example where two visually similar bitmaps have a large difference under the naive distance metric.\relax }}{38}

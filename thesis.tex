@@ -500,11 +500,60 @@ For further readability, test results can be summarized somewhat more succinctly
 
 We considered a number of ways of reporting results to some online courseware (e.g. EdX, Coursera, etc.).  In the end, we chose a simple but effective solution, inspired by UT Austin's Embedded Systems course on EdX.  Students receive an individualized codeword for each test through the online courseware, and enter that codeword into MicroGrader.  When MicroGrader runs a test, the student's score is combined with that codeword and hashed.  The student can then copy that hash back into the courseware.  Since the number of possible scores is limited (scores are limited to four digits of precision), it's easy for the online courseware to determine the student's score.  This solution discourages cheating without requiring direct communication between MicroGrader and online courseware.  To further discourage cheating, courses could require students to upload their solutions to the online courseware for later reference.
 
-\subsection{Screen analysis (TODO: edit and add images)}
-As previously mentioned, binary (i.e. no partial intensities) monochrome screens are a built-in type.  MicroGrader also includes some utilities for working with such outputs, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for this type of value.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
+\subsection{Screen analysis}
+As previously mentioned, bitmap screens area built-in type in MicroGrader.  MicroGrader also includes some utilities for working with bitmaps, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for bitmaps.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
 
-MicroGrader includes a built-in distance metric for binary monochrome screens.  It's basic functionality is simple: for two screens of the same dimensions, the distance between them is the number of pixels that do not match.  In practice, this fails to identify two screens that are very similar, but slightly shifted relative to one another.  Therefore, MicroGrader's distance metric allows the user to specify a maximum allowable shift of one screen relative to another, in any direction.  The distance is the \textbf{minimum} number of mismatched pixels.  Essentially, the function tries all allowable shifts and picks the best one.  Yet another built-in function checks that if a screen is significantly closer than a blank screen to a given reference screen.  After all, a blank screen might match a large number of pixels but isn't very close in terms of informational content.
+\subsubsection{Bitmap distance metric (TODO: edit and add images)}
+MicroGrader includes a built-in distance metric for bitmaps of the same dimensions.  Specifically, we say the distance between two bitmaps is the number of pixels that do not match.  We can compute this easily by XOR-ing two bitmaps and counting the number of 1's in the result, as shown in Figure \ref{fig:naive-distance}.
 
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{squares-horizontal.png}
+\caption{Bitmap 1, two horizontal 10x10 white squares.}
+\label{fig:squares-horizontal}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{squares-vertical.png}
+\caption{Bitmap 2, two vertical 10x10 white squares.}
+\label{fig:squares-vertical}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{squares-diagonal.png}
+\caption{XOR of bitmaps 1 and 2, showing 200 differing pixels.}
+\label{fig:squares-diagonal}
+\end{subfigure}
+\caption{Example of using bitmap XOR to find number of pixel differences.}
+\label{fig:naive-distance}
+\end{figure}
+
+This distance metric is very unforgiving of slight translations.  For example, consider two bitmaps that each represent the outline of a circle.  If one bitmap is slightly shifted relative to the other, the distance between them is quite high, as shown in Figure \ref{fig:naive-distance-problem}.  In fact, the empty (all 0s) bitmap is closer to each of these than they are to each other.  We therefore will refer to this simple distance metric as the \textit{naive distance}. A more complex distance metric seems valuable.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{circle-left.png}
+\caption{Bitmap 1, a circle at \\ location (30,30).}
+\label{fig:circle-left}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{circle-right.png}
+\caption{Bitmap 1, a circle at \\ location (35,30).}
+\label{fig:circle-right}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{circle-diff.png}
+\caption{White pixels are pixel differences.}
+\label{fig:circle-diff}
+\end{subfigure}
+\caption{Example where two visually similar bitmaps have a large difference under the naive distance metric.}
+\label{fig:naive-distance-problem}
+\end{figure}
+
+
+To allow for leniency with regard to translations, we introduce a parametric family of distance metrics; there are two parameters, $d_{\text{vertical}}$ and $d_{\text{horizontal}}$.  These parameters specify the maximum allowable translation of one bitmap relative to the other in the vertical and horizontal directions respectively.  The allowable vertical translations are in the range $[-d_{\text{vertical}}, d_{\text{vertical}}]$ and the allowable horizontal translations are in the range $[-d_{\text{horizontal}}, d_{\text{horizontal}}]$.  Therefore, there are a total of $(2*d_{\text{vertical}}+1)*(2*d_{\text{horizontal}}+1)$ translations in two dimensions.  To compute the distance between two bitmaps, $B_1$ and $B_2$, according to this parametrized metric, a function applies each allowable translation to $B_1$.  The distance is defined to be the minimum naive distance between $B_2$ and any of the translations of $B_1$.  For example, if we set $d_{\text{horizontal}} >= 5$, then the distance between the bitmaps in Figures \ref{fig:circle-left} and \ref{fig:circle-right} is 0.
+
+\subsubsection{Text extraction from a bitmap (TODO: edit an add images}
 Many assignments involving a screen are text-based.  That is, the screen is expected to contain printed text.  To that end, MicroGrader includes functionality to extract the text from the screen.  Various OCR engines were considered, but none worked acceptably well due to the tiny size of many fonts used in such contexts (potentially 5x7 pixels or smaller).  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
 
 There are a few downsides to this text extraction approach.  First, any noise in the image or overlying element makes extraction impossible.  Furthermore, fonts must fixed-width.  This isn't a fundamental constraint of this technique, but it does massively help performance since the algorithm only has to consider rectangles of a specific size.  The biggest issue is that MicroGrader needs to know the bitmap for each character in the font.  Since its sometimes not easy to find detailed information for embedded fonts, MicroGrader includes a utility to ``record" the character bitmaps of a font using the actual screen output.
