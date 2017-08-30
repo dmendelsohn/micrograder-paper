@@ -443,13 +443,21 @@ Each evaluation point is examined and evaluated.  Refer back to section \ref{sec
 
 TODO: edit paragraph... MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
 
+% TODO: remove these comments
+%Ideally, the functionality of the MicroGrader client should wrapped in a library and should mostly be invisible to the student writing code ``on top" of that library.  It may also be necessary to modify existing libraries that handle I/O functionality.  Details about the way this is accomplished in the reference implementation (for Teensy) can be found in Appendix B.
+
+%In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
+
+
 \subsection{Implementation decisions}
 \subsubsection{Client implementation}
-TODO discuss why a thin wrapper client is used (minimal interference)
+When developing MicroGrader, we decided to minimize the computational responsibilities of the MicroGrader client.  We wanted to limit MicroGrader's effect on the execution of the student's embedded programs.  The students, ideally, should not notice the effect of the MicroGrader client software.  Embedded programs that meet the specification for an exercise when not connected to MicroGrader should behave similarly when MicroGrader is performing a test.
 
-TODO describe how we have developed one implementation, but others are possible.  The communication protocol itself is not platform-specific
+We created a implementation of the MicroGrader client for the Teensy 3.2 microcontroller, from PJRC [TODO: ref], which is used as the primary computation platform for MIT's 6.S08.  It is possible, and desirable, to develop client implementations for other platforms as well.  The communication protocol, detailed in [TODO: ref], is not platform-specific.  For example, as alluded to in section \ref{sec:config}, the MicroGrader server makes no assumptions about the range and resolution of analog values.  The client is responsible for communicating range and resolution information in any analog request or observation.
 
-TODO: quickly describe our implementation and why we used Teensy
+We, and the original staff of 6.S08, chose to use the Teensy for a few major reasons.  Programs for the Teensy are developed using an add-on to Arduino IDE [TODO: ref].  Arduino IDE is a popular development environment for beginners in particular [TODO: ref], and can run on a variety of operating systems including Windows, MacOS, and Linux.  Furthermore, many existing Arduino libraries are compatible with the Teensy, affording instructors a wide range of options for supported hardware peripherals.  The Teensy is significantly more powerful than Arduino boards at a similar price point [TODO: support this].
+
+TODO: high-level description of Teensy implementation (using a library to silently wrap I/O and modifying libraries that do I/O)
 
 TODO: discuss general principles for a client.  Invisible communication layer + minimal changes to code.  Good idea to have an inactive mode
 
@@ -488,17 +496,12 @@ Many assignments involving a screen are text-based.  That is, the screen is expe
 There are a few downsides to this text extraction approach.  First, any noise in the image or overlying element makes extraction impossible.  Furthermore, fonts must fixed-width.  This isn't a fundamental constraint of this technique, but it does massively help performance since the algorithm only has to consider rectangles of a specific size.  The biggest issue is that MicroGrader needs to know the bitmap for each character in the font.  Since its sometimes not easy to find detailed information for embedded fonts, MicroGrader includes a utility to ``record" the character bitmaps of a font using the actual screen output.
 
 \subsection{Configurability and defaults}
+\label{sec:config}
 MicroGrader is designed to be as configurable as possible.  This manifests itself in a variety of ways.  Test cases themselves are highly configurable, as described earlier.  Furthermore, certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or observation of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
 
 Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \footnote{https://docs.python.org/3/library/pickle.html} Python objects that include implementations of all the functions a data type needs to have.  The minimum functions for a new data type are: serialization, deserialization, and a definition of the equivalence operator.
 
 The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, consider the aggregator function, which maps a list of evaluation point results to a score.  By default, each channel uses a ``proportional" aggregator function, where the score is just the fraction of points that evaluate to \texttt{true}.  An instructor could replace this with any valid aggregator, such as an ``all-or-nothing" function which returns 1 if all points evaluate to \texttt{true} and 0 otherwise.
-
-
-% TODO: remove these comments
-%Ideally, the functionality of the MicroGrader client should wrapped in a library and should mostly be invisible to the student writing code ``on top" of that library.  It may also be necessary to modify existing libraries that handle I/O functionality.  Details about the way this is accomplished in the reference implementation (for Teensy) can be found in Appendix B.
-
-%In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
 
 
 \newpage
