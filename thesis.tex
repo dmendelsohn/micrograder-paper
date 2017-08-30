@@ -8,6 +8,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage{setspace}
 \usepackage{indentfirst}
+\usepackage[titletoc,title,toc,page]{appendix}
+\usepackage[nottoc,notlot,notlof]{tocbibind}
 
 \usepackage{graphicx}
 \graphicspath{ {images/} }
@@ -59,7 +61,7 @@ at the \\
 \vspace{12pt}
 Massachusetts Institute of Technology \\
 \vspace{12pt}
-August 2017 \\
+September 2017 \\
 \vspace{12pt}
 \textcopyright \hspace{0.05in} Massachusetts Institute of Technology 2017.  All rights reserved. \\
 \vspace{48pt}
@@ -115,6 +117,10 @@ We describe a specification format for instructors to define the technical requi
 
 \tableofcontents
 
+\newpage
+\listoffigures
+\listoftables
+
 \doublespacing
 
 \newpage
@@ -140,9 +146,9 @@ The process of constructing test cases can be time-consuming.  It is often prohi
 
 \newpage
 \section{Prior Work}
-In my search for existing automatic graders for embedded systems courses, I found only one system that's actually being used.  The University of Texas at Austin (UT Austin) offers an EdX course "Embedded Systems - Shape The World" \footnote{https://www.edx.org/course/embedded-systems-shape-world-utaustinx-ut-6-10x}, which uses a grading system called TExaS.  Most of what I learned about TExaS was gleaned by examining the course on EdX itself; I was not able to find technical documentation.
+In my search for existing automatic graders for embedded systems courses, I found only one system that's actually being used.  The University of Texas at Austin (UT Austin) offers an EdX course "Embedded Systems - Shape The World" \cite{ut-austin-edx}, which uses a grading system called TExaS.  Most of what I learned about TExaS was gleaned by examining the course on EdX itself; I was not able to find technical documentation.
 
-TExaS consists of a grader running on a student's computer, that observes the activity of the student's microcontroller.  It is decidedly not multi-platform: the core of TExaS runs as a plug-in to the Keil Microcontroller Development Kit \footnote{http://www2.keil.com/mdk5/}, which only runs on Windows.  That plug-in works with the particular microcontroller used in the course.
+TExaS consists of a grader running on a student's computer, that observes the activity of the student's microcontroller.  It is decidedly not multi-platform: the core of TExaS runs as a plug-in to the Keil Microcontroller Development Kit \cite{keil}, which only runs on Windows.  That plug-in works with the particular microcontroller used in the course.
 
 The platform lock-in of TExaS has benefits.  It appears to have low-level access to the operation of the microcontroller and places little -- if any -- burden on the microcontroller itself.  TExaS can observe all the inputs and outputs of the microcontroller and it can even observe arrays of raw data in the microcontroller's memory.
 
@@ -150,7 +156,7 @@ TExaS does not inject test input values into the microcontroller.  Rather, test 
 
 In designing and building MicroGrader, I wanted a cross-platform system to generalize the task of grading an embedded system.  Furthermore, I wanted a broader set of possible inputs and outputs, and the ability to grade more complex tasks.
 
-In MIT's 6.S08 (Interconnected Embedded Systems), microcontroller grading is completely manual.  Students show instructors solutions in-person or by video.  This approach is time-consuming and does not scale well.  6.S08 uses CAT-SOOP \footnote{https://catsoop.mit.edu/} to evaluate certain software functions.  Students enter C++ code, which is then evaluated on the centralized course server and evaluated within the CAT-SOOP environment.  This allows the course staff to verify the student's code to some extent, but the execution of the code is inevitably different on the actual microcontroller.  Students often find that solutions that work in the CAT-SOOP checker, fail on the microcontroller.
+In MIT's 6.S08 (Interconnected Embedded Systems), microcontroller grading is completely manual.  Students show instructors solutions in-person or by video.  This approach is time-consuming and does not scale well.  6.S08 uses CAT-SOOP \cite{catsoop} to evaluate certain software functions.  Students enter C++ code, which is then evaluated on the centralized course server and evaluated within the CAT-SOOP environment.  This allows the course staff to verify the student's code to some extent, but the execution of the code is inevitably different on the actual microcontroller.  Students often find that solutions that work in the CAT-SOOP checker, fail on the microcontroller.
 
 \newpage
 \section{Motivating example: ``Wikipedia Scroller"}
@@ -453,9 +459,10 @@ TODO: edit paragraph... MicroGrader is \textbf{not} designed to gracefully handl
 \subsubsection{Client implementation}
 When developing MicroGrader, we decided to minimize the computational responsibilities of the MicroGrader client.  We wanted to limit MicroGrader's effect on the execution of the student's embedded programs.  The students, ideally, should not notice the effect of the MicroGrader client software.  Embedded programs that meet the specification for an exercise when not connected to MicroGrader should behave similarly when MicroGrader is performing a test.
 
-We created a implementation of the MicroGrader client for the Teensy 3.2 microcontroller, from PJRC [TODO: ref https://www.pjrc.com/teensy/index.html], which is used as the primary computation platform for MIT's 6.S08.  It is possible, and desirable, to develop client implementations for other platforms as well.  The communication protocol, detailed in Appendix B, is not platform-specific.  For example, as alluded to in section \ref{sec:config}, the MicroGrader server makes no assumptions about the range and resolution of analog values.  The client is responsible for communicating range and resolution information in any analog request or observation.
+We created a implementation of the MicroGrader client for the Teensy 3.2 microcontroller, from PJRC \cite{teensy}, which is used as the primary computation platform for MIT's 6.S08.  It is possible, and desirable, to develop client implementations for other platforms as well.  The communication protocol, detailed in Appendix \ref{sec:teensy}, is not platform-specific.  For example, as alluded to in section \ref{sec:config}, the MicroGrader server makes no assumptions about the range and resolution of analog values.  The client is responsible for communicating range and resolution information in any analog request or observation.
 
-We, and the original staff of 6.S08, chose to use the Teensy for a few major reasons.  Programs for the Teensy are developed using an add-on to Arduino IDE [TODO: ref].  Arduino IDE is a popular development environment for beginners in particular [TODO: ref], and can run on a variety of operating systems including Windows, MacOS, and Linux.  Furthermore, many existing Arduino libraries are compatible with the Teensy, affording instructors a wide range of options for supported hardware peripherals.  The Teensy boasts impressive features for its price (under 20 dollars); it has a 72MHz 32-bit microprocessor, 34 digital input/output pins and 21 analog input pins.  It also has 64 kilobytes of random access memory (RAM)[TODO: ref https://www.pjrc.com/teensy/teensy31.html].
+We, and the original staff of 6.S08, chose to use the Teensy for a few major reasons.  Programs for the Teensy are developed using an add-on to Arduino IDE \cite{arduino-ide}.  The Arduino platform in general is popular \cite{arduino-popular}, including among students \cite{arduino-students}, and the integrated development environment (IDE) can run on Windows, MacOS, and Linux.  Many existing Arduino libraries are compatible with the Teensy, affording instructors a wide range of options for supported hardware peripherals.  The Teensy boasts impressive features for its price (under 20 dollars); it has a 72MHz 32-bit microprocessor, 34 digital input/output pins and 21 analog input pins.  It also has 64 kilobytes of random access memory (RAM) \cite{teensy-specs}.
+
 
 TODO: high-level description of Teensy implementation (using a library to silently wrap I/O and modifying libraries that do I/O)
 
@@ -499,7 +506,7 @@ There are a few downsides to this text extraction approach.  First, any noise in
 \label{sec:config}
 MicroGrader is designed to be as configurable as possible.  This manifests itself in a variety of ways.  Test cases themselves are highly configurable, as described earlier.  Furthermore, certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or observation of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
 
-Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \footnote{https://docs.python.org/3/library/pickle.html} Python objects that include implementations of all the functions a data type needs to have.  The minimum functions for a new data type are: serialization, deserialization, and a definition of the equivalence operator.
+Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \cite{pickle} Python objects that include implementations of all the functions a data type needs to have.  The minimum functions for a new data type are: serialization, deserialization, and a definition of the equivalence operator.
 
 The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, consider the aggregator function, which maps a list of evaluation point results to a score.  By default, each channel uses a ``proportional" aggregator function, where the score is just the fraction of points that evaluate to \texttt{true}.  An instructor could replace this with any valid aggregator, such as an ``all-or-nothing" function which returns 1 if all points evaluate to \texttt{true} and 0 otherwise.
 
@@ -637,8 +644,8 @@ Certain ``correct" values are not determined at the time the test case is create
 As mentioned in section \ref{sec:derived-outputs}, it is sometimes desirable to measure an output that is not directly generated by the microcontroller, but rather is some transformation of an output generated by the microcontroller.  In the next version of MicroGrader, instructors will have the ability to add a custom physical model to convert the microcontroller's outputs to a derived output (e.g. converting a motor voltage to the position of an attached wheel).
 
 \newpage
-
-\section{Appendix A: Client-server protocol}
+\begin{appendices}
+\section{Client-server protocol}
 \label{sec:protocol}
 All client-server communication occurs over a USB connection.  All multi-byte integers are transmitted in a little-endian fashion.  In general, we refer to a message from the client to the server as a \textit{request}.  Some requests result in server-to-client \textit{response}.
 
@@ -726,7 +733,7 @@ code & name & request body \\ \hline
 If the client expects a response, the body of the response is empty.  The encoding of values for digital writes is the same as for digital reads (a single byte, 0 or 1).  The encoding of values for analog writes is the same as for analog reads.  Recall that the value reported is a ``bin number".
 
 \subsubsection{Screen Encoding}
-Since the built-in screen type is a monochrome display, in which each pixel is on-or-off, our screen is essentially a bitmap.  We represent each pixel using a single bit.  Our encoding for the screen is inspired by the U8x8 embedded library \footnote{https://github.com/olikraus/u8g2/wiki/u8x8setupcpp}, and it makes it simple for embedded clients to transmit screen information if their display libraries are U8x8 compatible.
+Since the built-in screen type is a monochrome display, in which each pixel is on-or-off, our screen is essentially a bitmap.  We represent each pixel using a single bit.  Our encoding for the screen is inspired by the U8x8 embedded library \cite{u8x8}, and it makes it simple for embedded clients to transmit screen information if their display libraries are U8x8 compatible.
 
 We code encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted over serial, note that this unsigned 64-bit integer, like all our other multi-byte integers, are transmitted in a little-endian fashion.  So the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
 
@@ -754,7 +761,7 @@ The Init request is sent when the embedded client initializes.  In addition, the
 It is important to inform the server of certain events, especially ones that have highly variable latencies.  The GPS Fix request is used to inform the server that the client has acquired a GPS fix.  The Wifi Request request is used to inform the server that a internet request has been sent.  The Wifi Response request is used to inform the server that a internet response has been received.
 
 \newpage
-\section{Appendix B: Client implementation for Teensy}
+\section{Client implementation for Teensy}
 \label{sec:teensy}
 MicroGrader is built to be cross-platform and is should work with a wide variety of microcontrollers.  As of now, the client side of the communication protocol is implemented for only one microcontroller: the Teensy, an Arduino variant.  The key for any client implementation is to be as invisible to students as possible.  In the case of the Teensy implementation, students write implement projects in a \texttt{.ino} file, which has access to a built-in functions.  In order to properly implement the protocol, I wrote a library that overrides many of these built-in functions to perform the proper communication with the server.  The required changes to the student's \texttt{.ino} file are minimal.
 
@@ -762,14 +769,51 @@ At its core, the client consists of a communication library that interacts with 
 
 The Teensy includes built-in functions to send and receive data over USB.  The MicroGrader client for Teensy replaces the built-in \texttt{Serial} object with a wrapper object.  When in \textit{test} mode or \textit{recording} mode, any print statements made using \texttt{Serial} have no effect.  For cases where a student or instructor wishes to print some text for debugging, the library includes a \texttt{debug} function, which sends a Print message in accordance with the MicroGrader protocol.  When the client is in \textit{inactive} mode, \texttt{Serial} print statements work normally.  Therefore, students can use \texttt{Serial} print statements when not connected to the MicroGrader server, but they don't have to worry about those statements interfering with MicroGrader communication when actual testing is happening.
 
-The fundamental general purpose I/O functionality (GPIO) is also wrapped.  This allows for recording GPIO events and for injecting test inputs from the host.  As with \texttt{Serial}\texttt{Serial}, the regular GPIO functions work normally when the client is in \textit{inactive} mode. 
+The fundamental general purpose I/O functionality (GPIO) is also wrapped.  This allows for recording GPIO events and for injecting test inputs from the host.  As with \texttt{Serial}, the regular GPIO functions work normally when the client is in \textit{inactive} mode. 
 
-For input from the inertial measurement unit (IMU), I modified the MPU9250 \footnote{https://github.com/sparkfun/SparkFun\_MPU-9250-DMP\_Arduino\_Library} library for Arduino/Teensy.  For output to a display, I modified the U8g2 \footnote{https://github.com/olikraus/u8g2/wiki} library for Arduino/Teensy.  If a course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is not complicated.
+For input from the inertial measurement unit (IMU), I modified the MPU9250 \cite{MPU9250} library for Arduino/Teensy.  For output to a display, I modified the U8g2 \cite{u8g2} library for Arduino/Teensy.  If a course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is not complicated.
 
 From a student's perspective, very few changes need to be made in order to run the MicroGrader client.  He or she needs to install the core library and the modified versions of the third-party libraries.  The line \verb+#include "MicroGrader.h"+ must be added to the top of the \texttt{.ino} file and an initialization function, \texttt{MicroGrader.begin()} must be called at the beginning of the Teensy \texttt{setup()} routine.
 
-\newpage
-\section{References}
-TODO
+\end{appendices}
 
+\newpage
+\begin{thebibliography}{}
+\bibitem{ut-austin-edx}
+https://www.edx.org/course/embedded-systems-shape-world-utaustinx-ut-6-10x (TODO)
+
+\bibitem{keil}
+http://www2.keil.com/mdk5/ (TODO)
+
+\bibitem{catsoop}
+https://catsoop.mit.edu/ (TODO)
+
+\bibitem{teensy}
+https://www.pjrc.com/teensy/index.html (TODO)
+
+\bibitem{arduino-ide}
+https://www.arduino.cc/en/Main/Software (TODO)
+
+\bibitem{arduino-popular}
+http://makezine.com/2011/02/10/why-the-arduino-won-and-why-its-here-to-stay/ (TODO)
+
+\bibitem{arduino-students}
+Hertzog, Pierre \& Swart, Arthur James. (2016). Arduino -- Enabling engineering students to obtain academic success in a design-based module. . 10.1109/EDUCON.2016.7474533. (TODO: formatting)
+
+\bibitem{teensy-specs}
+https://www.pjrc.com/teensy/teensy31.html (TODO)
+
+\bibitem{pickle}
+https://docs.python.org/3/library/pickle.html (TODO)
+
+\bibitem{u8x8}
+https://github.com/olikraus/u8g2/wiki/u8x8setupcpp (TODO)
+
+\bibitem{MPU9250}
+https://github.com/sparkfun/SparkFun\_MPU-9250-DMP\_Arduino\_Library (TODO)
+
+\bibitem{u8g2}
+https://github.com/olikraus/u8g2/wiki (TODO)
+
+\end{thebibliography}
 \end{document}
