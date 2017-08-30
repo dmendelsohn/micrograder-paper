@@ -32,6 +32,8 @@ def plot_wiki_scroller_input_frame():
 def plot_button_signal():
     tlist = np.arange(0, 5001, 1000)
     plt.step(tlist, [1, 0, 1, 0, 1, 1], where='post')
+    plt.ylabel('Digital value')
+    plt.xlabel('Time (ms)')
     plt.show()
 
 if __name__ == "__main__":

@@ -124,7 +124,7 @@ We describe a specification format for instructors to define the technical requi
 \doublespacing
 
 \newpage
-\section{Introduction}
+\section{Introduction (TODO: edit chapter)}
 Verification of program behavior has been a major concern for engineers and academics since the early days of computing.  The study of software testing has grown into a significant field of computer science.  In this thesis, we will describe a software tool (``MicroGrader") that verifies the correctness of embedded systems, specifically in an educational context.  Essentially, it is an automated grader for embedded systems assignments that provides actionable feedback to students.
 
 We must understand why the verification of an embedded system requires a specialized approach, and understand how the educational context affects design choices.
@@ -145,7 +145,7 @@ The process of constructing test cases can be time-consuming.  It is often prohi
 
 
 \newpage
-\section{Prior Work}
+\section{Prior Work (TODO: edit chapter)}
 In my search for existing automatic graders for embedded systems courses, I found only one system that's actually being used.  The University of Texas at Austin (UT Austin) offers an EdX course "Embedded Systems - Shape The World" \cite{ut-austin-edx}, which uses a grading system called TExaS.  Most of what I learned about TExaS was gleaned by examining the course on EdX itself; I was not able to find technical documentation.
 
 TExaS consists of a grader running on a student's computer, that observes the activity of the student's microcontroller.  It is decidedly not multi-platform: the core of TExaS runs as a plug-in to the Keil Microcontroller Development Kit \cite{keil}, which only runs on Windows.  That plug-in works with the particular microcontroller used in the course.
@@ -161,15 +161,15 @@ In MIT's 6.S08 (Interconnected Embedded Systems), microcontroller grading is com
 \newpage
 \section{Motivating example: ``Wikipedia Scroller"}
 \label{sec:wiki-scroller}
-Before diving into technical details of the automated grader, it helps to have a motivating example in mind;  MIT's 6.S08 includes an exercise called ``Wikipedia Scroller", in which students build a digital encyclopedia using a microcontroller, a push-button switch, a nine-axis inertial measurement unit (IMU) and a 128x64 organic light-emitting diode (OLED) display.
+Before diving into technical details of the automated grader, it helps to have a motivating example in mind;  MIT's 6.S08 includes an exercise called ``Wikipedia Scroller", in which students build a digital encyclopedia using a microcontroller, a push-button switch, a nine-axis inertial measurement unit (IMU) and a 128x64 organic light-emitting diode (OLED) display \cite{wiki-scroller}.
 
-Each student implements a tilt-based interface that allows the device's user to build an alphanumeric query string.  Using the ESP8266 chip, the device transmits the query string to a server-side Python program.  That Python program uses the query string to formulate a query to the Wikipedia API, parses the response from the Wikipedia API, and transmits the first 200 characters of the relevant Wikipedia description to the embedded device.
+Each student implements a tilt-based interface that allows the device's user to build an alphanumeric query string.  Using the ESP8266 chip, the device transmits the query string to a server-side Python program.  That Python program uses the query string to formulate a query to the Wikipedia application program interface (API), parses the response from the Wikipedia API, and transmits the first 200 characters of the relevant Wikipedia description to the embedded device.
 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.5]{wiki-block-diagram.png}
 \vspace{5mm}
-\caption{Block diagram for Wikipedia Scroller. Bottom block is the embedded system.}
+\caption{Block diagram for Wikipedia Scroller, from 6.S08 exercise description.}
 \end{figure}
 
 
@@ -177,7 +177,7 @@ Each student implements a tilt-based interface that allows the device's user to 
 The embedded device allows its user to construct an alphanumeric query string, and it displays the results of the corresponding query.  The primary input mechanism is ``tilt", as measured by accelerometer readings.  In addition, the user can perform two actions using the push-button switch.  We define a press to be a \textit{short press} if its duration is under one second.  We define a press to be a \textit{long press} if its duration is at least one second.  The system can be viewed as an FSM with three states.  Note that, in the specifications for each state below, some of the finer details have been omitted in this paper for the sake of brevity.
 
 \subsubsection{State 0: display state}
-In this state, the result for the most recent query should be displayed.  Specifically, the screen should show as many characters as possible from the most recent HTTP response.  Initially, before any query has occurred, we define the ``most recent result" to be the empty string.  The system's built-in 5x7 fixed-size font should be used, so that eight lines, each comprised of 21 characters, can fit on the screen.  See Figure \ref{fig:pigeons} for an example.  When the user performs a long press, the system should switch to the query entry state.
+In this state, the result for the most recent query should be displayed.  Specifically, the screen should show as many characters as possible from the most recent HTTP (hypertext transfer protocol) response.  Initially, before any query has occurred, we define the ``most recent result" to be the empty string.  The system's built-in 5x7 fixed-size font should be used, so that eight lines, each comprised of 21 characters, can fit on the screen.  See Figure \ref{fig:pigeons} for an example.  When the user performs a long press, the system should switch to the query entry state.
 
 TODO: replace Figure \ref{fig:pigeons} with a better photo, without html tag
 
@@ -219,7 +219,7 @@ In this manner, the author was able to grade each student's work in under two mi
 
 \newpage
 \section{Defining a test}
-In this chapter, we describe the design of the \textit{test case} data structure, and explain the reasoning behind it.  At an abstract level, a grader's role is to assign a score to an embedded system.  A human grader might rely on intuition or a checklist in order to assign a score.  For MicroGrader, the test case defines the process by which a score is assigned.  A MicroGrader test case serves two primary functions.  First, it specifies any necessary input signal signals.  Second, it specifies how the resulting output signals should be graded.
+In this chapter, we describe the design of the \textit{test case} data structure, and explain the reasoning behind it.  At an abstract level, MicroGrader's role is to assign a score to an embedded system.  A human grader might rely on intuition or a checklist in order to assign a score.  For MicroGrader, the test case defines the process by which a score is assigned.  A MicroGrader test case serves two primary functions.  First, it specifies any necessary input signal signals.  Second, it specifies how the resulting output signals should be graded.
 
 \subsection{The shortcomings of statically defined inputs}
 While developing MicroGrader, we first explored a static approach to specifying inputs.  In this design, all input signals would be completely predefined.  For example, a test case could specify a digital input as seen in Figure \ref{fig:static-input}.
@@ -234,24 +234,24 @@ While developing MicroGrader, we first explored a static approach to specifying 
 
 In this particular example, presuming the digital input is connected to an active-low push-button switch, the test case indicates the button is pressed in the interval $[1000,2000)$ and $[3000,4000)$ and not pressed at all other times.  We would define $t=0$ as the time at which the microcontroller last powered on or reset.  In this static paradigm, the input signals would not depend upon the behavior of the embedded system.
 
-In practice, we found that statically defined inputs limited scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not within the student's control.  When human graders evaluate the system, they know to wait for the Wikipedia text to appear (indicating an HTTP response has arrived), before performing additional test actions.  The HTTP response might arrive less than a second after the request, or it might arrive several seconds later.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.  More generally, dynamically defined inputs allow MicroGrader to deal with variable latencies that are not within the student's control.
+In practice, we found that statically defined inputs limited the scope of assignments for which MicroGrader could be used.  Grading assignments often requires input signals that are dependent on the behavior of the system.  Consider ``Wikipedia Scroller" for a concrete example.  In particular, Wikipedia Scroller requires that the system wait for an HTTP response after transmitting a query.  The length of time spent waiting for the response varies widely and is not entirely within the student's control.  When human graders evaluate the system, they know to wait for the Wikipedia text to appear (indicating an HTTP response has arrived), before performing additional test actions.  The HTTP response might arrive less than a second after the request, or it might arrive several seconds later.  We should consider the timing of subsequent actions relative to the arrival of the HTTP response, not relative to the initialization of the system as a whole.  We can conclude that, in order to effectively grade Wikipedia Scroller, MicroGrader test cases need to dynamically define inputs, with respect to run-time events.  More generally, dynamically defined inputs allow MicroGrader to deal with variable latencies that are not within the student's control.
 
 \subsection{Dynamically defined inputs}
 We have established that MicroGrader must dynamically generate microcontroller inputs, based on the previous activity of the embedded system.  Human graders can only use system outputs to determine future input actions.  An automated grader could go further, relying on internal embedded system events in addition to system outputs.  For Wikipedia Scroller, human graders use the appearance of Wikipedia text to indicate that the HTTP response has arrived; an automated grader could, in principal, observe the arrival of the HTTP response directly and not rely on an indirect indicator.
 
-Observing internal events directly can simplify the logic for test cases.  It is important to carefully decide which internal events MicroGrader should observe; since the grader is remotely assessing embedded system, it is impractical to observe low-level events that occur frequently.  In the current implementation of MicroGrader, the observed internal events are: ``system initialized", ``Wifi connected", ``HTTP request sent", ``HTTP response received", and ``GPS fix acquired".  In addition, MicroGrader supports a ``print" event, which allows the embedded system to send a string to the automated grader.  In general, we define a MicroGrader \textit{observation} to be one of these internal events or any external output.
+Observing internal events directly can simplify the logic for test cases.  It is important to carefully decide which internal events MicroGrader should observe; since the grader is remotely assessing embedded system, it is impractical to observe low-level events that occur frequently.  In the current implementation of MicroGrader, the observed internal events are: ``System initialized", ``Wifi connected", ``HTTP request sent", ``HTTP response received", and ``GPS fix acquired".  In addition, MicroGrader supports a ``print" event, which allows the embedded system to send a string to the automated grader.  In general, we define a MicroGrader \textit{observation} to be one of these internal events or any external output.
 
 \subsubsection{Data structure: ``Condition"}
 \label{sec:condition}
-We want the ability to specify the timing of system inputs relative to a specific, unique event that occurs during the execution of an embedded system.  In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the condition's satisfaction.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
+We want the ability to specify the timing of system inputs relative to a specific, unique event that occurs during the execution of an embedded system.  In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the satisfaction of the condition.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
 
 Our condition data structure can express unique events such as: ``The first HTTP request", ``the second HTTP request", and ``the first time that the word `cat' appears on the embedded display".  It achieves this with a recursive design; complex conditions can be built by composing simpler ones.  There are four fundamental types of conditions.
 
-The first type of condition is the \textit{basic condition}.  A basic condition's $t_{\text{satisfied}}$ is defined by a \textit{cause}. A cause is boolean function that takes a single input representing a MicroGrader observation.  As MicroGrader processes each observation during the execution of an embedded program, the cause function is invoked with that observation as its input.  The condition's $t_{\text{satisfied}}$ is the \textbf{first} time at which the cause function returns \texttt{true}.  For example, we can describe ``the first HTTP request" using a basic condition; the cause function would return \texttt{true} if and only if the observation is an HTTP request.
+The first type of condition is the \textit{basic condition}.  A basic condition's $t_{\text{satisfied}}$ is defined by a \textit{cause function}, which is boolean function that takes a single input representing a MicroGrader observation.  As MicroGrader processes each observation during the execution of an embedded program, the cause function is invoked with that observation as its input.  The condition's $t_{\text{satisfied}}$ is the \textbf{first} time at which the cause function returns \texttt{true}.  For example, we can describe ``the first HTTP request" using a basic condition; the cause function would return \texttt{true} if and only if the observation is an HTTP request.
 
-The second type of condition is the \textit{after condition}.  After conditions have another condition (of any kind) as a ``precondition".  Like basic conditions, after conditions have a cause function.  This cause function is only invoked for observations that occur after the precondition is satisfied.  As before, the after condition's $t_{\text{satisfied}}$ is the first time at which the cause function returns \texttt{true}.  We can describe ``the second HTTP request" using this type of condition.  In particular, the precondition would be a condition signifying ``the first HTTP request", as described above.  The cause function would return \texttt{true} if any only if the observation is an HTTP request.  Note that this condition has the same cause function as the condition for ``the first HTTP request", the existence of a precondition is the only difference.  In a similar manner, we could define the nth occurrence of any event.
+The second type of condition is the \textit{after condition}.  After conditions have another condition (of any kind) as a ``precondition".  Like basic conditions, after conditions have a cause function.  This cause function is only invoked for observations that occur after the precondition is satisfied.  As before, the after condition's $t_{\text{satisfied}}$ is the first time at which the cause function returns \texttt{true}.  We can describe ``the second HTTP request" using this type of condition.  In particular, the precondition would be a condition signifying ``the first HTTP request", as described above.  The cause function would return \texttt{true} if any only if the observation is an HTTP request.  Note that this condition has the same cause function as the condition for ``the first HTTP request", the existence of a precondition is the only difference.  In a similar manner, we could define the \textit{n}th occurrence of any event.
 
-Alternatively, the cause of an after condition can be a single number, $t_{\text{cause}}$, instead of a function.  In this case, we consider this condition's $t_{\text{satisfied}}$ to be the precondition's $t_{\text{satisfied}}$ plus $t_{\text{cause}}$.  In general, an after condition cannot be satisfied without its precondition being satisfied.
+Alternatively, an after condition can have a cause number, $t_{\text{cause}}$, instead of a cause function.  In this case, we consider this condition's $t_{\text{satisfied}}$ to be the precondition's $t_{\text{satisfied}}$ plus $t_{\text{cause}}$.  In general, an after condition cannot be satisfied without its precondition being satisfied.
 
 The third type of condition is the \textit{and condition}.  This type of condition has no \textit{cause}, but rather a set of subconditions, which can be of any condition type.  This condition is considered to be met once \textbf{all} of the subconditions are met.  Equivalently, this condition's $t_{\text{satisfied}}$ is the maximum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if any subcondition has an undefined $t_{\text{satisfied}}$.
 
@@ -447,29 +447,25 @@ In this stage, the MicroGrader server considers all the activity that occurred d
 
 Each evaluation point is examined and evaluated.  Refer back to section \ref{sec:eval-point} for details.  If an point's condition was never met, then that point automatically evaluates to \texttt{false}.  The boolean results of each evaluation point are aggregated into an overall score, as per section \ref{sec:aggregating}.
 
-TODO: edit paragraph... MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
-
-% TODO: remove these comments
-%Ideally, the functionality of the MicroGrader client should wrapped in a library and should mostly be invisible to the student writing code ``on top" of that library.  It may also be necessary to modify existing libraries that handle I/O functionality.  Details about the way this is accomplished in the reference implementation (for Teensy) can be found in Appendix B.
-
-%In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
+MicroGrader is designed to not mask software errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid message, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
 
 
 \subsection{Implementation decisions}
-\subsubsection{Client implementation}
+\subsubsection{Client side}
 When developing MicroGrader, we decided to minimize the computational responsibilities of the MicroGrader client.  We wanted to limit MicroGrader's effect on the execution of the student's embedded programs.  The students, ideally, should not notice the effect of the MicroGrader client software.  Embedded programs that meet the specification for an exercise when not connected to MicroGrader should behave similarly when MicroGrader is performing a test.
 
 We created a implementation of the MicroGrader client for the Teensy 3.2 microcontroller, from PJRC \cite{teensy}, which is used as the primary computation platform for MIT's 6.S08.  It is possible, and desirable, to develop client implementations for other platforms as well.  The communication protocol, detailed in Appendix \ref{sec:teensy}, is not platform-specific.  For example, as alluded to in section \ref{sec:config}, the MicroGrader server makes no assumptions about the range and resolution of analog values.  The client is responsible for communicating range and resolution information in any analog request or observation.
 
 We, and the original staff of 6.S08, chose to use the Teensy for a few major reasons.  Programs for the Teensy are developed using an add-on to Arduino IDE \cite{arduino-ide}.  The Arduino platform in general is popular \cite{arduino-popular}, including among students \cite{arduino-students}, and the integrated development environment (IDE) can run on Windows, MacOS, and Linux.  Many existing Arduino libraries are compatible with the Teensy, affording instructors a wide range of options for supported hardware peripherals.  The Teensy boasts impressive features for its price (under 20 dollars); it has a 72MHz 32-bit microprocessor, 34 digital input/output pins and 21 analog input pins.  It also has 64 kilobytes of random access memory (RAM) \cite{teensy-specs}.
 
+Our client implementation for Teensy primarily consists of an embedded library that overrides certain input and output functions.  The implementations for these functions have two modes, \textit{test mode} and \textit{inactive mode}.  In test mode, the new input functions request input values from the server, rather than from sensors.  The new output functions report outputs to the server, in addition to actually sending these outputs to hardware actuators.  In inactive mode, on the other hand, input and output functions behave as if the MicroGrader library were not installed at all.  By changing the library to inactive mode, students can experiment with their solutions, without the grader interfering at all and without having to change their code significantly. 
 
-TODO: high-level description of Teensy implementation (using a library to silently wrap I/O and modifying libraries that do I/O)
+Our Teeny client also includes slightly modified versions of existing libraries that perform input and output operations.  Similarly, our modifications enable the proper communication with the MicroGrader server.  We modified the MPU9250 library, which reads input from a digital IMU \cite{MPU9250}.  We modified the U8g2 library which can drive outputs to a variety of displays \cite{u8g2}.  Finally, we modified the 6.S08 Wifi library, so that the client can observe Wifi connectivity, HTTP requests, and HTTP responses \cite{6s08-wifi}.
 
-TODO: discuss general principles for a client.  Invisible communication layer + minimal changes to code.  Good idea to have an inactive mode
+Future implementations for other embedded platforms should look to the Teensy implementation as an example.  From an educational standpoint, it is valuable that the Teensy implementation requires very few changes to students' code.  The communication between the MicroGrader client and MicroGrader server is completely hidden from students.  Thanks to the inactive mode, students can work in a non-test environment without having to uninstall the test libraries.  A MicroGrader client should allow students to focus on the actual exercise at hand, not on coaxing the grader into behaving correctly.
 
-\subsubsection{Server implementation}
-TODO
+\subsubsection{Language choice for the MicroGrader server}
+We built the MicroGrader server in Python (specifically Python 3).  Python is one of the most popular programming languages \cite{python-popular}, especially in the context of education \cite{python-ed}.  Effective serial communication with embedded systems is a high priority for MicroGrader; the pyserial library is proven in the field and works on most major operating systems \cite{pyserial}. Furthermore, functions are objects in Python, which is a helpful trait since some of the attributes of our data structures are functions.  
 
 \subsection{Reporting results}
 For grading purposes, we only care about the numerical final score.  A student, however, would be well served by examining a rich and readable description of the test results.  In the event that a student does not receive full credit, this description should make it clear which points evaluated to \texttt{false} and why.
@@ -512,7 +508,7 @@ The high level of configurability could potentially make it difficult for an ins
 
 
 \newpage
-\section{Limitations}
+\section{Limitations (TODO: edit chapter)}
 Although MicroGrader is well-suited for grading many types of microcontroller projects, there are limitations that any instructor using this tool should know about.
 
 \subsection{Latency}
@@ -535,7 +531,7 @@ In many systems, the embedded device produces outputs that serve as inputs to so
 It is currently impossible to evaluate derived outputs like this using MicroGrader (unless the derived output is zeroth order linear function of the microcontroller's output).  In a later version, MicroGrader will include the ability to add a custom physical model to convert the raw output into a derived output.
 
 \newpage
-\section{Automatic Test Generation}
+\section{Automatic Test Generation (TODO: overhaul chapter)}
 \label{sec:scaffold}
 
 Using CAT-SOOP as a TA for MIT's 6.S08, the process of building test cases is a quick and convenient one.  An important convenience is the ability to only specify inputs for test cases.  CAT-SOOP uses a staff solution to generate the correct outputs for those specified inputs.  MicroGrader takes this philosophy one step further: it is possible to automatically generate a test case, including the desired system inputs, using a functioning staff solution.
@@ -560,11 +556,11 @@ Completely generating a test case from a log along turns out to produce poor res
 \subsubsection{Data structure: Scaffold}
 The two primary aspects of the \textit{scaffold} are \textit{frame templates} and \textit{point templates}.
 
-Frame templates arise out of the need to specify which intervals of time are relevant from a grading standpoint.  Specifically, the generated test case needs to know when to ``care" about the system outputs, and when to ignore them (e.g. while waiting for a internet request to resolve, or while waiting to get a GPS fix).  The relevant intervals might comprise only a small portion of the total operation of the system.
+Frame templates arise out of the need to specify which intervals of time are relevant from a grading standpoint.  Specifically, the generated test case needs to know when to ``care" about the system outputs, and when to ignore them (e.g. while waiting for an HTTP request to resolve, or while waiting to get a GPS fix).  The relevant intervals might comprise only a small portion of the total operation of the system.
 
 The most important two components of a frame template are the \textit{start condition} and \textit{end condition}.  These are instances of our familiar \textit{condition} data structure, and will serve as the start and end conditions for the frame that will be generated.  Refer back to section \ref{sec:frames} for more information.
 
-In our Wikipedia Scroller exercise, we can use a scaffold with two frame templates for the evaluation procedure previously outlined.  The first frame could start when system initialization is complete, and end when the first Wifi request occurs.  The second frame could start when the first Wifi response arrives, and end when the recording ends (I usually end recordings by just unplugging the client system).  This two-frame structure allows the test case to ignore the variable latency period of time when the Wifi request is awaiting a response.  After all, the length of this time period shouldn't be relevant in determining the correctness of a student's solution.  If we tried to use one frame for this whole evaluation, the student solution's timing after the variable-latency event would certainly mismatch the staff solution's timing.
+In our Wikipedia Scroller exercise, we can use a scaffold with two frame templates for the evaluation procedure previously outlined.  The first frame could start when system initialization is complete, and end when the first HTTP request occurs.  The second frame could start when the first HTTP response arrives, and end when the recording ends (I usually end recordings by just unplugging the client system).  This two-frame structure allows the test case to ignore the variable latency period of time when the HTTP request is awaiting a response.  After all, the length of this time period shouldn't be relevant in determining the correctness of a student's solution.  If we tried to use one frame for this whole evaluation, the student solution's timing after the variable-latency event would certainly mismatch the staff solution's timing.
 
 The other major aspect of a scaffold is the set of \textit{point templates}.  For each output channel, a point template is defined.  This template will indicate how the instructor wants each \textit{evaluation point} to be configured.
 
@@ -611,9 +607,9 @@ To give instructors the ability to tune the width of evaluation intervals in a d
 \subsection{Auto-generated test case for Wikipedia Scroller}
 For an instructor to automatically generate a test case, he or she would first have to record a correctly implemented system performing the relevant operations (in our example, creating the query string ``cat" and fetching the relevant information from the internet).  For this assignment, a fairly simple scaffold would do.  Consider the following possible scaffold:
 
-The scaffold has has templates specifying the beginning and end of two separate frames.  The first frame should begin upon system initialization and end upon the first internet request.  The second frame should begin upon the response to that internet request, and end a few seconds afterward.  For point templates, the default point template suffices, with a time of interval of \texttt{("0.2*T", "0.8*T")} as mentioned above.  This gives a bit of leniency on the exact timing of state transitions in the student's solution.
+The scaffold has has templates specifying the beginning and end of two separate frames.  The first frame should begin upon system initialization and end upon the first HTTP request.  The second frame should begin upon the response to that HTTP request, and end a few seconds afterward.  For point templates, the default point template suffices, with a time of interval of \texttt{("0.2*T", "0.8*T")} as mentioned above.  This gives a bit of leniency on the exact timing of state transitions in the student's solution.
 
-With this simple scaffold, and the recording of the staff solution, MicroGrader can generate a test case that checks for all the outputs that a human grader would look for.  Furthermore, the test case's use of two separate frames ensures that students would not be penalized for internet requests that are quicker or slower than the one in the original recording.
+With this simple scaffold, and the recording of the staff solution, MicroGrader can generate a test case that checks for all the outputs that a human grader would look for.  Furthermore, the test case's use of two separate frames ensures that students would not be penalized for HTTP requests that are quicker or slower than the one in the original recording.
 
 \subsection{Resolving ambiguous cases}
 \label{sec:resolve-ambiguity}
@@ -625,7 +621,7 @@ A subsequent version of MicroGrader will include tools for instructors to avoid 
 
 
 \newpage
-\section{Future Work}
+\section{Future Work (TODO: edit chapter)}
 This thesis is being submitted with the described functionality, but many of the aforementioned shortcoming can be overcome.  A version 2.0 of MicroGrader is under construction, and it will include the following improvements.
 
 \subsection{Custom data types}
@@ -747,18 +743,18 @@ Event requests are similar to output requests in that they are used to report in
 code & name & request body \\ \hline
 0x00 & Init & (\textit{empty}) \\
 0x01 & Print & $<$uint8 char$>$* \\
-0x40 & Screen Init & $<$uint8 width$>$$<$uint8 height$>$ \\
-0x50 & GPS Fix & (\textit{empty}) \\
-0x60 & Wifi Request & (\textit{empty}) \\
-0x61 & Wifi Response & (\textit{empty}) \\ \hline
+0x40 & Screen init & $<$uint8 width$>$$<$uint8 height$>$ \\
+0x50 & GPS fix & (\textit{empty}) \\
+0x60 & HTTP request & (\textit{empty}) \\
+0x61 & HTTP response & (\textit{empty}) \\ \hline
 \end{tabular}
 \end{center}
 
 \vspace{5mm}
 
-The Init request is sent when the embedded client initializes.  In addition, the Screen Init request is used upon initialization to inform the server of the width and height of the screen, as measured in 8x8 tiles.  The Print request is used to send custom text (ASCII-encoded) from the client to the server.  This is particularly helpful for debugging, since it is impossible to perform regular debugging via USB serial when MicroGrader is in use.
+The Init request is sent when the embedded client initializes.  In addition, the Screen Init request is used upon initialization to inform the server of the width and height of the screen, as measured in 8x8 tiles.  The Print request is used to send custom text (ASCII-encoded) from the client to the server.  This is particularly helpful for debugging, since it is impossible to perform regular debugging via USB when MicroGrader is in use.
 
-It is important to inform the server of certain events, especially ones that have highly variable latencies.  The GPS Fix request is used to inform the server that the client has acquired a GPS fix.  The Wifi Request request is used to inform the server that a internet request has been sent.  The Wifi Response request is used to inform the server that a internet response has been received.
+It is important to inform the server of certain events, especially ones that have highly variable latencies.  The GPS Fix request is used to inform the server that the client has acquired a GPS fix.  The ``HTTP request" mesage is used to inform the server that an HTTP request has been sent.  The ``HTTP response" message is used to inform the server that a internet response has been received.
 
 \newpage
 \section{Client implementation for Teensy}
@@ -788,6 +784,9 @@ http://www2.keil.com/mdk5/ (TODO)
 \bibitem{catsoop}
 https://catsoop.mit.edu/ (TODO)
 
+\bibitem{wiki-scroller}
+https://iesc-s2.mit.edu/6S08/S17/EX04 (TODO)
+
 \bibitem{teensy}
 https://www.pjrc.com/teensy/index.html (TODO)
 
@@ -803,17 +802,29 @@ Hertzog, Pierre \& Swart, Arthur James. (2016). Arduino -- Enabling engineering 
 \bibitem{teensy-specs}
 https://www.pjrc.com/teensy/teensy31.html (TODO)
 
-\bibitem{pickle}
-https://docs.python.org/3/library/pickle.html (TODO)
-
-\bibitem{u8x8}
-https://github.com/olikraus/u8g2/wiki/u8x8setupcpp (TODO)
-
 \bibitem{MPU9250}
 https://github.com/sparkfun/SparkFun\_MPU-9250-DMP\_Arduino\_Library (TODO)
 
 \bibitem{u8g2}
 https://github.com/olikraus/u8g2/wiki (TODO)
+
+\bibitem{6s08-wifi}
+https://github.com/voldman/esp8266 (TODO)
+
+\bibitem{python-popular}
+https://spectrum.ieee.org/computing/software/the-2017-top-programming-languages (TODO)
+
+\bibitem{python-ed}
+https://cacm.acm.org/blogs/blog-cacm/176450-python-is-now-the-most-popular-introductory-teaching-language-at-top-u-s-universities/fulltext (TODO)
+
+\bibitem{pyserial}
+https://pythonhosted.org/pyserial/ (TODO)
+
+\bibitem{pickle}
+https://docs.python.org/3/library/pickle.html (TODO)
+
+\bibitem{u8x8}
+https://github.com/olikraus/u8g2/wiki/u8x8setupcpp (TODO)
 
 \end{thebibliography}
 \end{document}
