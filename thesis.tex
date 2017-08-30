@@ -396,13 +396,11 @@ Point 4 & 1 & Equality operator & System initialization & (1500,2000) & 0.9 \\ \
 Non-default check functions can be useful for evaluating screen output.  Consider our Wikipedia Scroller exercise.  An instructor might only care about the text on the screen, but not the exact positioning of the text.  In the context of this exercise, the screen is a bitmap.  The equality operator would not be an appropriate check function in this case, because it would require an exact pixel-for-pixel match between the expected bitmaps and the observed bitmaps to assess correctness.  Rather, an instructor might consider using a check function that extracts text from the bitmaps and compares the text for equality.  In fact, this particular check function is built into MicroGrader, and its implementation is detailed later in this paper.
 
 \subsubsection{Aggregating individual point results}
+\label{sec:aggregating}
 For any output channel, we calculate an overall test result in a flexible way.  Specifically, an ``aggregator function" is defined for each output channel.  This function takes the set of boolean point results for that channel as input, and returns a numerical score in the interval $[0,1]$.  The scores for each output channel are then averaged together (optionally, a weighted average can be used) to get a final score for the entire test case.
 
 \subsection{Determining the end of a test}
 Embedded systems typically run indefinitely; there is no inherent ``end" to the execution of an embedded system.  Any test of an embedded system must, however, have an end.  A MicroGrader test case has an attribute called the \textit{termination condition}.  This is an instance of our usual condition data structure that, when satisfied, indicates that the test case is complete.  When constructing a test case, it is a good idea to use an end condition that is always satisfied eventually, regardless of the correctness of the student's system.  Otherwise, a test might run indefinitely, must to the student's consternation.
-
-
-
 
 
 
@@ -441,8 +439,7 @@ In this stage, the MicroGrader server considers all the activity that occurred d
 \item Reconstruct all the output signals.  Recall that we assume that each the output on each channel holds until the next output on the same channel.
 \end{itemize}
 
-Each evaluation point is examined and evaluated.  Refer back to section \ref{sec:eval-point} for details.  If an point's condition was never met, then that point automatically evaluates to \texttt{false}.  The boolean results of each evaluation point are aggregated into an overall score, as per TODO: section ref.
-
+Each evaluation point is examined and evaluated.  Refer back to section \ref{sec:eval-point} for details.  If an point's condition was never met, then that point automatically evaluates to \texttt{false}.  The boolean results of each evaluation point are aggregated into an overall score, as per section \ref{sec:aggregating}.
 
 TODO: edit paragraph... MicroGrader is \textbf{not} designed to gracefully handle errors.  If something goes wrong with the communication between the server and the client, or the client sends an invalid request, the session ends immediately and the test fails with an error message.  Similarly, if results of the session cannot be evaluated in the evaluation stage, the test automatically fails with an error message.  These situations are typically indicative of a malformed test case or a software bug that is not the student's responsibility.  Course staff should immediately address these types of issues.
 
@@ -498,35 +495,10 @@ Later, it will be possible to add additional data types, beyond the built-in one
 The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, consider the aggregator function, which maps a list of evaluation point results to a score.  By default, each channel uses a ``proportional" aggregator function, where the score is just the fraction of points that evaluate to \texttt{true}.  An instructor could replace this with any valid aggregator, such as an ``all-or-nothing" function which returns 1 if all points evaluate to \texttt{true} and 0 otherwise.
 
 
+% TODO: remove these comments
+%Ideally, the functionality of the MicroGrader client should wrapped in a library and should mostly be invisible to the student writing code ``on top" of that library.  It may also be necessary to modify existing libraries that handle I/O functionality.  Details about the way this is accomplished in the reference implementation (for Teensy) can be found in Appendix B.
 
-
-
-
-
-\newpage
-\section{Technical design (deprecated)}
-\subsection{Overall architecture}
-\label{sec:architecture}
-MicroGrader uses a client-server model.  The server is not a internet server, but rather a Python program running locally on a student's laptop or desktop machine.  That program connects to the client -- namely the embedded system being evaluated -- via USB serial.  The client is a thin wrapper of certain aspects of the embedded system's I/O functionality, which allows the server to ``drive" system inputs and observe results.
-
-This key design choice stemmed from a desire to change the execution of an embedded program as little as possible.  A lightweight approach on the embedded side reduces the chances of incorrect evaluations (both false positives and false negatives).
-
-\subsection{MicroGrader client}
-The embedded client has two modes of operation.  In \textit{test} mode, we need to inject pre-defined inputs into the system instead of taking real input readings.  The software, in lieu of taking a real reading, makes a request via USB serial to the server, which responds with the proper pre-defined input value.  In the current reference implementation of the client, requests are blocking -- the embedded system will wait for a response if it expects one.  Currently, MicroGrader only supports one request ``in-flight" at a time.
-
-For system outputs, the client really does produce the output (e.g. a digital write, or displaying something on a screen).  In addition to producing that output, the client reports the output to the server, for later evaluation.  The client also reports certain other system events, such as the beginning of program execution and various Wifi activity.
-
-The other mode of operation on the client-side is \textit{inactive} mode.  In this mode, the client makes no request to the server whatsoever.  That is, the program should operate completely normally.  Inputs are read from the actual sensors, and outputs are not reported.  This mode allows students to experiment with an in-progress assignment without worrying about the grader.
-
-The exact data that comprises client requests and reports varies depending on the type of request or report.  The communication protocol is detailed in Appendix A.  One commonality of all requests and reports is an integer timestamp, in milliseconds.  The server will trust this timestamp, and doesn't keep track of its own time during a live test.
-
-Ideally, the functionality of the MicroGrader client should wrapped in a library and should mostly be invisible to the student writing code ``on top" of that library.  It may also be necessary to modify existing libraries that handle I/O functionality.  Details about the way this is accomplished in the reference implementation (for Teensy) can be found in Appendix B.
-
-\subsection{MicroGrader server}
-In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
-
-
-
+%In the current implementation of the MicroGrader, all of the code is written in Python.  This language was chosen due to its ease of development and flexibility with data types.  Importantly, functions are first-order objects in Python which makes the implementation of a test case much easier (after all, a test case includes aggregator functions and check functions).  Python's popularity make it more convenient for others (especially time-strapped course professors and TAs) to understand and potentially extend the MicroGrader code base.
 
 
 \newpage
