@@ -10,6 +10,7 @@
 \usepackage{indentfirst}
 \usepackage[titletoc,title,toc,page]{appendix}
 \usepackage[nottoc,notlot,notlof]{tocbibind}
+\usepackage{subcaption}
 
 \usepackage{graphicx}
 \graphicspath{ {images/} }
@@ -155,11 +156,9 @@ The embedded device allows its user to construct an alphanumeric query string, a
 \subsubsection{State 0: display state}
 In this state, the result for the most recent query should be displayed.  Specifically, the screen should show as many characters as possible from the most recent HTTP (hypertext transfer protocol) response.  Initially, before any query has occurred, we define the ``most recent result" to be the empty string.  The system's built-in 5x7 fixed-size font should be used, so that eight lines, each comprised of 21 characters, can fit on the screen.  See Figure \ref{fig:pigeons} for an example.  When the user performs a long press, the system should switch to the query entry state.
 
-TODO: replace Figure \ref{fig:pigeons} with a better photo, without html tag
-
 \begin{figure}[t]
 \centering
-\includegraphics[scale=0.125]{pigeons.png}
+\includegraphics[width=0.5\linewidth]{text-wiki-close.png}
 \vspace{5mm}
 \caption{Screen output when in the display state. The last query was ``pigeons".}
 \label{fig:pigeons}
@@ -177,9 +176,45 @@ In order to build the query string, the user selects characters one by one.  The
 
 With a short press, the user ``locks in" the next character.  That is, the next character should be appended to the query string, and then \texttt{next_char_index} should be reset to 0.  Finally, with a long press, the user finishes the construction of the query string, which is then transmitted via HTTP to the server-side portion of the project.
 
-In this state, the text on the OLED screen should always be \texttt{query}, plus the next character.  For example, if \texttt{query} is \texttt{"pigeo"} and \texttt{next_char_index} is 0, then the string \texttt{"pigeoa"} should be displayed on the screen.
+In this state, the text on the OLED screen should always be \texttt{query}, plus the next character.  For example, if \texttt{query} is \texttt{"pigeo"} and \texttt{next_char_index} is 0, then the string \texttt{"pigeoa"} should be displayed on the screen.  Figure \ref{fig:pigeon-entry} contains six photographs taken during the process of creating a single query.
 
-TODO: add some demonstration photos
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{text-blank}
+\caption{Screen starts blank in display mode.}
+\label{fig:text-blank}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{text-a}
+\caption{Short press to text entry state; first letter appears.}
+\label{fig:text-a}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{text-p}
+\caption{Tilt right until first letter changes to ``p".}
+\label{fig:text-p}
+\end{subfigure}
+
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{text-pa}
+\caption{A short press locks in the letter; second letter appears.}
+\label{fig:text-pa}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{text-pi}
+\caption{Tilt right until second letter changes to ``i".}
+\label{fig:text-pi}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{text-pigeons}
+\caption{Eventually, the entire query string is entered.}
+\label{fig:text-pigeons}
+\end{subfigure}
+
+\caption{Demonstration of text entry in the Wikipedia Scroller exercise.}
+\label{fig:pigeon-entry}
+\end{figure}
 
 \subsubsection{State 2: waiting state}
 In this state, the device waits for a response from the server.  When the response arrives, the system should transition back to the display state (which is responsible for displaying the response).  In this state, the OLED screen should contain the text \texttt{"Waiting for response"}.
