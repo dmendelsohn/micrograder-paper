@@ -220,6 +220,7 @@ In this state, the text on the OLED screen should always be \texttt{query}, plus
 In this state, the device waits for a response from the server.  When the response arrives, the system should transition back to the display state (which is responsible for displaying the response).  In this state, the OLED screen should contain the text \texttt{"Waiting for response"}.
 
 \subsection{Manually grading Wikipedia Scroller}
+\label{sec:manual-wiki-grade}
 As a teaching assistant (TA) grading 6.S08 assignments, the author performed the following procedure to check that the assignment was implemented correctly.
 
 First, upon system initialization, he checked that the OLED screen was blank.  Then, he performed a long press to transition to the query entry state and verified that the character \texttt{"a"} appeared on the screen.  He then tilted the device slightly left and right (less than $20^{\circ}$) to ensure the text did not change, signifying that the scroller was not too sensitive to tilt.  He would then increase the tilt to more than $20^{\circ}$ to ensure that scrolling occurred.  When holding a constant tilt at a high angle, he checked the rate at which the character changed.  He also checked that wrap-around was correctly implemented in both directions (i.e. that a left tilt from \texttt{"a"} yielded \texttt{"9"} and that a right tilt from \texttt{"9"} yielded \texttt{"a"}.
@@ -619,11 +620,11 @@ It is currently impossible to evaluate derived outputs like this using MicroGrad
 
 \newpage
 \section{Automatic test generation}
-TODO: paragraph to motivate this work 
+So far in this paper, we have described a structure for defining tests and a technical system capable of carrying out those tests.  Creating a test case, however, can be a tedious process.  Instructors must define each input frame, including the value generator function for each input frame.  Value generator functions, which define a value for every input channel at every time $t>0$ can be complicated.  In Figure \ref{fig:value-gen} from section \ref{sec:wiki-scroller}, we showed how a value generator function could define inputs.  In the context of Wikipedia Scroller, these particular input signals would yield a query string of length 1.  Creating a longer query string, and triggering the edge cases described in section \ref{sec:manual-wiki-grade}, would require significantly more complex inputs and implementing the value generator function would become time-consuming.
 
-Consider the Wikipedia Scroller exercise described in section \ref{sec:wiki-scroller}.  TODO: reminder of human process
+Specifying evaluation points for assessing an implementation of Wikipedia Scroller can also be tedious.  A human grader, while performing the manual grading process for the exercise, observed dozens of unique screen outputs.  For each output that the instructor deems relevant, the MicroGrader test would have to have an evaluation point.  The instructor would be responsible for determining the timing and expected value (a 128x64 bitmap) for each of these points.
 
-TODO: describe manual test case construction process in two paragraphs, one for inputs one for outputs, in reference to "human process"
+The primary purpose of MicroGrader is to streamline the grading process, so it is important to make it easy and intuitive to create test cases.  To this end, we have built a utility for MicroGrader that allows an instructor to automatically generate a test case using a reference solution for the exercise.
 
 \subsection{Recording a reference solution}
 In order to obtain a recording of a correctly implemented solution, we use introduce a mode of operation called \textit{recording mode}.  Recording mode differs from regular testing in that input values are \textbf{not} predefined.  Rather, inputs are sampled by the embedded system's sensors and those values are reported to the MicroGrader server, as shown in Figure \ref{fig:recording-mode}.
