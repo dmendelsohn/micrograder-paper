@@ -629,7 +629,7 @@ The primary purpose of MicroGrader is to streamline the grading process, so it i
 \subsection{Recording a reference solution}
 In order to obtain a recording of a correctly implemented solution, we use introduce a mode of operation called \textit{recording mode}.  Recording mode differs from regular testing in that input values are \textbf{not} predefined.  Rather, inputs are sampled by the embedded system's sensors and those values are reported to the MicroGrader server, as shown in Figure \ref{fig:recording-mode}.
 
-\begin{figure}[h]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=\linewidth]{recording-mode.png}
 \caption{MicroGrader block diagram in recording mode.}
@@ -665,20 +665,48 @@ Frame 2 & $1^{\text{st}}$ HTTP response received & 3 seconds after first HTTP re
 Frame 1 would specify the inputs required to begin the first query entry process, perform out that entry process, and send the query.  Frame 2 would specify the inputs required to restart the query entry process after the HTTP response arrives.  An instructor specifies the start and end conditions; it is the role of our test construction algorithm to add the value generating functions.
 
 \subsection{Building value generating functions}
-TODO: talk about what we have (input samples)...need to recover a continuous signal.  Discuss our various methods of doing that
+The first step in constructing our value generating functions is to convert the observed discrete input signals to continuous input signals.  Suppose that on some input channel, the \textit{n}th sample occurs at time $t_n$, the previous sample occurs at time $t_{n-1}$, and the subsequent sample occurs at time $t_{n+1}$.  MicroGrader offers several ways to create a continuous signal using these samples:
+
+\begin{itemize}
+\item Post-hold: the \textit{n}th sample is valid in the interval $[t_n, t_{n+1})$.
+\item Pre-hold: the \textit{n}th sample is valid in the interval $(t_{n-1}, t_n]$.
+\item Mid-hold: the \textit{n}th sample is valid in the interval $[(t_{n-1} + t_n)/2, (t_n + t_{n+1})/2)$.
+\item Interpolation: Values between samples are determined using linear interpolation. 
+\end{itemize}
+
+These methods are illustrated in Figure \ref{fig:interpolation}.  Instructors can specify a different method of creating the continuous signal for each input channel.  For some types of input channels, namely digital ones, the ``interpolate" method is not valid.
+
+\begin{figure}
+\centering
+\begin{subfigure}[b]{.45\linewidth}
+\includegraphics[width=\linewidth]{input-samples.png}
+\caption{Input samples.}
+\end{subfigure}
+
+\begin{subfigure}[b]{.45\linewidth}
+\includegraphics[width=\linewidth]{input-pre.png}
+\caption{Pre-hold continuous signal.}
+\end{subfigure}
+\begin{subfigure}[b]{.45\linewidth}
+\includegraphics[width=\linewidth]{input-post.png}
+\caption{Post-hold continuous signal.}
+\end{subfigure}
+
+\begin{subfigure}[b]{.45\linewidth}
+\includegraphics[width=\linewidth]{input-mid.png}
+\caption{Mid-hold continuous signal.}
+\end{subfigure}
+\begin{subfigure}[b]{.45\linewidth}
+\includegraphics[width=\linewidth]{input-inter.png}
+\caption{Interpolated continuous signal.}
+\end{subfigure}
+\caption{TODO}
+\label{fig:interpolation}
+\end{figure}
 
 TODO: now that we have a the continuous signal, we need to figure out the bounds of each frame.  Some frames might be discarded.  Describe.
 
 TODO: Portion of signal within bounds is zero-ed, zero-order holded out to infinity.  Use a pair of plots here to demonstrate.  MicroGrader can then use its representation of this signal to construct the function.  Remind that this process is occurring for each frame and for each input channel. 
-
-%One issue we haven't addressed yet is interpolating the recorded inputs.  After all, those represent a sample of a continuous signal.  MicroGrader gives instructors several options as to how to interpolate the sampled input; the following methods are all supported.  For the sake of clarity, consider a value recorded at time $t_n$.  The previous recording occurred at time $t_{n-1}$ and the subsequent recording occurred at time $t_{n+1}$.
-
-%\begin{itemize}
-%\item Forward hold: a recorded value holds in the interval $[t_n, t_{n+1})$
-%\item Backward hold: a recorded value holds in the interval $(t_{n-1}, t_n]$
-%\item Bi-direction hold: a recorded value holds in the interval $[(t_{n-1} + t_n)/2, (t_n + t_{n+1})/2)$
-%\item Interpolation: perform linear interpolation with a specified resolution between each sample.  Note that this doesn't work for certain input types (namely digital inputs).
-%\end{itemize}
 
 \subsection{Constructing evaluation points}
 \label{sec:using-point-templates}
