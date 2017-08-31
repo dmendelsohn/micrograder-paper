@@ -651,7 +651,7 @@ In our Wikipedia Scroller exercise, we can use a set of two frame templates for 
 
 TODO: describe how frame templates get ``accepted" or ``rejected"
 
-\subsection{Constructing test inputs}
+\subsection{Constructing test inputs (TODO: overhaul)}
 We construct a full set of input signals for each frame. First, the entire activity log is scanned to determined the times at which the start and end condition for each frame template were fulfilled.  We only generate a frame from a frame template if both the start and end condition were met, and the start condition was met first.
 
 For each generated frame, we consider all input values recorded by the client between the times that the start and end condition were met.  We convert the absolute times of these recorded inputs to relative times by subtracting the time at which the start condition was met.
@@ -665,7 +665,7 @@ One issue we haven't addressed yet is interpolating the recorded inputs.  After 
 \item Linear: perform linear interpolation with a specified resolution between each sample.  Note that this doesn't work for certain input types (namely digital inputs).
 \end{itemize}
 
-\subsection{Constructing evaluation points}
+\subsection{Constructing evaluation points (TODO: overhaul)}
 \label{sec:using-point-templates}
 Just as with input generation, we first determine which frame templates generate a frame by determining the times at which their conditions were fulfilled.  Again, for each frame, we consider the outputs on all channels that were reported between the fulfillment of the frame's start and end conditions.
 
@@ -679,14 +679,14 @@ A fixed-width time interval, like the one mentioned in the previous paragraph, i
 
 To give instructors the ability to tune the width of evaluation intervals in a dynamic way, elements of the template time interval can be mathematical formulae (represented in string form) rather than just integers.  In particular, this string can include a special variable, \texttt{T}, representing the length of time for which the recorded output was sustained.  For example, a point template might have the time interval \texttt{("0.2*T", "0.8*T")}, which indicates that the evaluation point's interval should cover the middle 60\% of the observed interval. 
 
-\subsection{Auto-generated test case for Wikipedia Scroller}
+\subsection{Auto-generated test case for Wikipedia Scroller (TODO: overhaul)}
 For an instructor to automatically generate a test case, he or she would first have to record a correctly implemented system performing the relevant operations (in our example, creating the query string ``cat" and fetching the relevant information from the internet).  For this assignment, a fairly simple scaffold would do.  Consider the following possible scaffold:
 
 The scaffold has has templates specifying the beginning and end of two separate frames.  The first frame should begin upon system initialization and end upon the first HTTP request.  The second frame should begin upon the response to that HTTP request, and end a few seconds afterward.  For point templates, the default point template suffices, with a time of interval of \texttt{("0.2*T", "0.8*T")} as mentioned above.  This gives a bit of leniency on the exact timing of state transitions in the student's solution.
 
 With this simple scaffold, and the recording of the staff solution, MicroGrader can generate a test case that checks for all the outputs that a human grader would look for.  Furthermore, the test case's use of two separate frames ensures that students would not be penalized for HTTP requests that are quicker or slower than the one in the original recording.
 
-\subsection{Resolving ambiguous cases}
+\subsection{Resolving ambiguous cases (TODO: move to ``Future work" and edit)}
 \label{sec:resolve-ambiguity}
 There is a major potential problem when recording a canonically correct staff solution.  First, the reconstruction of the input signals from the recorded input samples is inevitably imperfect.  Staff members should keep this in mind designing their solutions.  Specifically, it's a good idea for the staff solution to sample (and therefore report) the input at a relatively high frequency even if such a high frequency isn't necessary for a correct implementation.  This will give the MicroGrader server a maximally high resolution view of the inputs that the staff member physically created.
 
