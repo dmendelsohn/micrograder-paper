@@ -1,0 +1,10 @@
+\contentsline {figure}{\numberline {1}{\ignorespaces Block diagram for Wikipedia Scroller, from 6.S08 exercise description.\relax }}{13}
+\contentsline {figure}{\numberline {2}{\ignorespaces Screen output when in the display state. The last query was ``pigeons".\relax }}{15}
+\contentsline {figure}{\numberline {3}{\ignorespaces Demonstration of text entry in the Wikipedia Scroller exercise.\relax }}{16}
+\contentsline {figure}{\numberline {4}{\ignorespaces A simple digital signal.\relax }}{18}
+\contentsline {figure}{\numberline {5}{\ignorespaces Value generator function with two input channels.\relax }}{24}
+\contentsline {figure}{\numberline {6}{\ignorespaces MicroGrader block diagram.\relax }}{31}
+\contentsline {figure}{\numberline {7}{\ignorespaces Example of using bitmap XOR to find number of pixel differences.\relax }}{37}
+\contentsline {figure}{\numberline {8}{\ignorespaces Example where two visually similar bitmaps have a large difference under the naive distance metric.\relax }}{38}
+\contentsline {figure}{\numberline {9}{\ignorespaces TODO\relax }}{39}
+\contentsline {figure}{\numberline {10}{\ignorespaces TODO\relax }}{39}
