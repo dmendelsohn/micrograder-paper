@@ -618,7 +618,7 @@ In many systems, the embedded device produces outputs that serve as inputs to so
 It is currently impossible to evaluate derived outputs like this using MicroGrader (unless the derived output is zeroth order linear function of the microcontroller's output).  In a later version, MicroGrader will include the ability to add a custom physical model to convert the raw output into a derived output.
 
 \newpage
-\section{Automatic Test Generation (TODO: overhaul chapter)}
+\section{Automatic test generation (TODO: overhaul chapter)}
 \label{sec:scaffold}
 
 Using CAT-SOOP as a TA for MIT's 6.S08, the process of building test cases is a quick and convenient one.  An important convenience is the ability to only specify inputs for test cases.  CAT-SOOP uses a staff solution to generate the correct outputs for those specified inputs.  MicroGrader takes this philosophy one step further: it is possible to automatically generate a test case, including the desired system inputs, using a functioning staff solution.
@@ -668,7 +668,7 @@ We construct a full set of input signals for each frame. First, the entire activ
 
 For each generated frame, we consider all input values recorded by the client between the times that the start and end condition were met.  We convert the absolute times of these recorded inputs to relative times by subtracting the time at which the start condition was met.
 
-One issue we haven't addressed yet is interpolating the recorded inputs.  After all, those represent a sample of a continuous signal.  MicroGrader gives instructors several options as to how to interpolate the sampled input -- the following methods are all supported.  For the sake of clarity, consider a value recorded at time $t_n$.  The previous recording occurred at time $t_{n-1}$ and the subsequent recording occurred at time $t_{n+1}$.
+One issue we haven't addressed yet is interpolating the recorded inputs.  After all, those represent a sample of a continuous signal.  MicroGrader gives instructors several options as to how to interpolate the sampled input; the following methods are all supported.  For the sake of clarity, consider a value recorded at time $t_n$.  The previous recording occurred at time $t_{n-1}$ and the subsequent recording occurred at time $t_{n+1}$.
 
 \begin{itemize}
 \item Start: a recorded value holds in the interval $[t_n, t_{n+1})$
