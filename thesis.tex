@@ -638,7 +638,11 @@ In order to obtain a recording of a correctly implemented solution, we use intro
 
 An instructor with a working solution can use this mode to perform some set of tasks that fully demonstrate the functionality of the system.  Meanwhile, the MicroGrader server compiles a full record of observations of the embedded system's, including input values.  Those observations are then used to programmatically construct a test case.
 
-It is difficult to define a test case using observations alone.  There are many ambiguities in terms of how the instructor might want to the assignment to be graded. [TODO: give examples].  MicroGrader uses a data structure called the \textit{scaffold} to allow for instructors to specify these preferences.  The scaffold and the observations, when combined, can be used to produce a full test case.
+It is difficult to define a test case using observations alone.  There are many ambiguities in terms of how an instructor might want to the assignment to be graded.  MicroGrader test cases define inputs dynamically, relative to a condition; a test generator would have to determine the conditions relative to which input signals should be defined.  Furthermore, an instructor might only want to assess system outputs during certain periods of time, and ignore other periods.  For example, a Wikipedia Scroller test might be set up in such a way that ignores system outputs when the embedded system is waiting for an HTTP response.
+
+The evaluation point data structure allows instructors to specify check functions, which afford leniency to output values that are not exactly correct.  Evaluation points also allow instructors to specify a time interval and a ``required portion" of that interval for which the output should be correct.  A test generator would have to account for instructors' preferences with regards to these attributes.
+
+MicroGrader uses a data structure called the \textit{scaffold} to allow for instructors to specify these preferences.  The scaffold and the observations of a reference solution, when combined, can be used to produce a full test case.
 
 \subsection{Frame templates}
 TODO: describe
