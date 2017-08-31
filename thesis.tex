@@ -554,7 +554,16 @@ This distance metric is very unforgiving of slight translations.  For example, c
 To allow for leniency with regard to translations, we introduce a parametric family of distance metrics; there are two parameters, $d_{\text{vertical}}$ and $d_{\text{horizontal}}$.  These parameters specify the maximum allowable translation of one bitmap relative to the other in the vertical and horizontal directions respectively.  The allowable vertical translations are in the range $[-d_{\text{vertical}}, d_{\text{vertical}}]$ and the allowable horizontal translations are in the range $[-d_{\text{horizontal}}, d_{\text{horizontal}}]$.  Therefore, there are a total of $(2*d_{\text{vertical}}+1)*(2*d_{\text{horizontal}}+1)$ translations in two dimensions.  To compute the distance between two bitmaps, $B_1$ and $B_2$, according to this parametrized metric, a function applies each allowable translation to $B_1$.  The distance is defined to be the minimum naive distance between $B_2$ and any of the translations of $B_1$.  For example, if we set $d_{\text{horizontal}} >= 5$, then the distance between the bitmaps in Figures \ref{fig:circle-left} and \ref{fig:circle-right} is 0.
 
 \subsubsection{Text extraction from a bitmap (TODO: edit an add images}
-Many assignments involving a screen are text-based.  That is, the screen is expected to contain printed text.  To that end, MicroGrader includes functionality to extract the text from the screen.  Various OCR engines were considered, but none worked acceptably well due to the tiny size of many fonts used in such contexts (potentially 5x7 pixels or smaller).  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
+Many assignments, such as Wikipedia Scroller, involve displaying text on a screen.  MicroGrader includes functionality to extract text from a bitmap.  At first we explored using existing tools for optical character recognition (OCR), such as tesseract \cite{tesseract}.  These generic OCR tools, however, do not perform well for small fonts.  The character glyphs of small fonts sometimes bear only vague resemblance to their counterparts in larger fonts.  For example, Figure \ref{small-glyph} shows the glyph for the letter \texttt{m} in a small font from the X11 distribution \cite{5x7}.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.3\linewidth]{circle-left.png}
+\caption{TODO}
+\label{fig:small-glyph}
+\end{figure}
+
+  Instead, MicroGrader looks for rectangles on the screen that match the exact bitmap of a character.
 
 There are a few downsides to this text extraction approach.  First, any noise in the image or overlying element makes extraction impossible.  Furthermore, fonts must fixed-width.  This isn't a fundamental constraint of this technique, but it does massively help performance since the algorithm only has to consider rectangles of a specific size.  The biggest issue is that MicroGrader needs to know the bitmap for each character in the font.  Since its sometimes not easy to find detailed information for embedded fonts, MicroGrader includes a utility to ``record" the character bitmaps of a font using the actual screen output.
 
@@ -879,6 +888,12 @@ https://cacm.acm.org/blogs/blog-cacm/176450-python-is-now-the-most-popular-intro
 
 \bibitem{pyserial}
 https://pythonhosted.org/pyserial/ (TODO)
+
+\bibitem{tesseract}
+TODO
+
+\bibitem{5x7}
+https://github.com/olikraus/u8g2/wiki/fntgrpx11\#5x7 (TODO)
 
 \bibitem{pickle}
 https://docs.python.org/3/library/pickle.html (TODO)
