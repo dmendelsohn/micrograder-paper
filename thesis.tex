@@ -122,7 +122,7 @@ The process of constructing test cases can be time-consuming.  It is often prohi
 
 
 \newpage
-\section{Prior Work (TODO: edit chapter)}
+\section{Prior work (TODO: edit chapter)}
 In my search for existing automatic graders for embedded systems courses, I found only one system that's actually being used.  The University of Texas at Austin (UT Austin) offers an EdX course "Embedded Systems - Shape The World" \cite{ut-austin-edx}, which uses a grading system called TExaS.  Most of what I learned about TExaS was gleaned by examining the course on EdX itself; I was not able to find technical documentation.
 
 TExaS consists of a grader running on a student's computer, that observes the activity of the student's microcontroller.  It is decidedly not multi-platform: the core of TExaS runs as a plug-in to the Keil Microcontroller Development Kit \cite{keil}, which only runs on Windows.  That plug-in works with the particular microcontroller used in the course.
@@ -592,21 +592,24 @@ The high level of configurability could potentially make it difficult for an ins
 
 
 \newpage
-\section{Limitations (TODO: edit chapter)}
-Although MicroGrader is well-suited for grading many types of microcontroller projects, there are limitations that any instructor using this tool should know about.
+\section{Limitations}
+Although MicroGrader is well-suited for grading many types of microcontroller projects, there are limitations that any instructor using this tool should know about.  Awareness of these limitations would help instructors design technical specifications that MicroGrader can assess effectively.
 
 \subsection{Latency}
-In order to implement its side of the protocol, embedded clients must do some work.  Effort has been made to minimize this, but this issue nevertheless makes MicroGrader unusable for projects that have very sensitive timing, or that involve performing I/O operations at high frequencies.  In \textit{test} mode, the latency of reading an input is often orders of magnitude higher than in \textit{inactive} mode.  The embedded client must wait for the MicroGrader server to process and respond to a request for an input value.  Most of the latency is fundamentally due to the round-trip latency of the USB protocol, and due to the firmware on the server machine.
+In order to implement its side of the protocol, embedded clients must do some computational work.  Effort has been made to minimize this, but nevertheless MicroGrader is unsuitable for projects that have very sensitive timing, or that involve performing I/O operations at high frequencies.  For example, the latency of sampling an input is often order of magnitude (or two) higher when the MicroGrader client is in use, compared to regular microcontroller operation.  The embedded client must wait for the MicroGrader server to process and respond to a request for an input value.  Most of the latency is fundamentally due to the round-trip latency of the USB protocol.
 
-The latency issue makes is impossible for MicroGrader to examine raw communication channels such as UART, I2C, or SPI, or to inject values into those channels at a reasonable rate.
+The latency issue makes is impossible for MicroGrader to observe device-level communication channels such as UART (universal asynchronous receiver/transmitter), $\text{I}^2\text{C}$ (inter-integrated circuit), or SPI (serial peripheral interface), or to inject values into those channels at a reasonable rate.  If the MicroGrader client tried to report each $\text{I}^2\text{C}$ message to the server, for example, the data throughput on the $\text{I}^2\text{C}$ would drop precipitously.
 
-The specific constraints depend on the platform.  In building the reference implementation for Teensy, I observed that round-trip latency for relatively small messages ($<100$ bytes) was about a millisecond.  Therefore, the upper bound for the input sampling rate is around 1 KHz.  This is fast enough for many assignments that involve ``human" time scales, but woefully insufficient in other cases, such as audio sampling.
+The specific constraints depend on the platform.  In building the reference implementation for Teensy, I observed that round-trip latency for relatively small messages ($<100$ bytes) was about a millisecond.  Therefore, the upper bound for the input sampling rate is around 1 KHz.  This is fast enough for many assignments that involve ``human" time scales, but insufficient in other cases, such as audio sampling.
 
 \subsection{Point-by-point evaluation}
-Our \textit{evaluation point} model inherently forces a test case to independently evaluate points of an output signal.  For any given interval, there is a single expected value.   More sophisticated correctness metric, involving the entire output signal at once, aren't possible in this framework.  For example, we cannot use \textit{evaluation points} to determine the cross-correlation between the observed output signal and an expected output signal.
+Our evaluation point structure inherently forces a test case to independently evaluate points of an output signal.  For any given interval, there is a single expected value.   A more sophisticated correctness metric, involving the entire output signal at once, aren't possible in this framework.  For example, we cannot use evaluation points to determine the cross-correlation between the observed output signal and an expected output signal.
+
+\subsection{Sensitivity to time scaling}
+Evaluation points have time intervals that are fixed, relative to the satisfaction of a condition.  If a student's solution shifts its outputs time-wise, it could cause many of the points to evaluate to \texttt{false}.  The overall output signals might appear reasonable, while being ``out-of-phase" with the expected signal, so to speak.  As a concrete example, consider a student implementation of Wikipedia Scroller where the ``scrolling" in text entry mode occurred 10\% too slowly.  That is, the letters change every 165 milliseconds instead of every 150 milliseconds.  To a human grader, this difference would probably be imperceptible.  In fact, an instructor might want to give some lenience for issues like this.  The system's outputs would be delayed relative to the expected solution, and there is currently no easy way to configure MicroGrader to handle that leniently.
 
 \subsection{Step-wise constant restriction}
-MicroGrader assumes that the embedded system's outputs remain constant until the next output is observed.  While a step-wise constant function can approximate any step-wise continuous function to arbitrary precision, this can put an unacceptably high burden on the embedded client.  For example, both Arduino and Teensy have built-in functionality for creating square wave signals of a specified frequency for a specified duration, using a single user-facing instruction (\texttt{tone(pin, frequency)} or \texttt{tone(pin, frequency, duration)}).  In order for the embedded client to properly inform the server about the square wave signal, it would have to send a message on every rising and falling edge.  It is not possible, in a single message, to inform the server about the square wave that is being produced.
+MicroGrader assumes that the embedded system's outputs remain constant until the next output is observed.  While a step-wise constant function can approximate any step-wise continuous function to arbitrary precision, this can put an unacceptably high burden on the embedded client.  For example, both the Teensy has built-in functionality for creating square wave signals of a specified frequency for a specified duration, using a single user-facing instruction (\texttt{tone(pin, frequency)} or \texttt{tone(pin, frequency, duration)}).  In order for the embedded client to properly inform the server about the square wave signal, it would have to send a message on every rising and falling edge.  It is not possible, in a single message, to inform the server about the square wave that is being produced.
 
 \subsection{Derived outputs}
 \label{sec:derived-outputs}
