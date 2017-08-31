@@ -559,21 +559,28 @@ Many assignments, such as Wikipedia Scroller, involve displaying text on a scree
 
 \begin{figure}
 \centering
-\includegraphics[width=0.3\linewidth]{circle-left.png}
-\caption{TODO}
+\includegraphics[width=0.3\linewidth]{glyph-m.png}
+\caption{A lower-case ``m", in a 5-by-7 pixel font is difficult to recognize.}
 \label{fig:small-glyph}
 \end{figure}
 
-MicroGrader's text extraction algorithm requires a bitmap representation of each character in a font.  Essentially, the algorithm scans the embedded system's output screen looking for rectangular patches that exactly match known bitmaps from a pre-loaded font.  The algorithm can be configured to ignore a subset of the characters in the font.  This is useful because some characters have glyphs that can appear in an image as an artifact of some other character, as shown in Figure \ref{fig:bad-ocr}.
+MicroGrader's text extraction algorithm requires a bitmap representation of each character in a font.  Essentially, the algorithm scans the embedded system's output screen looking for rectangular patches that exactly match known bitmaps from a pre-loaded font.  The algorithm can be configured to ignore a subset of the characters in the font.  This is useful because some characters have glyphs that can appear in an image as a result of some other character, as shown in Figure \ref{fig:bad-ocr}.
 
 \begin{figure}
 \centering
-\includegraphics[width=0.3\linewidth]{circle-left.png}
-\caption{TODO}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{glyph-T.png}
+\label{fig:glyph-T}
+\end{subfigure}
+\begin{subfigure}[b]{.3\linewidth}
+\includegraphics[width=\linewidth]{glyph-underscore.png}
+\label{fig:glyph-underscore}
+\end{subfigure}
+\caption{The crossbar of a T is identical to an underscore character.  An instructor might choose to ignore the underscore character.}
 \label{fig:bad-ocr}
 \end{figure}
 
-TODO: describe downsides (need a clear rectangle, need to gather information about the font.  Talk about utility to record a font).
+This text extraction algorithm is effective, but it has some weaknesses.  It requires exact glyph matches, so a single changed pixel anywhere in the rectangular window of the glyph would make the character unrecognizable to the algorithm.  The algorithm requires each glyph in the font before performing any recognition; instructors must provide the font data.
 
 \subsection{Configurability and defaults}
 \label{sec:config}
