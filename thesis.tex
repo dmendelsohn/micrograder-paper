@@ -680,34 +680,18 @@ TODO: Portion of signal within bounds is zero-ed, zero-order holded out to infin
 %\item Interpolation: perform linear interpolation with a specified resolution between each sample.  Note that this doesn't work for certain input types (namely digital inputs).
 %\end{itemize}
 
-\subsection{Constructing evaluation points (TODO: overhaul)}
+\subsection{Constructing evaluation points}
 \label{sec:using-point-templates}
-Just as with input generation, we first determine which frame templates generate a frame by determining the times at which their conditions were fulfilled.  Again, for each frame, we consider the outputs on all channels that were reported between the fulfillment of the frame's start and end conditions.
+TODO: discrete to continuous
 
-For each (frame, channel) pair, we create a set of evaluation points.  Specifically, we create a new evaluation point each time the output value changes on that channel.  It is important to note that repeated output reports of the same value have no effect.  For example, if the voltage on a pin is currently 0, and the microcontroller executes a command that sets the voltage on that pin to 0 again, that is functionally equivalent to doing nothing.  The change in the value is all that matters.
+TODO: groundwork... for each frame and channel, we have a bounded signal on that channel to evaluate
 
-In constructing each evaluation point, we can easily determine the channel.  The expected value is equal to the observed value, since this is a staff recording and we consider its outputs to be canonically correct.   For the point's check function and required portion, we use the values for the point template for this channel.  For the point's condition, we use the start condition of the frame we are currently considering.
+For each (frame, channel) pair, we create a set of evaluation points.  Specifically, we create a new evaluation point each time the output value changes on that channel.  TODO: an image here would be helpful
 
-To complete our construction of an evaluation point, we need to specify the time interval.  The time interval is generated using a combination of the time interval of this channel's point template, and the activity log.  Specifically, the template time interval is not relative to the fulfillment of the frame's start condition, but rather relative to the time at which the output was reported.  So if the template time interval is \texttt{(0, 100)}, the frame's start condition was met at $t=1000$, and a new output is reported at $t=1500$, then the evaluation point for this output will have an interval of \texttt{(500, 600)}.  Recall that an evaluation point's time interval is relative to the point's condition being met.  More generally, if the template interval is $(t_{start}, t_{end})$, the condition is met at $t_{cond}$ and the output is reported at $t_{output}$, the evaluation point's interval will be $(t_{output} - t_{cond} + t_{start}, t_{output} - t_{cond} + t_{end})$.
+TODO: details on the new point.  Mention how templates come into play.  Ignore the time interval thing I did in the template.  Include a table corresponding to above image
 
-A fixed-width time interval, like the one mentioned in the previous paragraph, is not very useful in a template.  Typically, the length of the interval should be relative to the length of time for which the output was sustained in the correct solution.  A fixed interval of width 100 milliseconds would be unreasonable if the correct solution sustained that output for only 50 milliseconds.  Furthermore, it would be too lenient if the correct solution sustained that output for 5000 milliseconds.
-
-To give instructors the ability to tune the width of evaluation intervals in a dynamic way, elements of the template time interval can be mathematical formulae (represented in string form) rather than just integers.  In particular, this string can include a special variable, \texttt{T}, representing the length of time for which the recorded output was sustained.  For example, a point template might have the time interval \texttt{("0.2*T", "0.8*T")}, which indicates that the evaluation point's interval should cover the middle 60\% of the observed interval. 
-
-\subsection{Auto-generated test case for Wikipedia Scroller (TODO: overhaul)}
-For an instructor to automatically generate a test case, he or she would first have to record a correctly implemented system performing the relevant operations (in our example, creating the query string ``cat" and fetching the relevant information from the internet).  For this assignment, a fairly simple scaffold would do.  Consider the following possible scaffold:
-
-The scaffold has has templates specifying the beginning and end of two separate frames.  The first frame should begin upon system initialization and end upon the first HTTP request.  The second frame should begin upon the response to that HTTP request, and end a few seconds afterward.  For point templates, the default point template suffices, with a time of interval of \texttt{("0.2*T", "0.8*T")} as mentioned above.  This gives a bit of leniency on the exact timing of state transitions in the student's solution.
-
-With this simple scaffold, and the recording of the staff solution, MicroGrader can generate a test case that checks for all the outputs that a human grader would look for.  Furthermore, the test case's use of two separate frames ensures that students would not be penalized for HTTP requests that are quicker or slower than the one in the original recording.
-
-\subsection{Resolving ambiguous cases (TODO: move to ``Future work" and edit)}
-\label{sec:resolve-ambiguity}
-There is a major potential problem when recording a canonically correct staff solution.  First, the reconstruction of the input signals from the recorded input samples is inevitably imperfect.  Staff members should keep this in mind designing their solutions.  Specifically, it's a good idea for the staff solution to sample (and therefore report) the input at a relatively high frequency even if such a high frequency isn't necessary for a correct implementation.  This will give the MicroGrader server a maximally high resolution view of the inputs that the staff member physically created.
-
-Even if we could, somehow, record an infinitely high resolution input signal, some recordings could have problems.  Namely, the desired system output could be ambiguous for that particular input signal.  This commonly happens in edge cases.  It is possible to make the specification stricter to avoid such ambiguities, but that might be undesirable from a pedagogical standpoint.  The instructor's solution would record one acceptable output.  As a result, other acceptable outputs would be seen as incorrect.
-
-A subsequent version of MicroGrader will include tools for instructors to avoid ambiguous inputs.  Specifically, these tools will allow instructors to edit recordings of input signals.  Presumably, an instructor would be able to remove any ambiguities.  After editing, these new input signals would be injected back into the instructor's embedded system to record the unambiguously correct output.
+\subsection{Auto-generated test case for Wikipedia Scroller}
+TODO: give some input plots from a real test case, and create table of evaluation points
 
 
 \newpage
@@ -722,6 +706,14 @@ It is currently difficult for instructors to have loose timing specifications, s
 
 \subsection{Editing recordings}
 As mentioned in section \ref{sec:resolve-ambiguity}, a set of tools will be included in the next version of MicroGrader to facilitate some manual editing of recordings of a instructor's correctly implemented system.  This will help create test cases that are unambiguous.  Ideally, these tools will also help an instructor programmatically edit a recording.
+
+TODO: add ambiguity issue here
+
+%There is a major potential problem when recording a canonically correct staff solution.  First, the reconstruction of the input signals from the recorded input samples is inevitably imperfect.  Staff members should keep this in mind designing their solutions.  Specifically, it's a good idea for the staff solution to sample (and therefore report) the input at a relatively high frequency even if such a high frequency isn't necessary for a correct implementation.  This will give the MicroGrader server a maximally high resolution view of the inputs that the staff member physically created.
+
+%Even if we could, somehow, record an infinitely high resolution input signal, some recordings could have problems.  Namely, the desired system output could be ambiguous for that particular input signal.  This commonly happens in edge cases.  It is possible to make the specification stricter to avoid such ambiguities, but that might be undesirable from a pedagogical standpoint.  The instructor's solution would record one acceptable output.  As a result, other acceptable outputs would be seen as incorrect.
+
+%A subsequent version of MicroGrader will include tools for instructors to avoid ambiguous inputs.  Specifically, these tools will allow instructors to edit recordings of input signals.  Presumably, an instructor would be able to remove any ambiguities.  After editing, these new input signals would be injected back into the instructor's embedded system to record the unambiguously correct output.
 
 \subsection{Dynamic values}
 Certain ``correct" values are not determined at the time the test case is created.  For example, the Wikipedia Scroller assignment has an output that involves the current text on Wikipedia.org.  The next version of MicroGrader, will include a ``place-holder" data type.  This placeholder will be a function that runs at evaluation time to generate the correct value.  In the Wikipedia Scroller case, the placeholder would fetch the correct text from Wikipedia.
