@@ -704,9 +704,16 @@ These methods are illustrated in Figure \ref{fig:interpolation}.  Instructors ca
 \label{fig:interpolation}
 \end{figure}
 
-TODO: now that we have a the continuous signal, we need to figure out the bounds of each frame.  Some frames might be discarded.  Describe.
+After converting the discrete input signals to continuous input signals, our algorithm uses these signals to determine the value generating function for each input frame.  First, it examines the observation log to determine the $t_{\text{start}}$ and $t_{\text{end}}$ for each input frame in the scaffold.  Recall that $t_{\text{start}}$ and $t_{\text{end}}$ are the $t_{\text{satisfied}}$ times for the start and end conditions, respectively, of an input frame.  For any input frame, if either of $t_{\text{start}}$ or $t_{\text{end}}$ are undefined, or $t_{\text{start}}$ >= $t_{\text{end}}$, then that input  frame is discarded and will not be included in our constructed test.
 
-TODO: Portion of signal within bounds is zero-ed, zero-order holded out to infinity.  Use a pair of plots here to demonstrate.  MicroGrader can then use its representation of this signal to construct the function.  Remind that this process is occurring for each frame and for each input channel. 
+For each remaining input frame, we can now determine the value generating function.  Specifically, for each input channel, we extract the portion of the signal between $t_{\text{start}}$ and $t_{\text{end}}$ of the frame.  We translate this signal so that it begins at $t=0$, and we extend the signal from its final value (which was originally at $t=t_{\text{end}}$) to infinity.  This process is illustrated in Figure \ref{fig:input-framing}.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\linewidth]{input-framing.png}
+\caption{Visualization of building a value generating function for a single analog input channel.}
+\label{fig:input-framing}
+\end{figure}
 
 \subsection{Constructing evaluation points}
 \label{sec:using-point-templates}

@@ -36,7 +36,7 @@ def plot_button_signal():
     plt.xlabel('Time (ms)')
     plt.show()
 
-def plot_input_samples(where=None):
+def plot_input_samples(where=None): # "inter", "mid", "pre", "post" or ""/None
     x = [0, 1000, 2000, 3000, 4000, 5000]
     y = [0, 2, 0, 3, 1, 2]
     if where == "inter":
@@ -49,5 +49,16 @@ def plot_input_samples(where=None):
     plt.legend(bbox_to_anchor=(0, 1), loc='upper left', ncol=1)
     plt.show()
 
+def plot_input_slicing(do_slice=True):
+    x = [0, 1000, 2000, 3000, 4000, 5000]
+    if do_slice:
+        y = [2, 0, 3, 1, 1, 1]
+    else:
+        y = [0, 2, 0, 3, 1, 2]
+    plt.step(x, y, where='post', label="continuous signal")
+    plt.ylabel('Analog voltage (V)')
+    plt.xlabel('Time (ms)')
+    plt.show()  
+
 if __name__ == "__main__":
-    plot_input_samples("inter")
+    plot_input_slicing(True)
