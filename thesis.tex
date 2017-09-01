@@ -139,7 +139,7 @@ In MIT's 6.S08 (Interconnected Embedded Systems), microcontroller grading is com
 \newpage
 \section{Motivating example: ``Wikipedia Scroller"}
 \label{sec:wiki-scroller}
-Before diving into technical details of the automated grader, it helps to have a motivating example in mind;  MIT's 6.S08 includes an exercise called ``Wikipedia Scroller", in which students build a digital encyclopedia using a microcontroller, a push-button switch, a nine-axis inertial measurement unit (IMU) and a 128x64 organic light-emitting diode (OLED) display \cite{wiki-scroller}.
+Before diving into technical details of the automated grader, it helps to have a motivating example in mind;  MIT's 6.S08 includes an exercise called ``Wikipedia Scroller", in which students build a digital encyclopedia using a microcontroller development board, a push-button switch, a nine-axis inertial measurement unit (IMU) and a 128x64 organic light-emitting diode (OLED) display \cite{wiki-scroller}.
 
 Each student implements a tilt-based interface that allows the device's user to build an alphanumeric query string.  Using the ESP8266 chip, the device transmits the query string to a server-side Python program.  That Python program uses the query string to formulate a query to the Wikipedia application program interface (API), parses the response from the Wikipedia API, and transmits the first 200 characters of the relevant Wikipedia description to the embedded device.
 
@@ -232,7 +232,7 @@ In this manner, the author was able to grade each student's work in under two mi
 
 \newpage
 \section{Defining a test}
-In this chapter, we describe the design of the \textit{test case} data structure, and explain the reasoning behind it.  At an abstract level, MicroGrader's role is to assign a score to an embedded system.  A human grader might rely on intuition or a checklist in order to assign a score.  For MicroGrader, the test case defines the process by which a score is assigned.  A MicroGrader test case serves two primary functions.  First, it specifies any necessary input signal signals.  Second, it specifies how the resulting output signals should be graded.
+In this chapter, we describe the design of the \textit{test case} data structure, and explain the reasoning behind it.  At an abstract level, MicroGrader's role is to assign a score to an embedded system.  A human grader might rely on intuition or a checklist in order to assign a score.   To automate the grading process, we must try formalize as much of this intuition as possible.  In MicroGrader, we attempt to encapsulate human intuition in the test case data structure, which defines the computation of assigning a score.  A MicroGrader test case serves two primary functions.  First, it specifies any necessary input signal signals.  Second, it specifies how the resulting output signals should be graded.
 
 \subsection{The shortcomings of statically defined inputs}
 While developing MicroGrader, we first explored a static approach to specifying inputs.  In this design, all input signals would be completely predefined.  For example, a test case could specify a digital input as seen in Figure \ref{fig:static-input}.
@@ -256,6 +256,8 @@ Observing internal events directly can simplify the logic for test cases.  It is
 
 \subsubsection{Data structure: ``Condition"}
 \label{sec:condition}
+TODO: capitalize "AFTER", "AND", "OR", "BASIC"....also maybe add a table summarizing types
+
 We want the ability to specify the timing of system inputs relative to a specific, unique event that occurs during the execution of an embedded system.  In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the satisfaction of the condition.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
 
 Our condition data structure can express unique events such as: ``The first HTTP request", ``the second HTTP request", and ``the first time that the word `cat' appears on the embedded display".  It achieves this with a recursive design; complex conditions can be built by composing simpler ones.  There are four fundamental types of conditions.
@@ -442,7 +444,7 @@ Furthermore, the client reports observations to the server.  Whenever a student'
 Evaluation of a student's system occurs via a two-stage process.  First, the MicroGrader server and client engage in an interactive session to determine how the embedded system responds to test inputs.  The outputs and a narrow selection of internal microcontroller events are logged.  In the second stage, the MicroGrader server assesses the logged observations and determines an overall score for the exercise.
 
 \subsubsection{Stage 1: The interactive session}
-In this stage, the server loads the relevant test case from a file and waits for the client to connect.  Once the client connects, it begins executing the student's embedded program, sending messages to the server when appropriate.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.  All messages include a timestamp, which is the number of milliseconds elapsed between the microcontroller's last reset and the time at which the message is sent.  On many microcontrollers, there is a built-in function for this (e.g. \texttt{millis()} on Arduino microcontrollers).
+In this stage, the server loads the relevant test case from a file and waits for the client to connect.  Once the client connects, it begins executing the student's embedded program, sending messages to the server when appropriate.  There are, broadly speaking, two types of message from the client to the server: observations and input requests.  All messages include a timestamp, which is the number of milliseconds elapsed between the microcontroller's last reset and the time at which the message is sent.  On many microcontroller platforms, there is a built-in function for this (e.g. \texttt{millis()} on Arduino systems).  TODO: why millis
 
 The exact contents of an observation message depend on the nature of that observation.  Output observations, for example, include the output channel and value.  Output observations are sent whenever the student's code generates an output, even if that output is redundant (i.e. the output value is identical to the previous value on the same channel).  Some observation messages contain information about internal events on the microcontroller, rather information about outputs.
 
@@ -467,7 +469,7 @@ MicroGrader is designed to not mask software errors.  If something goes wrong wi
 \subsubsection{Client side}
 When developing MicroGrader, we decided to minimize the computational responsibilities of the MicroGrader client.  We wanted to limit MicroGrader's effect on the execution of the student's embedded programs.  The students, ideally, should not notice the effect of the MicroGrader client software.  Embedded programs that meet the specification for an exercise when not connected to MicroGrader should behave similarly when MicroGrader is performing a test.
 
-We created a implementation of the MicroGrader client for the Teensy 3.2 microcontroller, from PJRC \cite{teensy}, which is used as the primary computation platform for MIT's 6.S08.  It is possible, and desirable, to develop client implementations for other platforms as well.  The communication protocol, detailed in Appendix \ref{sec:teensy}, is not platform-specific.  For example, as alluded to in section \ref{sec:config}, the MicroGrader server makes no assumptions about the range and resolution of analog values.  The client is responsible for communicating range and resolution information in any analog request or observation.
+We created a implementation of the MicroGrader client for the Teensy 3.2 microcontroller development board, from PJRC \cite{teensy}, which is used as the primary computation platform for MIT's 6.S08.  It is possible, and desirable, to develop client implementations for other platforms as well.  The communication protocol, detailed in Appendix \ref{sec:teensy}, is not platform-specific.  For example, as alluded to in section \ref{sec:config}, the MicroGrader server makes no assumptions about the range and resolution of analog values.  The client is responsible for communicating range and resolution information in any analog request or observation.
 
 We, and the original staff of 6.S08, chose to use the Teensy for a few major reasons.  Programs for the Teensy are developed using an add-on to Arduino IDE \cite{arduino-ide}.  The Arduino platform in general is popular \cite{arduino-popular}, including among students \cite{arduino-students}, and the integrated development environment (IDE) can run on Windows, MacOS, and Linux.  Many existing Arduino libraries are compatible with the Teensy, affording instructors a wide range of options for supported hardware peripherals.  The Teensy boasts impressive features for its price (under 20 dollars); it has a 72MHz 32-bit microprocessor, 34 digital input/output pins and 21 analog input pins.  It also has 64 kilobytes of random access memory (RAM) \cite{teensy-specs}.
 
@@ -833,7 +835,7 @@ Expected Value & Check Function & Condition & Interval & Portion \\ \hline \vspa
 \end{center}
 \end{table}
 
-TODO: talk about efficacy
+In practice, this automatically constructed test was effective at grading this assignment.  We made a variety of minor changes to the reference implementation.  Some of these changes did not affect the system's adherence to the specification of the exercise, such as the exact positioning of text on the screen.  Using the generated test, MicroGrader correctly gave these implementations full credit.  Other changes resulted in a system that did not quite meet the specification, and MicroGrader correctly gave these less-than-perfect scores.
 
 \newpage
 \section{Future Work}
