@@ -963,7 +963,7 @@ We encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap f
 
 The screen can be considered a grid of non-overlapping tiles (though padding might be necessary so that 8x8 tiles perfectly cover the entire screen.  When transmitting the screen, the tiles are transmitted by row, from top to bottom (lowest y-coordinate to highest y-coordinate.  Within each row, tiles are transmitted from right to left (highest x-coordinate to lowest x-coordinate).  Note that the Screen request does not specify the shape of the screen; it just sends a sequence of tiles.  Therefore, it is imperative that, before sending any Screen requests, the client informs the server of the screen shape using a ``Screen Init" request (see section \ref{sec:event-messages}).
 
-\subsection{Events (TODO: edit)}
+\subsection{Events}
 \label{sec:event-messages}
 Event messages are similar to output messages in that they are used to report information to the server, not receive information from the server.  Responses to event messages have empty bodies, just as with output messages.  Table \ref{table:event-messages} describes the bodies of event messages.
 
