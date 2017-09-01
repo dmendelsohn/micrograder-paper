@@ -965,8 +965,9 @@ The screen can be considered a grid of non-overlapping tiles (though padding mig
 
 \subsection{Events (TODO: edit)}
 \label{sec:event-messages}
-Event requests are similar to output requests in that they are used to report information to the server, not receive information from the server.  Responses to event requests have empty bodies, just as with output requests.  The following table describes the request bodies for event requests.
+Event messages are similar to output messages in that they are used to report information to the server, not receive information from the server.  Responses to event messages have empty bodies, just as with output messages.  Table \ref{table:event-messages} describes the bodies of event messages.
 
+\begin{table}[ht]
 \begin{center}
 \begin{tabular}{l l l}
 code & name & request body \\ \hline
@@ -977,26 +978,27 @@ code & name & request body \\ \hline
 0x60 & HTTP request & (\textit{empty}) \\
 0x61 & HTTP response & (\textit{empty}) \\ \hline
 \end{tabular}
+\caption{Summary of contents of event messages.}
+\label{table:event-messages}
 \end{center}
+\end{table}
 
-\vspace{5mm}
+The ``Init" message is sent when the embedded client initializes.  In addition, the ``Screen Init" message is used upon initialization to inform the server of the width and height of the screen, as measured in 8x8 tiles.  The ``Print" message is used to send custom text (ASCII-encoded) from the client to the server.  This is particularly helpful for debugging, since it is impossible to perform regular debugging via USB when MicroGrader is in use.
 
-The Init request is sent when the embedded client initializes.  In addition, the Screen Init request is used upon initialization to inform the server of the width and height of the screen, as measured in 8x8 tiles.  The Print request is used to send custom text (ASCII-encoded) from the client to the server.  This is particularly helpful for debugging, since it is impossible to perform regular debugging via USB when MicroGrader is in use.
-
-It is important to inform the server of certain events, especially ones that have highly variable latencies.  The GPS Fix request is used to inform the server that the client has acquired a GPS fix.  The ``HTTP request" mesage is used to inform the server that an HTTP request has been sent.  The ``HTTP response" message is used to inform the server that a internet response has been received.
+It is important to inform the server of certain events, especially ones that have highly variable latencies.  The ``GPS Fix" message is used to inform the server that the client has acquired a GPS fix.  The ``HTTP request" message is used to inform the server that an HTTP request has been sent.  The ``HTTP response" message is used to inform the server that a internet response has been received.
 
 \clearpage
 \section{Client implementation for Teensy}
 \label{sec:teensy}
-MicroGrader is built to be cross-platform and is should work with a wide variety of microcontrollers.  As of now, the client side of the communication protocol is implemented for only one microcontroller: the Teensy, an Arduino variant.  The key for any client implementation is to be as invisible to students as possible.  In the case of the Teensy implementation, students write implement projects in a \texttt{.ino} file, which has access to a built-in functions.  In order to properly implement the protocol, I wrote a library that overrides many of these built-in functions to perform the proper communication with the server.  The required changes to the student's \texttt{.ino} file are minimal.
+MicroGrader is built to be cross-platform and is should work with a wide variety of microcontrollers.  As of now, the client side of the communication protocol is implemented for only one microcontroller development board: the Teensy.  The key for any client implementation is to be as invisible to students as possible.  In the case of the Teensy implementation, students implement projects in a \texttt{.ino} file, which has access to built-in functions.  In order to properly implement the protocol, I wrote a library that overrides many of these built-in functions to perform the proper communication with the server.  The required changes to the student's \texttt{.ino} file are minimal.
 
-At its core, the client consists of a communication library that interacts with the server.  It provides functionality for other libraries to send messages to the server; the core communication library adds the request header to the message.  If the request requires a response, the communication library waits, and processes, that response, and returns its contents.  If the request does not require a response, the communication library returns immediately after sending a request.
+At its core, the client consists of a communication library that interacts with the server.  It provides functionality for other libraries to send messages to the server; the core communication library adds the message header to the message.  If the message requires a response, the communication library waits, and processes, that response, and returns its contents.  If the message does not require a response, the communication library returns immediately after sending a message.
 
-The Teensy includes built-in functions to send and receive data over USB.  The MicroGrader client for Teensy replaces the built-in \texttt{Serial} object with a wrapper object.  When in \textit{test} mode or \textit{recording} mode, any print statements made using \texttt{Serial} have no effect.  For cases where a student or instructor wishes to print some text for debugging, the library includes a \texttt{debug} function, which sends a Print message in accordance with the MicroGrader protocol.  When the client is in \textit{inactive} mode, \texttt{Serial} print statements work normally.  Therefore, students can use \texttt{Serial} print statements when not connected to the MicroGrader server, but they don't have to worry about those statements interfering with MicroGrader communication when actual testing is happening.
+The Teensy includes built-in functions to send and receive data over USB.  The MicroGrader client for Teensy replaces the built-in \texttt{Serial} object with a wrapper object.  When testing or recording, any print statements made using the \texttt{Serial} object have no effect.  For cases where a student or instructor wishes to print some text for debugging, the library includes a \texttt{debug} function, which sends a Print message in accordance with the MicroGrader protocol.  
 
-The fundamental general purpose I/O functionality (GPIO) is also wrapped.  This allows for recording GPIO events and for injecting test inputs from the host.  As with \texttt{Serial}, the regular GPIO functions work normally when the client is in \textit{inactive} mode. 
+The built-in functions for general purpose input-output functionality (GPIO) is also wrapped.  This allows for recording GPIO events and for injecting test inputs from the MicroGrader server.  For input from the inertial measurement unit (IMU), we modified the MPU9250 \cite{MPU9250} library for Arduino/Teensy.  For output to a display, we modified the U8g2 \cite{u8g2} library for Arduino/Teensy.  If an academic course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is relatively simple.
 
-For input from the inertial measurement unit (IMU), I modified the MPU9250 \cite{MPU9250} library for Arduino/Teensy.  For output to a display, I modified the U8g2 \cite{u8g2} library for Arduino/Teensy.  If a course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is not complicated.
+The MicroGrader client for Teensy includes an \textit{inactive mode}, in which all built-in GPIO functions and third-party libraries operate normally, and in which there is no communication with the MicroGrader server.  In this mode, \texttt{Serial} print statements work normally.  Therefore, students can use \texttt{Serial} print statements when not connected to the MicroGrader server, but they do not have to worry about those statements interfering with MicroGrader communication when actual testing is happening.
 
 From a student's perspective, very few changes need to be made in order to run the MicroGrader client.  He or she needs to install the core library and the modified versions of the third-party libraries.  The line \verb+#include "MicroGrader.h"+ must be added to the top of the \texttt{.ino} file and an initialization function, \texttt{MicroGrader.begin()} must be called at the beginning of the Teensy \texttt{setup()} routine.
 
