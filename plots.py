@@ -1,6 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.lines as lines
+import pickle
+
+# Saves an objec to a file
+def save(obj, filename):
+    f = open(filename, 'wb')
+    pickle.dump(obj,f)
+    f.close()
+
+# Loads an object from a file
+def load(filename):
+    f = open(filename, 'rb')
+    obj = pickle.load(f)
+    f.close()
+    return obj
 
 def plot_wiki_scroller_input_frame():
     tlist = np.arange(0, 8001, 200) # times
@@ -58,7 +72,13 @@ def plot_input_slicing(do_slice=True):
     plt.step(x, y, where='post', label="continuous signal")
     plt.ylabel('Analog voltage (V)')
     plt.xlabel('Time (ms)')
-    plt.show()  
+    plt.show()
+
+# Hardcoded path
+def plot_frames():
+    #TODO
+    pass
+
 
 if __name__ == "__main__":
-    plot_input_slicing(True)
+    plot_frames()
