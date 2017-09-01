@@ -256,8 +256,6 @@ Observing internal events directly can simplify the logic for test cases.  It is
 
 \subsubsection{Data structure: ``Condition"}
 \label{sec:condition}
-TODO: add a table summarizing types
-
 We want the ability to specify the timing of system inputs relative to a specific, unique event that occurs during the execution of an embedded system.  In order to specify unique run-time events, we must first introduce a data structure that describes those events.  We will refer to this data structure as a \textit{condition}.  As an embedded system executes a program, MicroGrader can determine the condition's $t_{\text{satisfied}}$, the elapsed time between the embedded system's initialization and the satisfaction of the condition.  A condition's $t_{\text{satisfied}}$ can be undefined, signifying that the condition was never satisfied during the embedded system's execution.
 
 Our condition data structure can express unique events such as: ``The first HTTP request", ``the second HTTP request", and ``the first time that the word `cat' appears on the embedded display".  It achieves this with a recursive design; complex conditions can be built by composing simpler ones.  There are four fundamental types of conditions.
@@ -270,11 +268,25 @@ Alternatively, an AFTER condition can have a cause number, $t_{\text{cause}}$, i
 
 The third type of condition is the \textit{AND condition}.  This type of condition has no \textit{cause}, but rather a set of subconditions, which can be of any condition type.  This condition is considered to be met once \textbf{all} of the subconditions are met.  Equivalently, this condition's $t_{\text{satisfied}}$ is the maximum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if any subcondition has an undefined $t_{\text{satisfied}}$.
 
-The fourth and final type of condition is the \textit{OR condition}.  It is analogous to the AND condition, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met. Equivalently, this condition's $t_{\text{satisfied}}$ is the minimum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if all subconditions have an undefined $t_{\text{satisfied}}$.
+The fourth and final type of condition is the \textit{OR condition}.  It is analogous to the AND condition, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met. Equivalently, this condition's $t_{\text{satisfied}}$ is the minimum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if all subconditions have an undefined $t_{\text{satisfied}}$.  Table \ref{table:condition-summary} gives a summary of the attributes of each of the four types of conditions.
+
+\begin{table}[ht]
+\begin{center}
+\begin{tabular}{cccc}
+Condition Type & Cause & Precondition & Subconditions \\ \hline
+BASIC & function & N/A & N/A \\
+AFTER & function or number & condition & N/A \\
+AND & N/A & N/A & set of conditions \\
+OR & N/A & N/A & set of conditions \\ \hline
+\end{tabular}
+\caption{Summary of attributes of each type of condition.}
+\label{table:condition-summary}
+\end{center}
+\end{table}
 
 In Tables \ref{table:observations}, \ref{table:conditions}, and \ref{table:condition-descs}, we examine a concrete example showing a sequence of observations and a set of conditions, including each condition's value for $t_{\text{satisfied}}$ with respect to this set of observations.  Here, $f_{\text{httpreq}}$ and $f_{\text{high}}$ are cause functions, which take a single observation as input.  In particular, $f_{\text{httpreq}}$ returns \texttt{true} if the observation represents the sending of an HTTP request, and $f_{\text{high}}$ returns \texttt{true} if the observation represents the setting of digital output 13 to 1.  Notice that condition 4 is satisfied at $t=4000$, since both its subconditions are satisfied and the maximum of the subconditions' $t_{\text{satisfied}}$ is 4000.  By contrast, condition 5 is never satisfied because its cause function is only invoked for observations 5, 6, and 7.
 
-\begin{table}
+\begin{table}[ht]
 \begin{center}
 \caption{Example observations}
 \label{table:observations}
@@ -294,8 +306,6 @@ Observation 7 & Digital output 13 set to 0 & 6000 \\ \hline
 \caption{Example conditions, with $t_{\text{satisfied}}$ calculated with respect to Table \ref{table:observations}}
 \label{table:conditions}
 
-\vspace{3mm}
-
 \begin{tabular}{l|llllr}
 & Type & Cause & Precondition & Subconditions & $t_{\text{satisfied}}$ (ms) \\ \hline
 Condition 1 & BASIC & $f_{\text{httpreq}}$ & N/A & N/A & 2000 \\
@@ -309,8 +319,6 @@ Condition 5 & AFTER & $f_{\text{high}}$ & Condition 2 & N/A & Undefined \\ \hlin
 
 \caption{Text descriptions of example conditions from Table \ref{table:conditions}}
 \label{table:condition-descs}
-
-\vspace{3mm}
 
 \begin{tabular}{l|l}
 & Description \\ \hline
