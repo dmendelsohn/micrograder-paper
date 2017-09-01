@@ -75,10 +75,25 @@ def plot_input_slicing(do_slice=True):
     plt.show()
 
 # Hardcoded path
-def plot_frames():
-    #TODO
-    pass
+def plot_acc():
+    x, y = load("pickles/f1_acc")
+    y = [9*elt for elt in y]
 
+    axes = plt.gca()
+    axes.set_ylim([-2.5,2.5])
+
+    plt.plot(x,y)
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Acceleration, x-axis (m/$s^2$)')
+    plt.show()
+
+def plot_button():
+    x, y = load("pickles/f1_but")
+
+    plt.plot(x,y)
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Active-low digital push-button')
+    plt.show()
 
 if __name__ == "__main__":
-    plot_frames()
+    plot_button()
