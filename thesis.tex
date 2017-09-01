@@ -781,7 +781,7 @@ Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP re
 \end{center}
 \end{table}
 
-TODO: discuss recording.
+For the recording, we performed a minimal test procedure that mostly covers the intended functionality of the system.  After initialization, we entered the query-entry state with a long press, scrolled left to the ``9" character, scrolled right to the ``c" character, locked that character in with a short press, and then sent the query with a long press.  After the response arrived, we entered the query-entry state with a long press again, and locked in the letter ``a" with a short press.
 
 In the recording, two input samples were taken on two channels: a digital input connected to the active-low push-button switch, and the x-axis of an accelerometer which gives us information about the left-right tilt of the embedded system.  Based on the recording, MicroGrader created value generating functions for each of the two frames, as illustrated in Figure \ref{fig:actual-input-frames}.  At a glance, one can see the actions that occurred during the recording. Frame 1 consists of a long press, followed by some tilting, following by a short press, and finally a long press.  Frame 2 consists of a long press followed by a short press, with very little tilting.
 
