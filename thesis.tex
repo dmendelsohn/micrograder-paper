@@ -717,17 +717,47 @@ For each remaining input frame, we can now determine the value generating functi
 
 \subsection{Constructing evaluation points}
 \label{sec:using-point-templates}
-TODO: discrete to continuous
+As with constructing input frames, the first step is converting discrete output observations to continuous signals.  In this case, we use the ``post-hold" method described in the previous section.  Also from the previous section, we have the $t_{\text{start}}$ and $t_{\text{end}}$ times for each frame.  For each frame, we consider the interval $[t_{\text{start}}, t_{\text{end}})$ of each output signal, and translate it so that it begins at $t=0$.  So far, this is the same process as we performed with input signals, except we do not extrapolate the output signal to $t=\infty$, as shown in Figure \ref{fig:output-framing}.  We will refer to this piece of the original output signal as the \textit{reference signal}.  
 
-TODO: groundwork... for each frame and channel, we have a bounded signal on that channel to evaluate
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.6\linewidth]{output-framing.png}
+\caption{Visualization of extracting a portion of an output signal.}
+\label{fig:output-framing}
+\end{figure}
 
-For each (frame, channel) pair, we create a set of evaluation points.  Specifically, we create a new evaluation point each time the output value changes on that channel.  TODO: an image here would be helpful
+Recall that since this is a recording of an instructor's embedded system, its outputs are correct by definition.  Now, our task is to generate a set of evaluation points that can represent this interval of the expected output signal.  For the sake of clarity, we will continue to focus on a reference signal for a single output channel within a single frame, but the process of creating and using a reference signal is the same for all frames and output channels.  We'll refer to the start condition of our hypothetical frame as $C_{\text{start}}$.
 
-TODO: details on the new point.  Mention how templates come into play.  Ignore the time interval thing I did in the template.  Include a table corresponding to above image
+First, we partition the reference signal into intervals with constant value.  In this case, there are three such intervals: $(0,1000)$,$(1000,2000)$, and $(2000,3000)$.  For each of these constant-value intervals, we construct one evaluation point that determines whether another signal matches the reference signal in this interval, as shown in Table \ref{table:construct-points}.
+
+\begin{table}[ht]
+\begin{center}
+\caption{Evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
+\vspace{2mm}
+\label{table:construct-points}
+\begin{tabular}{cccccc}
+Expected & Check Function & Condition & Interval & Portion \\ \hline
+2.0 V & ? & $C_{\text{start}}$ & (0,1000) & ? \\
+0.0 V & ? & $C_{\text{start}}$ & (1000,2000) & ? \\
+3.0 V & ? & $C_{\text{start}}$ & (2000,3000) & ? \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+TODO: explain table and explain how  templates help us fill in the missing fields
+
+TODO: mention how aggregation happens
 
 \subsection{Auto-generated test case for Wikipedia Scroller}
-TODO: give some input plots from a real test case, and create table of evaluation points
+To demonstrate the capability of the test construction algorithm, we used it to build a test for Wikipedia Scroller.  For our scaffold, we started with the frames from Table \ref{table:frame-templates}.  TODO: "the following figures show the inputs for each channel"
 
+TODO: figures
+
+The exercise has a single output channel, represented as a 128x64, bit map.  For that channel, (TODO: describe template).  TODO: "the following table shows the evaluation points
+
+TODO: table
+
+TODO: talk about efficacy
 
 \newpage
 \section{Future Work (TODO: edit chapter)}
