@@ -868,17 +868,17 @@ As mentioned in section \ref{sec:derived-outputs}, it is sometimes desirable to 
 \begin{appendices}
 \section{Client-server protocol}
 \label{sec:protocol}
-All client-server communication occurs over a USB connection.  All multi-byte integers are transmitted in a little-endian fashion.  In general, we refer to a message from the client to the server as a \textit{request}.  Some requests result in server-to-client \textit{response}.
+All client-server communication occurs over a USB connection.  All multi-byte integers are transmitted in a little-endian fashion.  In general, we refer to a message from the client to the server as a \textit{message}.  Some requests result in a server-to-client \textit{response}.  We use the term \textit{packet} to refer to a message or a response.
 
-All messages consist of a header and a body.  The header contains important information about the request or response, and specifies the length of the body. Thus, our protocol requires no termination byte.  A message is considered complete once the expected number of bytes is received.  As a result, all message bodies must have the specified length, or further communication will fail.
+All packets consist of a header and a body.  The header contains important information about the packet, and specifies the length of the body. Thus, our protocol requires no termination byte.  A packet is considered complete once the expected number of bytes is received.  As a result, all packet bodies must have the specified length, or further communication will fail.
 
-The basic structure of a request is as follows:
+The basic structure of a message is as follows:
 
-\textbf{request ::= $<$request header$>$$<$request body$>$}
+\textbf{message ::= $<$message header$>$$<$message body$>$}
 
-\textbf{request header ::= $<$uint8 code$>$$<$uint32 timestamp$>$$<$uint16 body length$>$}
+\textbf{message header ::= $<$uint8 code$>$$<$uint32 timestamp$>$$<$uint16 body length$>$}
 
-\noindent The most significant bit of the request code determines whether or not the server should send a response.  If the bit is 0, a response should be sent.  If the bit is 1, a response should be omitted.  The lower seven bits of the code determine the type of request, and therefore, how the request body should be interpreted.  The structure of the request body depends on the particular type of request.  The timestamp is measured in milliseconds, and the body length is measured in bytes.
+\noindent The most significant bit of the message code byte determines whether or not the server should send a response.  If the bit is 0, a response should be sent.  If the bit is 1, a response should be omitted.  The lower seven bits of the code determine the type of message, and therefore, how the message body should be interpreted.  The structure of the message body depends on the particular type of message.  The timestamp is measured in milliseconds, and the body length is measured in bytes.
 
 The basic structure of a response is as follows:
 
@@ -888,29 +888,31 @@ The basic structure of a response is as follows:
 
 \noindent The second-least significant bit of the response code indicates whether or not an error occurred with the most recent request (1 indicates an error occurred, 0 indicates success).  The response body for an error response is always empty.
 
-The least significant bit indicates if the current session is complete (1 indicates yes, 0 indicates no).  The server disconnects immediately after sending a response indicating the session is complete.  Once again, the body length is measured in bytes.  Notice that the server does not include a timestamp in the response header.  The structure of the response body depends on the type of request to which the response corresponds.
+The least significant bit indicates if the current session is complete (1 indicates yes, 0 indicates no).  The server disconnects immediately after sending a response indicating the session is complete.  Once again, the body length is measured in bytes.  Notice that the server does not include a timestamp in the response header.  The structure of the response body depends on the type of message to which the response corresponds.
 
-Broadly speaking, there are three kinds of requests: inputs, outputs, and events.
+Broadly speaking, there are three kinds of messages: input messages, output messages, and event messages.
 
 \subsection{Inputs}
-Input requests are typically used to ``inject" pre-determined test values, in place of true sensor readings.  Alternatively, input requests can be used to record observed sensor values on an instructor's system, for the purpose of building tests.  The following table describes the request bodies for input requests.
+Input messages are typically used to ``inject" pre-determined test values, in place of true sensor readings.  Alternatively, input messages can be used to record observed sensor values on an instructor's system, for the purpose of building tests.  Table \ref{table:input-messages} describes the message bodies for input messages.
 
+\begin{table}[ht]
 \begin{center}
 \begin{tabular}{l l l}
-code & name & request body \\ \hline
-0x20 & Digital Read & $<$uint8 pin$>$[$<$uint8 value$>$] \\
-0x22 & Analog Read & $<$uint8 pin$>$$<$analog params$>$[$<$int32 value$>$] \\
+code & name & message body \\ \hline
+0x20 & Digital Input & $<$uint8 pin$>$[$<$uint8 value$>$] \\
+0x22 & Analog Input & $<$uint8 pin$>$$<$analog params$>$[$<$int32 value$>$] \\
 0x30 & Accelerometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
 0x31 & Gyroscope & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\
 0x32 & Magnetometer & $<$analog params$>$[$<$int32 x value$>$$<$int32 y value$>$$<$int32 z value$>$] \\ \hline
 \end{tabular}
+\caption{Summary of contents of input messages.}
+\label{table:input-messages}
 \end{center}
+\end{table}
 
-\vspace{5mm}
+If the optional value or values are included, this message is reporting recorded sensor readings from the client to the server.  In that case, the body of the response (if there is a response) is empty.  
 
-If the optional value or values are included, this message is passing recorded sensor readings from the client to the server.  In that case, the body of the response (if there is a response) is empty.  
-
-If the optional values are not included, this message is requesting test values.  In that case, the body of the response (if there is a response), is just the requested values.  For digital reads, the response is a single byte containing a 0 or a 1.  For analog reads, the response is a 32-bit integer.  For the accelerometer, gyroscope, and magnetometer requests, the response is a sequence of three 32-bit bit integers representing the x-value, y-value, and z-value respectively.
+If the optional values are not included, this message is requesting test values.  In that case, the body of the response (if there is a response), is just the requested values.  For digital input requests, the response is a single byte containing a 0 or a 1.  For analog input requests, the response is a 32-bit integer.  For the accelerometer, gyroscope, and magnetometer requests, the response is a sequence of three 32-bit bit integers representing the x-value, y-value, and z-value respectively.
 
 \subsubsection{Value Encoding}
 Encoding for digital values is simple: a single byte containing the value 0 or 1.  For analog values, however, MicroGrader uses a system by which the client decides how an analog value becomes discretized.  In particular, the client specifies the \textit{analog params} which are defined as follows:
@@ -921,9 +923,9 @@ Encoding for digital values is simple: a single byte containing the value 0 or 1
 
 \noindent These parameters indicate that the physical quantity in the range (min value, max value) should be mapped to the range (min bin, max bin) for discretization.
 
-To illustrate, let's examine the behavior of the Teensy client for analog read requests.  It uses the values 0 and 3300 for min value and max value respectively.  These represent the minimum and maximum voltages, in millivolts, that the Teensy's analog-to-digital converter (ADC) can process.  For min bin and max bin, the values depend on the Teensy's current analog resolution.  If the resolution is 10 bits for example, the Teensy client would use the values 0 and 1023 for min bin and max bin.
+To illustrate, we examine the behavior of the Teensy client for analog input requests.  It uses the values 0 and 3300 for \texttt{min value} and \texttt{max value} respectively.  These represent the minimum and maximum voltages, in millivolts, that the Teensy's analog-to-digital converter (ADC) can process.  For \texttt{min bin} and \texttt{max bin}, the values depend on the Teensy's current analog resolution.  If the resolution is 10 bits for example, the Teensy client would use the values 0 and 1023 for \texttt{min bin} and \texttt{max bin}.
 
-Let's suppose the Teensy makes a request for an analog read using these parameters, and the server observes that the true value to ``inject" is $x$.  Let $b_{\text{min}}$, $b_{\text{max}}$, $v_{\text{min}}$, and $v_{\text{max}}$ represent the min bin, max bin, min value, and max value respectively.  The server must convert the value $x$ to a ``bin number", $y$, in accordance with the given parameters:
+Suppose the Teensy makes a request for an analog input using these parameters, and the server observes that the true value to ``inject" is $x$.  Let $b_{\text{min}}$, $b_{\text{max}}$, $v_{\text{min}}$, and $v_{\text{max}}$ represent the min bin, max bin, min value, and max value respectively.  The server must convert the value $x$ to a ``bin number", $y$, in accordance with the given parameters:
 
 $$y = \left \lfloor b_{\text{min}} + \frac{x_{\text{bound}}-v_{\text{min}}}{v_{\text{max}}-v_{\text{min}}} * (b_{\text{max}}-b_{\text{min}}) \right \rfloor$$
 
@@ -931,35 +933,38 @@ where
 
 $$x_{\text{bound}} = \min(v_{\text{max}}, \max(v_{\text{min}}, x))$$
 
-The server responds with the value $y$.  This example discussed a true input request for injecting a value.  For input ``recordings", the value supplied by the client should also be the bin number as described by the above formula (typically this math would be calculated in hardware by the ADC).
+The server responds with the value $y$.  Now consider a situation in which the client reports an input sample to the server, rather than requesting an input value.  For such input ``recordings", the value supplied by the client should also be the bin number as described by the above formula (typically this math would be calculated in hardware by the ADC).
 
 \subsubsection{Units}
 The units for analog requests are not specified.  There is no built-in unit for the relevant physical quantities (namely voltage, acceleration, angular velocity, and magnetic flux density).  The client implementation and the constructed test cases just need to be consistent.  For example, the reference Teensy client implementation uses millivolts for voltage, and any test cases written for this client should use values expressed in millivolts.
 
 \subsection{Outputs}
-Output requests aren't really ``requests" in the traditional sense.  They are used to report outputs to the server.  The following table describes the request bodies for output requests.
+Output messages are used to report outputs to the server.  Table \ref{table:output-messages} describes the message bodies for output messages.
 
+\begin{table}[ht]
 \begin{center}
 \begin{tabular}{l l l}
-code & name & request body \\ \hline
-0x21 & Digital Write & $<$uint8 pin$>$$<$uint8 value$>$ \\
-0x23 & Analog Write & $<$uint8 pin$>$$<$analog params$>$$<$int32 value$>$ \\
+code & name & message body \\ \hline
+0x21 & Digital Output & $<$uint8 pin$>$$<$uint8 value$>$ \\
+0x23 & Analog Output & $<$uint8 pin$>$$<$analog params$>$$<$int32 value$>$ \\
 0x41 & Screen & $<$tile$>$* \\
 \end{tabular}
+\caption{Summary of contents of output messages.}
+\label{table:output-messages}
 \end{center}
+\end{table}
 
-\vspace{5mm}
-
-If the client expects a response, the body of the response is empty.  The encoding of values for digital writes is the same as for digital reads (a single byte, 0 or 1).  The encoding of values for analog writes is the same as for analog reads.  Recall that the value reported is a ``bin number".
+If the client specifies that a response should be sent, then the body of the response is empty.  The encoding of values for digital outputs is the same as for digital inputs (a single byte, 0 or 1).  The encoding of values for analog outputs is the same as for analog inputs.  Recall that the value reported is a ``bin number".
 
 \subsubsection{Screen Encoding}
 Since the built-in screen type is a monochrome display, in which each pixel is on-or-off, our screen is essentially a bitmap.  We represent each pixel using a single bit.  Our encoding for the screen is inspired by the U8x8 embedded library \cite{u8x8}, and it makes it simple for embedded clients to transmit screen information if their display libraries are U8x8 compatible.
 
-We code encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted over serial, note that this unsigned 64-bit integer, like all our other multi-byte integers, are transmitted in a little-endian fashion.  So the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
+We encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted over serial, note that this unsigned 64-bit integer, like all our other multi-byte integers, are transmitted in a little-endian fashion.  So the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
 
-The screen can be considered a grid of non-overlapping tiles (though padding might be necessary so that tiles perfectly cover the entire screen.  When transmitting the screen, the tiles are transmitted by row, from top to bottom (lowest y-coordinate to highest y-coordinate.  Within each row, tiles are transmitted from right to left (highest x-coordinate to lowest x-coordinate).  Note that the Screen request does not specify the shape of the screen (just the overall number of tile).  Therefore, it is imperative that, before sending any Screen requests, the client informs the server of the screen shape using a ``Screen Init" request (see the section below).
+The screen can be considered a grid of non-overlapping tiles (though padding might be necessary so that 8x8 tiles perfectly cover the entire screen.  When transmitting the screen, the tiles are transmitted by row, from top to bottom (lowest y-coordinate to highest y-coordinate.  Within each row, tiles are transmitted from right to left (highest x-coordinate to lowest x-coordinate).  Note that the Screen request does not specify the shape of the screen; it just sends a sequence of tiles.  Therefore, it is imperative that, before sending any Screen requests, the client informs the server of the screen shape using a ``Screen Init" request (see section \ref{sec:event-messages}).
 
-\subsection{Events}
+\subsection{Events (TODO: edit)}
+\label{sec:event-messages}
 Event requests are similar to output requests in that they are used to report information to the server, not receive information from the server.  Responses to event requests have empty bodies, just as with output requests.  The following table describes the request bodies for event requests.
 
 \begin{center}
