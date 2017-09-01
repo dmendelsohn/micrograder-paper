@@ -504,7 +504,7 @@ We considered a number of ways of reporting results to some online courseware (e
 \subsection{Screen analysis}
 As previously mentioned, bitmap screens area built-in type in MicroGrader.  MicroGrader also includes some utilities for working with bitmaps, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for bitmaps.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
 
-\subsubsection{Bitmap distance metric (TODO: edit and add images)}
+\subsubsection{Bitmap distance metric}
 MicroGrader includes a built-in distance metric for bitmaps of the same dimensions.  Specifically, we say the distance between two bitmaps is the number of pixels that do not match.  We can compute this easily by XOR-ing two bitmaps and counting the number of 1's in the result, as shown in Figure \ref{fig:naive-distance}.
 
 \begin{figure}
@@ -554,7 +554,7 @@ This distance metric is very unforgiving of slight translations.  For example, c
 
 To allow for leniency with regard to translations, we introduce a parametric family of distance metrics; there are two parameters, $d_{\text{vertical}}$ and $d_{\text{horizontal}}$.  These parameters specify the maximum allowable translation of one bitmap relative to the other in the vertical and horizontal directions respectively.  The allowable vertical translations are in the range $[-d_{\text{vertical}}, d_{\text{vertical}}]$ and the allowable horizontal translations are in the range $[-d_{\text{horizontal}}, d_{\text{horizontal}}]$.  Therefore, there are a total of $(2*d_{\text{vertical}}+1)*(2*d_{\text{horizontal}}+1)$ translations in two dimensions.  To compute the distance between two bitmaps, $B_1$ and $B_2$, according to this parametrized metric, a function applies each allowable translation to $B_1$.  The distance is defined to be the minimum naive distance between $B_2$ and any of the translations of $B_1$.  For example, if we set $d_{\text{horizontal}} >= 5$, then the distance between the bitmaps in Figures \ref{fig:circle-left} and \ref{fig:circle-right} is 0.
 
-\subsubsection{Text extraction from a bitmap (TODO: edit an add images}
+\subsubsection{Text extraction from a bitmap}
 Many assignments, such as Wikipedia Scroller, involve displaying text on a screen.  MicroGrader includes functionality to extract text from a bitmap.  At first we explored using existing tools for optical character recognition (OCR), such as tesseract \cite{tesseract}.  These generic OCR tools, however, do not perform well for small fonts.  The character glyphs of small fonts sometimes bear only vague resemblance to their counterparts in larger fonts.  For example, Figure \ref{fig:small-glyph} shows the glyph for the letter \texttt{m} in a small font from the X11 distribution \cite{5x7}.  It is difficult to develop an OCR algorithm for small fonts without prior knowledge of the exact character glyphs.
 
 
