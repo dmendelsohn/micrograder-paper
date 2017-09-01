@@ -11,6 +11,7 @@
 \usepackage[titletoc,title,toc,page]{appendix}
 \usepackage[nottoc,notlot,notlof]{tocbibind}
 \usepackage{subcaption}
+\usepackage{array}
 
 \usepackage{graphicx}
 \graphicspath{ {images/} }
@@ -655,7 +656,7 @@ Our manual grading process for Wikipedia Scroller involved a complicated query e
 \begin{tabular}{c|ll}
 & Start condition & End condition \\ \hline
 Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
-Frame 2 & $1^{\text{st}}$ HTTP response received & 3 seconds after first HTTP response received \\ \hline
+Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP response received \\ \hline
 \end{tabular}
 \caption{A more lenient set of evaluation points for Blinky.}
 \label{table:frame-templates}
@@ -773,7 +774,7 @@ To demonstrate the capability of the test construction algorithm, we used it to 
 \begin{tabular}{c|ll}
 & Start condition & End condition \\ \hline
 Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
-Frame 2 & $1^{\text{st}}$ HTTP response received & 3 seconds after first HTTP response received \\ \hline
+Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP response received \\ \hline
 \end{tabular}
 \caption{A more lenient set of evaluation points for Blinky.}
 \label{table:frame-templates-2}
@@ -809,9 +810,28 @@ In the recording, two input samples were taken on two channels: a digital input 
 \label{fig:actual-input-frames}
 \end{figure}
 
-The Wikipedia Scroller exercise involves a single output channel, represented as a 128x64, bit map.  For that channel, we made the following selections for the instructor-specified attributes: 0.8 for the required portion of each evaluation point, and ``text equality" for the check function.  The ``text equality" function checks if two bitmaps contain images of the same text.   Combining these preferences with the recording, MicroGrader constructed the evaluation points described in Table \ref{table:actual-points}.
+The Wikipedia Scroller exercise involves a single output channel, represented as a 128x64, bit map.  For that channel, we made the following selections for the instructor-specified attributes: 0.8 for the required portion of each evaluation point, and ``text equality" for the check function.  The ``text equality" function checks if two bitmaps contain images of the same text.   Combining these preferences with the recording, MicroGrader constructed the evaluation points described in Table \ref{table:actual-points}.  For conciseness, the table refers to the start condition of frame 1 as $C_1$ and the start condition of Frame 2 as $C_2$.
 
-TODO: make table
+\begin{table}
+\begin{center}
+\vspace{2mm}
+\begin{tabular}{>{\centering\arraybackslash} m{3.75cm} >{\centering\arraybackslash} m{3cm} >{\centering\arraybackslash} m{1.5cm} >{\centering\arraybackslash} m{2.5cm} >{\centering\arraybackslash} m{1.5cm} }
+Expected Value & Check Function & Condition & Interval & Portion \\ \hline \vspace{2mm}
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_1$ & (TODO) & 0.8 \\
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_1$ & (TODO) & 0.8 \\ % a
+\includegraphics[width=\linewidth]{screen-9.png} & Text equality & $C_1$ & (TODO) & 0.8 \\ % 9
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_1$ & (TODO) & 0.8 \\ % a
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_1$ & (TODO) & 0.8 \\ % b
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_1$ & (TODO) & 0.8 \\ % c
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_2$ & (TODO) & 0.8 \\ % wiki text
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_2$ & (TODO) & 0.8 \\
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_2$ & (TODO) & 0.8 \\ % a
+\includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_2$ & (TODO) & 0.8 \\ \hline % aa
+\end{tabular}
+\caption{TODO}
+\label{table:actual-points}
+\end{center}
+\end{table}
 
 TODO: talk about efficacy
 
