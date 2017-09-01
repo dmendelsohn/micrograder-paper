@@ -780,37 +780,38 @@ Frame 2 & $1^{\text{st}}$ HTTP response received & 3 seconds after first HTTP re
 \end{center}
 \end{table}
 
-TODO: "the following figures show the inputs for each channel"
+TODO: discuss recording.
+
+In the recording, two input samples were taken on two channels: a digital input connected to the active-low push-button switch, and the x-axis of an accelerometer which gives us information about the left-right tilt of the embedded system.  Based on the recording, MicroGrader created value generating functions for each of the two frames, as illustrated in Figure \ref{fig:actual-input-frames}.  At a glance, one can see the actions that occurred during the recording. Frame 1 consists of a long press, followed by some tilting, following by a short press, and finally a long press.  Frame 2 consists of a long press followed by a short press, with very little tilting.
 
 \begin{figure}[ht]
 \centering
 
 \begin{subfigure}[b]{.45\linewidth}
 \includegraphics[width=\linewidth]{f0-button.png}
-\caption{TODO}
+\caption{Frame 1, button input.}
 \end{subfigure}
 \begin{subfigure}[b]{.45\linewidth}
 \includegraphics[width=\linewidth]{f0-acc.png}
-\caption{TODO}
+\caption{Frame 1, accelerometer input.}
 \end{subfigure}
 
 \begin{subfigure}[b]{.45\linewidth}
 \includegraphics[width=\linewidth]{f1-button.png}
-\caption{TODO}
+\caption{Frame 2, button input.}
 \end{subfigure}
 \begin{subfigure}[b]{.45\linewidth}
 \includegraphics[width=\linewidth]{f1-acc.png}
-\caption{TODO}
+\caption{Frame 2, accelerometer input.}
 \end{subfigure}
 
-\caption{TODO}
+\caption{Visualization of value generating functions for both frames in automatically generated Wikipedia Scroller test.}
 \label{fig:actual-input-frames}
 \end{figure}
 
+The Wikipedia Scroller exercise involves a single output channel, represented as a 128x64, bit map.  For that channel, we made the following selections for the instructor-specified attributes: 0.8 for the required portion of each evaluation point, and ``text equality" for the check function.  The ``text equality" function checks if two bitmaps contain images of the same text.   Combining these preferences with the recording, MicroGrader constructed the evaluation points described in Table \ref{table:actual-points}.
 
-The exercise has a single output channel, represented as a 128x64, bit map.  For that channel, we chose the instructor-specified attributes: 0.8 for the required portion of each evaluation point, and ``text equality" for the check function.  The ``text equality" function checks if two bitmaps contain images of the same text.   TODO: "the following table shows the evaluation points"
-
-TODO: table
+TODO: make table
 
 TODO: talk about efficacy
 
