@@ -847,24 +847,16 @@ In practice, this automatically constructed test was effective at grading this a
 
 \clearpage
 \section{Future Work}
-TODO: intro paragraph
+MicroGrader can successfully execute tests on students' embedded systems.  It can also automatically generate tests using a recording of an instructor's system.  Nevertheless, the project is not finished; MicroGrader is being actively developed further.  In this section, we outline a few improvements that future versions will bring.
 
 \subsection{Custom data types}
 In the current implementation of MicroGrader, adding new data types for input and output channels requires modifying the source code.  In the next version, it will be possible to specify a custom data type in a separate Python file.  The file will include the name of the data type, as well as the implementations of certain necessary functions.  Namely, there must be functions to serialize and deserialize the data type, and the equality operator must be implemented.
 
-\subsection{Timing flexibility (TODO: edit)}
-It is currently difficult for instructors to have loose timing specifications, since \textit{evaluation points} inherently have a pre-determined time interval.  The only flexibility is picking a condition to which that interval is relative.  In the next version of MicroGrader, the data structure for test cases will be augmented such that an instructor can give different sorts of timing specification.  For example, an instructor can specify that a certain sequence of outputs must occur in a certain order, regardless of timing.  It will also be possible to put requirements on the length of time for which an output occurs, regardless of exactly when it occurs.
+\subsection{Additional timing flexibility}
+It is currently difficult for instructors to have loose specifications with regards to time shifts, since evaluation points have fixed intervals relative to a condition.  The only flexibility is picking a condition to which that interval is relative.  In the next version of MicroGrader, the data structure for test cases will be augmented such that an instructor can give different sorts of timing specification.  For example, an instructor could specify that a certain sequence of output values must occur in a certain order, regardless of timing.  It will also be possible to put requirements on the length of time for which an output value occurs, regardless of exactly when it occurs.
 
-\subsection{Editing recordings (TODO: edit)}
-As mentioned in section \ref{sec:resolve-ambiguity}, a set of tools will be included in the next version of MicroGrader to facilitate some manual editing of recordings of a instructor's correctly implemented system.  This will help create test cases that are unambiguous.  Ideally, these tools will also help an instructor programmatically edit a recording.
-
-TODO: add ambiguity issue here
-
-%There is a major potential problem when recording a canonically correct staff solution.  First, the reconstruction of the input signals from the recorded input samples is inevitably imperfect.  Staff members should keep this in mind designing their solutions.  Specifically, it's a good idea for the staff solution to sample (and therefore report) the input at a relatively high frequency even if such a high frequency isn't necessary for a correct implementation.  This will give the MicroGrader server a maximally high resolution view of the inputs that the staff member physically created.
-
-%Even if we could, somehow, record an infinitely high resolution input signal, some recordings could have problems.  Namely, the desired system output could be ambiguous for that particular input signal.  This commonly happens in edge cases.  It is possible to make the specification stricter to avoid such ambiguities, but that might be undesirable from a pedagogical standpoint.  The instructor's solution would record one acceptable output.  As a result, other acceptable outputs would be seen as incorrect.
-
-%A subsequent version of MicroGrader will include tools for instructors to avoid ambiguous inputs.  Specifically, these tools will allow instructors to edit recordings of input signals.  Presumably, an instructor would be able to remove any ambiguities.  After editing, these new input signals would be injected back into the instructor's embedded system to record the unambiguously correct output.
+\subsection{Editing automatically generated test cases}
+A significant problem with automatically generated test cases is that of ambiguity.  The test case might prescribe inputs that can have multiple reasonable outputs.  For example, a test case for Wikipedia Scroller might involve a ``tilt" input in query-entry mode that should cause the selected character to scroll $n$ indices forward, but is very close to causing the character to scroll $n+1$ indices forward.  Instructors may not want to penalize students whose systems scroll one character too far, but the automatically generated test case will penalize these students.  Instructors, therefore, might want to edit the test case to disambiguate the tilt input so that its duration is further from an edge case.  A future version of MicroGrader will include tools for making changes to existing test cases.
 
 \subsection{Dynamic values}
 Certain ``correct" values are not determined at the time the test case is created.  For example, the Wikipedia Scroller assignment has an output that involves the current text on Wikipedia.org.  The next version of MicroGrader, will include a ``place-holder" data type.  This placeholder will be a function that runs at evaluation time to generate the correct value.  In the Wikipedia Scroller case, the placeholder would fetch the correct text from Wikipedia.
