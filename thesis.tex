@@ -736,7 +736,7 @@ First, we partition the reference signal into intervals with constant value.  In
 \vspace{2mm}
 \label{table:construct-points}
 \begin{tabular}{cccccc}
-Expected & Check Function & Condition & Interval & Portion \\ \hline
+Expected Value & Check Function & Condition & Interval & Portion \\ \hline
 2.0 V & ? & $C_{\text{start}}$ & (0,1000) & ? \\
 0.0 V & ? & $C_{\text{start}}$ & (1000,2000) & ? \\
 3.0 V & ? & $C_{\text{start}}$ & (2000,3000) & ? \\ \hline
@@ -744,16 +744,47 @@ Expected & Check Function & Condition & Interval & Portion \\ \hline
 \end{center}
 \end{table}
 
-TODO: explain table and explain how  templates help us fill in the missing fields
+The start and end time of each constant-value interval define the ``time interval" attribute of the corresponding evaluation point.  Recall that we defined $t=0$ in our reference signal to be the time at which $C_{\text{start}}$ was satisfied, so $C_{\text{start}}$ is the condition for each evaluation point.  The expected value for each evaluation point is the value of the reference signal in the corresponding interval.
 
-TODO: mention how aggregation happens
+As observed in the table, we have no way to determine the proper check function for the evaluation points.  Similarly, we cannot determine the ``portion" attribute, which essentially tunes the leniency of the evaluation point.  These two attributes are used to make evaluation points more flexible, and are inherently not specified by the reference signal, but rather by instructors.  Therefore, our scaffold data structure includes instructors' preferences for these attributes.  Instructors can specify a check function and portion for each output channel.  Table \ref{table:construct-points-2} shows some reasonable choices.
+
+\begin{table}[ht]
+\begin{center}
+\caption{Evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
+\vspace{2mm}
+\label{table:construct-points-2}
+\begin{tabular}{cccccc}
+Expected Value & Check Function & Condition & Interval & Portion \\ \hline
+2.0 V & True if values are within 0.1 V & $C_{\text{start}}$ & (0,1000) & 0.8 \\
+0.0 V & True if values are within 0.1 V & $C_{\text{start}}$ & (1000,2000) & 0.8 \\
+3.0 V & True if values are within 0.1 V & $C_{\text{start}}$ & (2000,3000) & 0.8 \\ \hline
+\end{tabular}
+\end{center}
+\end{table}
+
+The last part of a test is the aggregator function, which defines how a set of boolean evaluation point results are combined into a numerical grade.  As with the check function and portion attributes, the aggregator function is specified by instructors on a per-channel basis.  A typical aggregator function is the function that returns the fraction of points that evaluate to \texttt{true}.
 
 \subsection{Auto-generated test case for Wikipedia Scroller}
-To demonstrate the capability of the test construction algorithm, we used it to build a test for Wikipedia Scroller.  For our scaffold, we started with the frames from Table \ref{table:frame-templates}.  TODO: "the following figures show the inputs for each channel"
+To demonstrate the capability of the test construction algorithm, we used it to build a test for Wikipedia Scroller.  For our scaffold, we started with the frames from Table \ref{table:frame-templates}, shown again in Table \ref{table:frame-templates-2} for convenience.
+
+\begin{table}[ht]
+\begin{center}
+\vspace{2mm}
+\begin{tabular}{c|ll}
+& Start condition & End condition \\ \hline
+Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
+Frame 2 & $1^{\text{st}}$ HTTP response received & 3 seconds after first HTTP response received \\ \hline
+\end{tabular}
+\caption{A more lenient set of evaluation points for Blinky.}
+\label{table:frame-templates-2}
+\end{center}
+\end{table}
+
+TODO: "the following figures show the inputs for each channel"
 
 TODO: figures
 
-The exercise has a single output channel, represented as a 128x64, bit map.  For that channel, (TODO: describe template).  TODO: "the following table shows the evaluation points
+The exercise has a single output channel, represented as a 128x64, bit map.  For that channel, we chose the instructor-specified attributes: 0.8 for the required portion of each evaluation point, and ``text equality" for the check function.  The ``text equality" function checks if two bitmaps contain images of the same text.   TODO: "the following table shows the evaluation points"
 
 TODO: table
 
