@@ -332,22 +332,22 @@ Condition 5 & Digital output 13 has been set to 1 after second HTTP request sent
 \end{table}
 
 \subsubsection{Data structure: ``Input Frame"}
-Now that we have a structure for specifying run-time events, we can describe input signals relative to such events.  To do so, we introduce a new data structure called the \textit{input frame}.  An input frame consists of a start condition, an end condition, and a \textit{value generator function}.  We will refer to the start condition's $t_{\text{satisfied}}$ as $t_{\text{start}}$, and the end condition's $t_{\text{satisfied}}$ as $t_{\text{end}}$.  We say that an input frame is \textit{active} in the time interval $[t_{\text{start}}, t_{\text{end}})$.
+Now that we have a structure for specifying run-time events, we can describe input signals relative to such events.  To do so, we introduce a new data structure called the \textit{input frame}.  An input frame consists of a start condition, an end condition, and a \textit{value-generating function}.  We will refer to the start condition's $t_{\text{satisfied}}$ as $t_{\text{start}}$, and the end condition's $t_{\text{satisfied}}$ as $t_{\text{end}}$.  We say that an input frame is \textit{active} in the time interval $[t_{\text{start}}, t_{\text{end}})$.
 
-The value generator function has two inputs: a channel, $c$, and time, $t$.  The channel, more specifically, is an input channel such as ``analog input 5" or ``accelerometer x-axis".  The value generator function returns a valid value for channel $c$ (i.e. a float for an analog channel, or $\{0,1\}$ for a digital channel).  We interpret this returned value to be the value of the input signal on channel $c$ at time $t_{\text{start}}+t$.  The value generator function should be defined for all input channels used in the exercise, and for all $t>0$.
+The value-generating function has two inputs: a channel, $c$, and time, $t$.  The channel, more specifically, is an input channel such as ``analog input 5" or ``accelerometer x-axis".  The value-generating function returns a valid value for channel $c$ (i.e. a float for an analog channel, or $\{0,1\}$ for a digital channel).  We interpret this returned value to be the value of the input signal on channel $c$ at time $t_{\text{start}}+t$.  The value-generating function should be defined for all input channels used in the exercise, and for all $t>0$.
 
-In the context of the Wikipedia Scroller exercise, we consider an example input frame.  Suppose the frame's start condition is ``system initialization" and the end condition is ``the first HTTP request".  The two-channel value generator function, shown in Figure \ref{fig:value-gen}, specifies the input signals relative to $t_{\text{start}}$.  When a properly designed ``Wikipedia Scroller" system processes those input signals, it should: start in the display state (with a blank screen), transition to the query entry state after the long button press, scroll through a few letters due to the subsequent tilting, lock in the selected letter due to the short press, and send the one-character query string to the project's backend due to the final long press.  This process supposes a certain orientation for the IMU, which should be specified in the instructions for the exercise.
+In the context of the Wikipedia Scroller exercise, we consider an example input frame.  Suppose the frame's start condition is ``system initialization" and the end condition is ``the first HTTP request".  The two-channel value-generating function, shown in Figure \ref{fig:value-gen}, specifies the input signals relative to $t_{\text{start}}$.  When a properly designed ``Wikipedia Scroller" system processes those input signals, it should: start in the display state (with a blank screen), transition to the query entry state after the long button press, scroll through a few letters due to the subsequent tilting, lock in the selected letter due to the short press, and send the one-character query string to the project's backend due to the final long press.  This process supposes a certain orientation for the IMU, which should be specified in the instructions for the exercise.
 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=1]{wiki-frame.png}
 \vspace{5mm}
-\caption{Value generator function with two input channels.}
+\caption{value-generating function with two input channels.}
 \label{fig:value-gen}
 \end{figure}
 
 \subsubsection{Determining input values}
-A single test case usually contains multiple input frames.  At any time, MicroGrader might need to inject an input value into the embedded system.  If, at that time, a single input frame is active, we use that frame's value generator function to determine the value to inject.  We must consider the possibility that multiple input frames are active at the same time, as well as the possibility that no input frames are active.
+A single test case usually contains multiple input frames.  At any time, MicroGrader might need to inject an input value into the embedded system.  If, at that time, a single input frame is active, we use that frame's value-generating function to determine the value to inject.  We must consider the possibility that multiple input frames are active at the same time, as well as the possibility that no input frames are active.
 
 If multiple input frames are active, we must choose which one determines the injected input value.  For this purpose, we add another attribute called \textit{priority} to our input frame data structure.  The highest priority active frame is used to determine the injected input value.  If there is a tie for the highest priority, the frame with the latest $t_{\text{start}}$ is used.  MicroGrader can be configured to instead use the frame with the earliest $t_{\text{start}}$ in a tie-breaker scenario.
 
@@ -458,7 +458,7 @@ The exact contents of an observation message depend on the nature of that observ
 
 When the server receives an observation message, the observation and its timestamp are logged.  In addition, for each of the test's input frames, the server examines the frame's start and end conditions, and updates them.  That is, it determines if the new observation causes these conditions to be met.  In this way, the server can keep track of which input frames are currently active, and which frame should be used to generate test inputs.  The test's termination condition is also examined, to determine if the interactive session should end.
 
-An input request is a message from the client to the server that specifies an input channel for which a value is required.  The client sends these messages when the student's program executes a function to sample an input.  Instead of actually sampling the sensor input, the client requests a test input value.  When the server receives an input request, it determines which input frame to use to find the proper value.  It invokes the frame's value generator function, using the channel and timestamp indicated in the message.  That function returns a value, which is then sent back to the client and returned to the student's program.
+An input request is a message from the client to the server that specifies an input channel for which a value is required.  The client sends these messages when the student's program executes a function to sample an input.  Instead of actually sampling the sensor input, the client requests a test input value.  When the server receives an input request, it determines which input frame to use to find the proper value.  It invokes the frame's value-generating function, using the channel and timestamp indicated in the message.  That function returns a value, which is then sent back to the client and returned to the student's program.
 
 \subsubsection{Stage 2: Assessment}
 In this stage, the MicroGrader server considers all the activity that occurred during the interactive session.  MicroGrader scans through the activity log in order to:
@@ -631,7 +631,7 @@ It is currently impossible to evaluate derived outputs like this using MicroGrad
 
 \clearpage
 \section{Automatic test generation}
-So far in this paper, we have described a structure for defining tests and a technical system capable of carrying out those tests.  Creating a test case, however, can be a tedious process.  Instructors must define each input frame, including the value generator function for each input frame.  Value generator functions, which define a value for every input channel at every time $t>0$ can be complicated.  In Figure \ref{fig:value-gen} from section \ref{sec:wiki-scroller}, we showed how a value generator function could define inputs.  In the context of Wikipedia Scroller, these particular input signals would yield a query string of length 1.  Creating a longer query string, and triggering the edge cases described in section \ref{sec:manual-wiki-grade}, would require significantly more complex inputs and implementing the value generator function would become time-consuming.
+So far in this paper, we have described a structure for defining tests and a technical system capable of carrying out those tests.  Creating a test case, however, can be a tedious process.  Instructors must define each input frame, including the value-generating function for each input frame.  value-generating functions, which define a value for every input channel at every time $t>0$ can be complicated.  In Figure \ref{fig:value-gen} from section \ref{sec:wiki-scroller}, we showed how a value-generating function could define inputs.  In the context of Wikipedia Scroller, these particular input signals would yield a query string of length 1.  Creating a longer query string, and triggering the edge cases described in section \ref{sec:manual-wiki-grade}, would require significantly more complex inputs and implementing the value-generating function would become time-consuming.
 
 Specifying evaluation points for assessing an implementation of Wikipedia Scroller can also be tedious.  A human grader, while performing the manual grading process for the exercise, observed dozens of unique screen outputs.  For each output that the instructor deems relevant, the MicroGrader test would have to have an evaluation point.  The instructor would be responsible for determining the timing and expected value (a 128x64 bitmap) for each of these points.
 
@@ -656,7 +656,7 @@ The evaluation point data structure allows instructors to specify check function
 MicroGrader uses a data structure called the \textit{scaffold} to allow for instructors to specify these preferences.  The scaffold and the observations of a reference solution, when combined, can be used to produce a full test case.
 
 \subsection{Frame templates}
-First, we will focus on automatically constructing the input frames of a test.  After exploring a few methods of doing this, we decided that instructors should specify the start and end conditions of each frame in the generated test; perhaps we should refer to our test construction procedure as ``semi-automatic".  Typically, the tedious aspect of building input frames is specifying the value generating function, while specifying the start and end conditions is relatively easy.
+First, we will focus on automatically constructing the input frames of a test.  After exploring a few methods of doing this, we decided that instructors should specify the start and end conditions of each frame in the generated test; perhaps we should refer to our test construction procedure as ``semi-automatic".  Typically, the tedious aspect of building input frames is specifying the value-generating function, while specifying the start and end conditions is relatively easy.
 
 Our manual grading process for Wikipedia Scroller involved a complicated query entry process, then sending a query to the project's backend, then displaying the response from the back-end, and finally restarting the query entry process.  In this case, a scaffold for automatically building a test might have two input frames, as shown in Table \ref{table:frame-templates}.
 
@@ -668,15 +668,15 @@ Our manual grading process for Wikipedia Scroller involved a complicated query e
 Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
 Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP response received \\ \hline
 \end{tabular}
-\caption{In a scaffold, we provide the start and end condition of each frame.  The value generating function is derived from the recording of the reference system.}
+\caption{In a scaffold, we provide the start and end condition of each frame.  The value-generating function is derived from the recording of the reference system.}
 \label{table:frame-templates}
 \end{center}
 \end{table}
 
-Frame 1 would specify the inputs required to begin the first query entry process, perform out that entry process, and send the query.  Frame 2 would specify the inputs required to restart the query entry process after the HTTP response arrives.  An instructor specifies the start and end conditions; it is the role of our test construction algorithm to add the value generating functions.
+Frame 1 would specify the inputs required to begin the first query entry process, perform out that entry process, and send the query.  Frame 2 would specify the inputs required to restart the query entry process after the HTTP response arrives.  An instructor specifies the start and end conditions; it is the role of our test construction algorithm to add the value-generating functions.
 
-\subsection{Building value generating functions}
-The first step in constructing our value generating functions is to convert the observed discrete input signals to continuous input signals.  Suppose that on some input channel, the \textit{n}th sample occurs at time $t_n$, the previous sample occurs at time $t_{n-1}$, and the subsequent sample occurs at time $t_{n+1}$.  MicroGrader offers several ways to create a continuous signal using these samples:
+\subsection{Building value-generating functions}
+The first step in constructing our value-generating functions is to convert the observed discrete input signals to continuous input signals.  Suppose that on some input channel, the \textit{n}th sample occurs at time $t_n$, the previous sample occurs at time $t_{n-1}$, and the subsequent sample occurs at time $t_{n+1}$.  MicroGrader offers several ways to create a continuous signal using these samples:
 
 \begin{itemize}
 \item Post-hold: the \textit{n}th sample is valid in the interval $[t_n, t_{n+1})$.
@@ -715,14 +715,14 @@ These methods are illustrated in Figure \ref{fig:interpolation}.  Instructors ca
 \label{fig:interpolation}
 \end{figure}
 
-After converting the discrete input signals to continuous input signals, our algorithm uses these signals to determine the value generating function for each input frame.  First, it examines the observation log to determine the $t_{\text{start}}$ and $t_{\text{end}}$ for each input frame in the scaffold.  Recall that $t_{\text{start}}$ and $t_{\text{end}}$ are the $t_{\text{satisfied}}$ times for the start and end conditions, respectively, of an input frame.  For any input frame, if either of $t_{\text{start}}$ or $t_{\text{end}}$ are undefined, or $t_{\text{start}}$ >= $t_{\text{end}}$, then that input  frame is discarded and will not be included in our constructed test.
+After converting the discrete input signals to continuous input signals, our algorithm uses these signals to determine the value-generating function for each input frame.  First, it examines the observation log to determine the $t_{\text{start}}$ and $t_{\text{end}}$ for each input frame in the scaffold.  Recall that $t_{\text{start}}$ and $t_{\text{end}}$ are the $t_{\text{satisfied}}$ times for the start and end conditions, respectively, of an input frame.  For any input frame, if either of $t_{\text{start}}$ or $t_{\text{end}}$ are undefined, or $t_{\text{start}}$ >= $t_{\text{end}}$, then that input  frame is discarded and will not be included in our constructed test.
 
-For each remaining input frame, we can now determine the value generating function.  Specifically, for each input channel, we extract the portion of the signal between $t_{\text{start}}$ and $t_{\text{end}}$ of the frame.  We translate this signal so that it begins at $t=0$, and we extend the signal from its final value (which was originally at $t=t_{\text{end}}$) to infinity.  This process is illustrated in Figure \ref{fig:input-framing}.
+For each remaining input frame, we can now determine the value-generating function.  Specifically, for each input channel, we extract the portion of the signal between $t_{\text{start}}$ and $t_{\text{end}}$ of the frame.  We translate this signal so that it begins at $t=0$, and we extend the signal from its final value (which was originally at $t=t_{\text{end}}$) to infinity.  This process is illustrated in Figure \ref{fig:input-framing}.
 
 \begin{figure}[ht]
 \centering
 \includegraphics[width=0.6\linewidth]{input-framing.png}
-\caption{Visualization of building a value generating function for a single analog input channel.}
+\caption{Visualization of building a value-generating function for a single analog input channel.}
 \label{fig:input-framing}
 \end{figure}
 
@@ -793,7 +793,7 @@ Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP re
 
 For the recording, we performed a minimal test procedure that mostly covers the intended functionality of the system.  After initialization, we entered the query-entry state with a long press, scrolled left to the ``9" character, scrolled right to the ``c" character, locked that character in with a short press, and then sent the query with a long press.  After the response arrived, we entered the query-entry state with a long press again, and locked in the letter ``a" with a short press.
 
-In the recording, two input samples were taken on two channels: a digital input connected to the active-low push-button switch, and the x-axis of an accelerometer which gives us information about the left-right tilt of the embedded system.  Based on the recording, MicroGrader created value generating functions for each of the two frames, as illustrated in Figure \ref{fig:actual-input-frames}.  At a glance, one can see the actions that occurred during the recording. Frame 1 consists of a long press, followed by some tilting, following by a short press, and finally a long press.  Frame 2 consists of a long press followed by a short press, with very little tilting.
+In the recording, two input samples were taken on two channels: a digital input connected to the active-low push-button switch, and the x-axis of an accelerometer which gives us information about the left-right tilt of the embedded system.  Based on the recording, MicroGrader created value-generating functions for each of the two frames, as illustrated in Figure \ref{fig:actual-input-frames}.  At a glance, one can see the actions that occurred during the recording. Frame 1 consists of a long press, followed by some tilting, following by a short press, and finally a long press.  Frame 2 consists of a long press followed by a short press, with very little tilting.
 
 \begin{figure}[ht]
 \centering
@@ -816,7 +816,7 @@ In the recording, two input samples were taken on two channels: a digital input 
 \caption{Frame 2, accelerometer input.}
 \end{subfigure}
 
-\caption{Visualization of value generating functions for both frames in the automatically generated Wikipedia Scroller test.}
+\caption{Visualization of value-generating functions for both frames in the automatically generated Wikipedia Scroller test.}
 \label{fig:actual-input-frames}
 \end{figure}
 
