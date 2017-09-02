@@ -103,12 +103,7 @@ We describe a specification format for instructors to define the technical requi
 
 \newpage
 \section{Introduction}
-
-
-TODO: new first paragraph
-%Verification of program behavior has been a major concern for engineers and academics since the early days of computing.  The study of software testing has grown into a significant field of computer science.  In this thesis, we will describe a software tool (``MicroGrader") that verifies the correctness of embedded systems, specifically in an educational context.  Essentially, it is an automated grader for embedded systems assignments that provides actionable feedback to students.
-
-We must understand why the verification of an embedded system requires a specialized approach, and understand how the educational context affects design choices.
+In this thesis, we describe a software tool (``MicroGrader") for grading embedded systems exercises in an academic setting.  Specifically, we focus on assessing the degree to which a student's microcontroller code adheres to an instructor's specification.  This tool also provides immediate and actionable feedback to students, so that they may improve their adherence to the specification.  Before detailing the process by which MicroGrader grades exercises, we must understand why the verification of an embedded system requires a specialized approach, and understand how the educational context affects design choices.
 
 First, let us consider program verification in general, at a high level. In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent if they produce an identical sequences of outputs given the same sequence of inputs and start state.  If we only care about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we should only evaluate the output sequences and not the internal state.
 
