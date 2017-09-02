@@ -16,7 +16,7 @@
 \usepackage{graphicx}
 \graphicspath{ {images/} }
 
-\newcommand{\mytitle}{\textbf{An Automatic Grader for Embedded Systems Courses}}
+\newcommand{\mytitle}{\textbf{An Automatic Grader for Embedded Systems Education}}
 \newcommand{\mydate}{September 5, 2017}
 
 \begin{document}
@@ -103,17 +103,17 @@ We describe a specification format for instructors to define the technical requi
 
 \newpage
 \section{Introduction}
-In this thesis, we describe a software tool (``MicroGrader") for grading embedded systems exercises in an academic setting.  Specifically, we focus on assessing the degree to which a student's microcontroller code adheres to an instructor's specification.  This tool also provides immediate and actionable feedback to students, so that they may improve their adherence to the specification.  Before detailing the process by which MicroGrader grades exercises, we must understand why the verification of an embedded system requires a specialized approach, and understand how the educational context affects design choices.
+In this thesis, we describe a software tool (``MicroGrader") for grading embedded systems exercises in an educational setting.  Specifically, we focus on assessing the degree to which a student's microcontroller program adheres to an instructor's specification.  This tool also provides immediate and actionable feedback to students, so that they may improve their adherence to the specification.  Before detailing the process by which MicroGrader grades exercises, we must understand why the verification of an embedded system requires a specialized approach, and understand how the educational context affects our design choices.
 
 First, let us consider program verification in general, at a high level. In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent if they produce an identical sequences of outputs given the same sequence of inputs and start state.  If we only care about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we should only evaluate the output sequences and not the internal state.
 
 Technical educators sometimes specify that students must use certain structures or programming patterns in their solutions.  For example, an instructor might require students to use recursion even if there are functionally equivalent non-recursive solutions.  We acknowledge the value of these pedagogical restrictions, but we put them aside for now.  MicroGrader focuses only on the functional correctness of an embedded program, not the methodology used to implement the program.
 
-To exhaustively verify the functionality of a black-box FSM, we would have to observe the output sequence for every possible input sequence and start state, and confirm that observed output sequences matches the expected output sequence. The number of steps required to do this is prohibitively large.  Rather, we typically test FSMs by verifying that they produce the correct output sequence for a useful subset of the possible input sequences and starting states.  That useful subset is often chosen manually.  The correct outputs might be defined manually as well.  In the context of education, it is easier to use a ``staff solution" to define the outputs.  That is, the staff solution is canonically considered correct, and student solutions must match the output of the staff solution to be considered correct.
+To exhaustively verify the functionality of a black-box FSM, we would have to observe the output sequence for every possible input sequence and start state, and confirm that each observed output sequence matches our expectation. The number of steps required to do this is prohibitively large.  Rather, we typically test FSMs by verifying that they produce the correct output sequence for a useful subset of the possible input sequences and starting states.  That useful subset is often chosen manually.  The correct outputs might be defined manually as well.  In the context of education, it is easier to use a ``staff solution" to define the outputs.  That is, the staff solution is canonically considered correct, and student solutions must match the output of the staff solution to be considered correct.
    
-Typically, the the system performing the verification (the ``evaluator") and system being verified (the ``evaluated system") can run on the same computing platform, such as an x86 processor with a compiler/interpreter for the relevant language.  In such cases, the evaluator exerts direct control over the evaluated system.  For embedded systems, the resource constraints of a microcontroller, in terms of both memory and speed, force us to separate the the evaluator and the evaluated system.  In the case of MicroGrader, the evaluator is a Python program running on a full-fledged processor, while the evaluated systems are the students' embedded programs.
+Typically, the the system performing the verification (the ``evaluator") and system being verified (the ``evaluated system" or ``evaluatee") can run on the same computing platform, such as an x86 processor with a compiler/interpreter for the relevant language.  Often, the evaluator exerts direct control over the evaluated system.  For embedded systems, the resource constraints of a microcontroller, in terms of both memory and speed, force us to separate the the evaluator and the evaluated system.  In the case of MicroGrader, the evaluator is a Python program running on a full-fledged processor, while the evaluated systems are the students' embedded systems.
 
-This separation of evaluator and the evaluatee (an embedded system in our particular case) is the primary focus of this paper, and it presents some new challenges.  The evaluator requires the ability to specify the inputs to the embedded system, which are typically real-world sensor readings.  Furthermore, it requires the ability to observe the outputs of the embedded system, (e.g. a motor, light-emitting diode, etc).  In MicroGrader, a communication protocol between the evaluator and the embedded system enables this access.  The protocol is designed to be minimally intensive for the embedded system.  Specifically, a low-level library on the embedded side implements one side of this protocol, which allows it to ``request" inputs from the evaluator rather than performing actual sensor sampling.  We can consider this an injection of test inputs.  This library also allows for the embedded system to report outputs.
+This separation of evaluator and the evaluatee, in the context of grading embedded systems, presents some new challenges and is the primary focus of this paper.  The evaluator requires the ability to specify the inputs to an embedded system, which are typically real-world sensor readings.  Furthermore, it requires the ability to observe the outputs of an embedded system (e.g. a motor, light-emitting diode, etc).  In MicroGrader, a communication protocol between the evaluator and the embedded system enables this access.  The protocol is designed to be minimally intensive for the embedded system.  Specifically, a low-level library on the microcontroller implements one side of this protocol, which allows it to ``request" inputs from the evaluator rather than performing actual sensor sampling.  We can consider this an injection of test inputs.  This library also allows for the embedded system to report outputs.
 
 Beyond the separation of evaluator and evaluatee, there are additional differences between evaluating embedded and non-embedded software.  One difference is the importance of timing.  While the specification of a non-embedded program \textit{could} include strict rules for the timing of specific operations, that would be unusual in an introductory academic course.  Existing automatic graders may consider the overall program running time without delving into the fine timing details. In embedded systems, timing is often of paramount importance.  For example, in computing a single state update, an embedded system may require multiple inputs and produce multiple outputs.  The inputs are not sampled at the exact same time, and the outputs are not produced at the exact same time.  Furthermore, the implementation of the embedded program determines the timing of these events; an evaluator has no ability to compel the embedded system to sample an input at exactly time $X$ or produce an output at exactly time $Y$.
 
@@ -587,7 +587,7 @@ MicroGrader's text extraction algorithm requires a bitmap representation of each
 \includegraphics[width=\linewidth]{glyph-underscore.png}
 \label{fig:glyph-underscore}
 \end{subfigure}
-\caption{The crossbar of a T is identical to an underscore character.  An instructor might choose to ignore the underscore character.}
+\caption{The crossbar of a ``T" is identical to an underscore character.  An instructor might choose to ignore the underscore character.}
 \label{fig:bad-ocr}
 \end{figure}
 
@@ -667,7 +667,7 @@ Our manual grading process for Wikipedia Scroller involved a complicated query e
 Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
 Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP response received \\ \hline
 \end{tabular}
-\caption{A more lenient set of evaluation points for Blinky.}
+\caption{In a scaffold, we provide the start and end condition of each frame.  The value generating function is derived from the recording of the reference system.}
 \label{table:frame-templates}
 \end{center}
 \end{table}
@@ -742,7 +742,7 @@ First, we partition the reference signal into intervals with constant value.  In
 
 \begin{table}[ht]
 \begin{center}
-\caption{Evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
+\caption{Partial evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
 \vspace{2mm}
 \label{table:construct-points}
 \begin{tabular}{cccccc}
@@ -760,7 +760,7 @@ As observed in the table, we have no way to determine the proper check function 
 
 \begin{table}[ht]
 \begin{center}
-\caption{Evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
+\caption{Complete evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
 \vspace{2mm}
 \label{table:construct-points-2}
 \begin{tabular}{cccccc}
@@ -785,7 +785,7 @@ To demonstrate the capability of the test construction algorithm, we used it to 
 Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
 Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP response received \\ \hline
 \end{tabular}
-\caption{A more lenient set of evaluation points for Blinky.}
+\caption{Frames for a scaffold for building a Wikipedia Scroller test.}
 \label{table:frame-templates-2}
 \end{center}
 \end{table}
@@ -815,7 +815,7 @@ In the recording, two input samples were taken on two channels: a digital input 
 \caption{Frame 2, accelerometer input.}
 \end{subfigure}
 
-\caption{Visualization of value generating functions for both frames in automatically generated Wikipedia Scroller test.}
+\caption{Visualization of value generating functions for both frames in the automatically generated Wikipedia Scroller test.}
 \label{fig:actual-input-frames}
 \end{figure}
 
@@ -913,7 +913,7 @@ If the optional value or values are included, this message is reporting recorded
 
 If the optional values are not included, this message is requesting test values.  In that case, the body of the response (if there is a response), is just the requested values.  For digital input requests, the response is a single byte containing a 0 or a 1.  For analog input requests, the response is a 32-bit integer.  For the accelerometer, gyroscope, and magnetometer requests, the response is a sequence of three 32-bit bit integers representing the x-value, y-value, and z-value respectively.
 
-\subsubsection{Value Encoding}
+\subsubsection{Value encoding}
 Encoding for digital values is simple: a single byte containing the value 0 or 1.  For analog values, however, MicroGrader uses a system by which the client decides how an analog value becomes discretized.  In particular, the client specifies the \textit{analog params} which are defined as follows:
 
 \footnotesize
@@ -955,7 +955,7 @@ code & name & message body \\ \hline
 
 If the client specifies that a response should be sent, then the body of the response is empty.  The encoding of values for digital outputs is the same as for digital inputs (a single byte, 0 or 1).  The encoding of values for analog outputs is the same as for analog inputs.  Recall that the value reported is a ``bin number".
 
-\subsubsection{Screen Encoding}
+\subsubsection{Screen encoding}
 Since the built-in screen type is a monochrome display, in which each pixel is on-or-off, our screen is essentially a bitmap.  We represent each pixel using a single bit.  Our encoding for the screen is inspired by the U8x8 embedded library \cite{u8x8}, and it makes it simple for embedded clients to transmit screen information if their display libraries are U8x8 compatible.
 
 We encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted over serial, note that this unsigned 64-bit integer, like all our other multi-byte integers, are transmitted in a little-endian fashion.  So the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
