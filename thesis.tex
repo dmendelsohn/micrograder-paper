@@ -515,10 +515,10 @@ For further readability, test results can be summarized somewhat more succinctly
 We considered a number of ways of reporting results to some online courseware, such as EdX or Coursera.  In the end, we chose a simple but effective solution, inspired by UT Austin's Embedded Systems course on EdX.  Students receive an individualized codeword for each test through the online courseware, and enter that codeword into MicroGrader.  When MicroGrader runs a test, the student's score is combined with that codeword and hashed.  The student can then copy that hash back into the courseware.  This method discourages cheating without requiring direct communication between MicroGrader and online courseware.  To further discourage cheating, courses could require students to upload their solutions to the online courseware for later reference.
 
 \subsection{Screen analysis}
-As previously mentioned, bitmap screens area built-in type in MicroGrader.  MicroGrader also includes some utilities for working with bitmaps, which are represented as a 2D array of binary values.  Specifically, these utilities help instructors build sensible check functions for bitmaps.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
+As previously mentioned, bitmap screens are a built-in type in MicroGrader.  MicroGrader also includes some utilities for working with bitmaps, which are represented as a 2D array of binary values.  These utilities help instructors build sensible check functions for bitmaps.  After all, exact pixel-by-pixel screen matching is often not a reasonable requirement for students.
 
 \subsubsection{Bitmap distance metric}
-MicroGrader includes a built-in distance metric for bitmaps of the same dimensions.  Specifically, we say the distance between two bitmaps is the number of pixels that do not match.  We can compute this easily by XOR-ing two bitmaps and counting the number of 1's in the result, as shown in Figure \ref{fig:naive-distance}.
+MicroGrader includes a built-in distance metric for bitmaps of the same dimensions.  We say the distance between two bitmaps is the number of pixels that do not match.  We can compute this easily by XOR-ing two bitmaps and counting the number of 1s in the result, as shown in Figure \ref{fig:naive-distance}.
 
 \begin{figure}
 \centering
@@ -527,11 +527,13 @@ MicroGrader includes a built-in distance metric for bitmaps of the same dimensio
 \caption{Bitmap 1, two horizontal 10x10 white squares.}
 \label{fig:squares-horizontal}
 \end{subfigure}
+\hspace{2mm}
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{squares-vertical.png}
 \caption{Bitmap 2, two vertical 10x10 white squares.}
 \label{fig:squares-vertical}
 \end{subfigure}
+\hspace{2mm}
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{squares-diagonal.png}
 \caption{XOR of bitmaps 1 and 2, showing 200 differing pixels.}
@@ -541,20 +543,22 @@ MicroGrader includes a built-in distance metric for bitmaps of the same dimensio
 \label{fig:naive-distance}
 \end{figure}
 
-This distance metric is very unforgiving of slight translations.  For example, consider two bitmaps that each represent the outline of a circle.  If one bitmap is slightly shifted relative to the other, the distance between them is quite high, as shown in Figure \ref{fig:naive-distance-problem}.  In fact, the empty (all 0s) bitmap is closer to each of these than they are to each other.  We therefore will refer to this simple distance metric as the \textit{naive distance}. A more complex distance metric seems valuable.
+This distance metric is very unforgiving of slight translations.  For example, consider two bitmaps that each represent the outline of a circle.  If one bitmap is slightly shifted relative to the other, the distance between them is quite high, as shown in Figure \ref{fig:naive-distance-problem}.  In fact, the empty (all 0s) bitmap is closer to each of these than they are to each other.  We therefore will refer to this simple distance metric as the \textit{naive distance} metric. A more complex distance metric seems valuable.
 
 \begin{figure}
 \centering
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{circle-left.png}
-\caption{Bitmap 1, a circle at \\ location (30,30).}
+\caption{Bitmap 1, a circle centered at location (30,30).}
 \label{fig:circle-left}
 \end{subfigure}
+\hspace{2mm}
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{circle-right.png}
-\caption{Bitmap 1, a circle at \\ location (35,30).}
+\caption{Bitmap 1, a circle centered at location (35,30).}
 \label{fig:circle-right}
 \end{subfigure}
+\hspace{2mm}
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{circle-diff.png}
 \caption{White pixels are pixel differences.}
@@ -565,10 +569,10 @@ This distance metric is very unforgiving of slight translations.  For example, c
 \end{figure}
 
 
-To allow for leniency with regard to translations, we introduce a parametric family of distance metrics; there are two parameters, $d_{\text{vertical}}$ and $d_{\text{horizontal}}$.  These parameters specify the maximum allowable translation of one bitmap relative to the other in the vertical and horizontal directions respectively.  The allowable vertical translations are in the range $[-d_{\text{vertical}}, d_{\text{vertical}}]$ and the allowable horizontal translations are in the range $[-d_{\text{horizontal}}, d_{\text{horizontal}}]$.  Therefore, there are a total of $(2*d_{\text{vertical}}+1)*(2*d_{\text{horizontal}}+1)$ translations in two dimensions.  To compute the distance between two bitmaps, $B_1$ and $B_2$, according to this parametrized metric, a function applies each allowable translation to $B_1$.  The distance is defined to be the minimum naive distance between $B_2$ and any of the translations of $B_1$.  For example, if we set $d_{\text{horizontal}} >= 5$, then the distance between the bitmaps in Figures \ref{fig:circle-left} and \ref{fig:circle-right} is 0.
+To allow for leniency with regard to translations, we introduce a parametric family of distance metrics; there are two parameters, $d_{\text{vertical}}$ and $d_{\text{horizontal}}$.  These parameters specify the maximum allowable translation of one bitmap relative to the other in the vertical and horizontal directions respectively.  The allowable vertical translations are in the range $[-d_{\text{vertical}}, d_{\text{vertical}}]$ and the allowable horizontal translations are in the range $[-d_{\text{horizontal}}, d_{\text{horizontal}}]$.  Therefore, there are a total of $(2*d_{\text{vertical}}+1)*(2*d_{\text{horizontal}}+1)$ translations in two dimensions.  To compute the distance between two bitmaps, $B_1$ and $B_2$, according to this parametrized metric, a function applies each allowable translation to $B_1$.  The distance is defined to be the minimum naive distance between $B_2$ and any of the translations of $B_1$.  For example, if we set $d_{\text{horizontal}} >= 5$, then the distance between the bitmaps in Figures \ref{fig:circle-left} and \ref{fig:circle-right} would be 0.
 
 \subsubsection{Text extraction from a bitmap}
-Many assignments, such as Wikipedia Scroller, involve displaying text on a screen.  MicroGrader includes functionality to extract text from a bitmap.  At first we explored using existing tools for optical character recognition (OCR), such as tesseract \cite{tesseract}.  These generic OCR tools, however, do not perform well for small fonts.  The character glyphs of small fonts sometimes bear only vague resemblance to their counterparts in larger fonts.  For example, Figure \ref{fig:small-glyph} shows the glyph for the letter \texttt{m} in a small font from the X11 distribution \cite{5x7}.  It is difficult to develop an OCR algorithm for small fonts without prior knowledge of the exact character glyphs.
+Many assignments, such as Wikipedia Scroller, involve displaying text on a screen.  MicroGrader includes functionality to extract text from a bitmap.  At first we explored using existing tools for optical character recognition (OCR), such as tesseract \cite{tesseract}.  These generic OCR tools, however, do not perform well for small fonts.  The character glyphs of small fonts sometimes bear only vague resemblance to their counterparts in larger fonts.  For example, Figure \ref{fig:small-glyph} shows the glyph for the letter ``m" in a small font from the X11 distribution \cite{5x7}.  It is difficult to develop an OCR algorithm for small fonts without prior knowledge of the exact character glyphs.
 
 
 \begin{figure}
@@ -578,7 +582,7 @@ Many assignments, such as Wikipedia Scroller, involve displaying text on a scree
 \label{fig:small-glyph}
 \end{figure}
 
-MicroGrader's text extraction algorithm requires a bitmap representation of each character in a font.  Essentially, the algorithm scans the embedded system's output screen looking for rectangular patches that exactly match known bitmaps from a pre-loaded font.  The algorithm can be configured to ignore a subset of the characters in the font.  This is useful because some characters have glyphs that can appear in an image as a result of some other character, as shown in Figure \ref{fig:bad-ocr}.
+MicroGrader's text extraction algorithm requires access to the bitmap representation of each character in a font.  Essentially, the algorithm scans the embedded system's output screen looking for rectangular patches that exactly match known bitmaps from a pre-loaded font.  The algorithm can be configured to ignore a subset of the characters in the font.  This is useful because some characters have glyphs that can appear in an image as a result of some other character, as shown in Figure \ref{fig:bad-ocr}.
 
 \begin{figure}
 \centering
@@ -590,7 +594,7 @@ MicroGrader's text extraction algorithm requires a bitmap representation of each
 \includegraphics[width=\linewidth]{glyph-underscore.png}
 \label{fig:glyph-underscore}
 \end{subfigure}
-\caption{The crossbar of a ``T" is identical to an underscore character.  An instructor might choose to ignore the underscore character.}
+\caption{In this font, the crossbar of a ``T" is identical to an underscore character.  An instructor might choose to ignore the underscore character.}
 \label{fig:bad-ocr}
 \end{figure}
 
@@ -600,7 +604,7 @@ This text extraction algorithm is effective, but it has some weaknesses.  It req
 \label{sec:config}
 MicroGrader is designed to be as configurable as possible.  This manifests itself in a variety of ways.  Test cases themselves are highly configurable, as described earlier.  Furthermore, certain design decisions were made in order to make MicroGrader compatible with as many embedded platforms as possible.  For example, it makes no assumptions about the resolution at which to discretize analog values.  Any request for an analog input or observation of an analog output comes packaged with information about the desired range and resolution of the analog quantity.
 
-Later, it will be possible to add additional data types, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \cite{pickle} Python objects that include implementations of all the functions a data type needs to have.  The minimum functions for a new data type are: serialization, deserialization, and a definition of the equivalence operator.
+Later, it will be possible to add additional data types for inputs and outputs, beyond the built-in ones, without changing the source code.  The easiest way to do this is by importing serialized \cite{pickle} Python objects that include implementations of all the functions a data type needs to have.  The minimum functions for a new data type are: serialization, deserialization, and a definition of the equivalence operator.
 
 The high level of configurability could potentially make it difficult for an instructor to use MicroGrader.  Therefore, wherever possible, reasonable defaults are included.  For example, consider the aggregator function, which maps a list of evaluation point results to a score.  By default, each channel uses a ``proportional" aggregator function, where the score is just the fraction of points that evaluate to \texttt{true}.  An instructor could replace this with any valid aggregator, such as an ``all-or-nothing" function which returns 1 if all points evaluate to \texttt{true} and 0 otherwise.
 
