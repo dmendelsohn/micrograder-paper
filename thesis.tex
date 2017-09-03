@@ -682,7 +682,7 @@ Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP re
 Frame 1 would specify the inputs required to begin the first query entry process, carry out that entry process, and send the query.  Frame 2 would specify the inputs required to restart the query entry process after the HTTP response arrives.  An instructor specifies the start and end conditions; it is the role of our test construction algorithm to add the value-generating functions.
 
 \subsection{Building value-generating functions}
-The first step in constructing our value-generating functions is to convert the observed discrete input signals to continuous input signals.  Suppose that on some input channel, the \textit{n}th sample occurs at time $t_n$, the previous sample occurs at time $t_{n-1}$, and the subsequent sample occurs at time $t_{n+1}$.  MicroGrader offers several ways to create a continuous signal using these samples:
+The first step in constructing value-generating functions is to convert the observed discrete input signals to continuous input signals.  Suppose that on some input channel, the \textit{n}th sample occurs at time $t_n$, the previous sample occurs at time $t_{n-1}$, and the subsequent sample occurs at time $t_{n+1}$.  MicroGrader offers several ways to create a continuous signal using these samples:
 
 \begin{itemize}
 \item Post-hold: the \textit{n}th sample is valid in the interval $[t_n, t_{n+1})$.
@@ -691,7 +691,7 @@ The first step in constructing our value-generating functions is to convert the 
 \item Interpolation: Values between samples are determined using linear interpolation. 
 \end{itemize}
 
-These methods are illustrated in Figure \ref{fig:interpolation}.  Instructors can specify a different method of creating the continuous signal for each input channel.  For some types of input channels, namely digital ones, the ``interpolate" method is not valid.
+These methods are illustrated in Figure \ref{fig:interpolation}.  Instructors can specify a different method of creating the continuous signal for each input channel.  For some types of input channels, namely digital ones, the interpolation method is not valid.
 
 \begin{figure}
 \centering
@@ -721,9 +721,9 @@ These methods are illustrated in Figure \ref{fig:interpolation}.  Instructors ca
 \label{fig:interpolation}
 \end{figure}
 
-After converting the discrete input signals to continuous input signals, our algorithm uses these signals to determine the value-generating function for each input frame.  First, it examines the observation log to determine the $t_{\text{start}}$ and $t_{\text{end}}$ for each input frame in the scaffold.  Recall that $t_{\text{start}}$ and $t_{\text{end}}$ are the $t_{\text{satisfied}}$ times for the start and end conditions, respectively, of an input frame.  For any input frame, if either of $t_{\text{start}}$ or $t_{\text{end}}$ are undefined, or $t_{\text{start}}$ >= $t_{\text{end}}$, then that input  frame is discarded and will not be included in our constructed test.
+After converting the discrete input signals to continuous input signals, our algorithm uses these signals to determine the value-generating function for each input frame.  First, it examines the observation log to determine the $t_{\text{start}}$ and $t_{\text{end}}$ for each input frame in the scaffold.  Recall that $t_{\text{start}}$ and $t_{\text{end}}$ are the $t_{\text{satisfied}}$ times for the start and end conditions, respectively, of an input frame.  For any input frame, if either $t_{\text{start}}$ or $t_{\text{end}}$ is undefined, or $t_{\text{start}} >= t_{\text{end}}$, then that input  frame is discarded and will not be included in our constructed test.
 
-For each remaining input frame, we can now determine the value-generating function.  Specifically, for each input channel, we extract the portion of the signal between $t_{\text{start}}$ and $t_{\text{end}}$ of the frame.  We translate this signal so that it begins at $t=0$, and we extend the signal from its final value (which was originally at $t=t_{\text{end}}$) to infinity.  This process is illustrated in Figure \ref{fig:input-framing}.
+For each remaining input frame, we can now determine the value-generating function.  For each input signal and frame, we extract the portion of the signal in the interval $[t_{\text{start}},t_{\text{end}})$.  We translate this signal so that it begins at $t=0$, and we extend the signal from its final value (which was originally at $t=t_{\text{end}}$) to infinity.  This process is illustrated in Figure \ref{fig:input-framing}.
 
 \begin{figure}[ht]
 \centering
@@ -734,7 +734,7 @@ For each remaining input frame, we can now determine the value-generating functi
 
 \subsection{Constructing evaluation points}
 \label{sec:using-point-templates}
-As with constructing input frames, the first step is converting discrete output observations to continuous signals.  In this case, we use the ``post-hold" method described in the previous section.  Also from the previous section, we have the $t_{\text{start}}$ and $t_{\text{end}}$ times for each frame.  For each frame, we consider the interval $[t_{\text{start}}, t_{\text{end}})$ of each output signal, and translate it so that it begins at $t=0$.  So far, this is the same process as we performed with input signals, except we do not extrapolate the output signal to $t=\infty$, as shown in Figure \ref{fig:output-framing}.  We will refer to this piece of the original output signal as the \textit{reference signal}.  
+To construct evaluation points, the first step is converting discrete output observations to continuous signals.  In this case, we use the ``post-hold" method described in the previous section.  Also from the previous section, we have the $t_{\text{start}}$ and $t_{\text{end}}$ times for each frame.  For each frame, we consider the interval $[t_{\text{start}}, t_{\text{end}})$ of each output signal, and translate it so that it begins at $t=0$.  So far, this is the same process as we performed with input signals, except we do not extrapolate the output signal to $t=\infty$, as shown in Figure \ref{fig:output-framing}.  We will refer to this piece of the original output signal as the \textit{reference signal}.  
 
 \begin{figure}[ht]
 \centering
@@ -743,9 +743,9 @@ As with constructing input frames, the first step is converting discrete output 
 \label{fig:output-framing}
 \end{figure}
 
-Recall that since this is a recording of an instructor's embedded system, its outputs are correct by definition.  Now, our task is to generate a set of evaluation points that can represent this interval of the expected output signal.  For the sake of clarity, we will continue to focus on a reference signal for a single output channel within a single frame, but the process of creating and using a reference signal is the same for all frames and output channels.  We'll refer to the start condition of our hypothetical frame as $C_{\text{start}}$.
+Recall that this is a recording of an instructor's embedded system, so its outputs are correct by definition.  Now, our task is to generate a set of evaluation points that can represent this interval of the expected output signal.  For the sake of clarity, we will continue to focus on a reference signal for a single output channel within a single frame, but the process of creating and using a reference signal is the same for all frames and output channels.  We will refer to the start condition of our hypothetical frame as $C_{\text{start}}$.
 
-First, we partition the reference signal into intervals with constant value.  In this case, there are three such intervals: $(0,1000)$,$(1000,2000)$, and $(2000,3000)$.  For each of these constant-value intervals, we construct one evaluation point that determines whether another signal matches the reference signal in this interval, as shown in Table \ref{table:construct-points}.
+First, we partition the reference signal into intervals with constant value.  In this case, there are three such intervals: $(0,1000)$, $(1000,2000)$, and $(2000,3000)$.  For each of these constant-value intervals, we construct one evaluation point that determines whether another signal matches the r?eference signal in this interval, as shown in Table \ref{table:construct-points}.
 
 \begin{table}[ht]
 \begin{center}
@@ -772,34 +772,33 @@ As observed in the table, we have no way to determine the proper check function 
 \label{table:construct-points-2}
 \begin{tabular}{cccccc}
 Expected Value & Check Function & Condition & Interval & Portion \\ \hline
-2.0 V & True if values are within 0.1 V & $C_{\text{start}}$ & (0,1000) & 0.8 \\
-0.0 V & True if values are within 0.1 V & $C_{\text{start}}$ & (1000,2000) & 0.8 \\
-3.0 V & True if values are within 0.1 V & $C_{\text{start}}$ & (2000,3000) & 0.8 \\ \hline
+2.0 V & \texttt{true} if values are within 0.1 V & $C_{\text{start}}$ & (0,1000) & 0.8 \\
+0.0 V & \texttt{true} if values are within 0.1 V & $C_{\text{start}}$ & (1000,2000) & 0.8 \\
+3.0 V & \texttt{true} if values are within 0.1 V & $C_{\text{start}}$ & (2000,3000) & 0.8 \\ \hline
 \end{tabular}
 \end{center}
 \end{table}
 
-The last part of a test is the aggregator function, which defines how a set of boolean evaluation point results are combined into a numerical grade.  As with the check function and portion attributes, the aggregator function is specified by instructors on a per-channel basis.  A typical aggregator function is the function that returns the fraction of points that evaluate to \texttt{true}.
+The last part of a test case is the aggregator function, which defines how a set of boolean evaluation point results are combined into a numerical grade.  As with the check function and portion attributes, the aggregator function is specified by instructors on a per-channel basis.
 
 \subsection{Auto-generated test case for Wikipedia Scroller}
-To demonstrate the capability of the test construction algorithm, we used it to build a test for Wikipedia Scroller.  For our scaffold, we started with the frames from Table \ref{table:frame-templates}, shown again in Table \ref{table:frame-templates-2} for convenience.
+To demonstrate the capability of the construction algorithm, we used it to build a test for Wikipedia Scroller.  For our scaffold, we started with the frames from Table \ref{table:frame-templates}, shown again in Table \ref{table:frame-templates-2} for convenience.
 
 \begin{table}[ht]
 \begin{center}
-\vspace{2mm}
+\caption{Frames for a scaffold for building a Wikipedia Scroller test.}
 \begin{tabular}{c|ll}
 & Start condition & End condition \\ \hline
 Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
 Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP response received \\ \hline
 \end{tabular}
-\caption{Frames for a scaffold for building a Wikipedia Scroller test.}
 \label{table:frame-templates-2}
 \end{center}
 \end{table}
 
-For the recording, we performed a minimal test procedure that mostly covers the intended functionality of the system.  After initialization, we entered the query-entry state with a long press, scrolled left to the ``9" character, scrolled right to the ``c" character, locked that character in with a short press, and then sent the query with a long press.  After the response arrived, we entered the query-entry state with a long press again, and locked in the letter ``a" with a short press.
+For the recording, we performed a minimal test procedure that demonstrated most of the intended functionality of the system.  After initialization, we entered the query entry state with a long press, scrolled left to the ``9" character, scrolled right to the ``c" character, locked that character in with a short press, and then sent the query with a long press.  After the response arrived, we entered the query entry state again with a long press, and locked in the letter ``a" with a short press.
 
-In the recording, two input samples were taken on two channels: a digital input connected to the active-low push-button switch, and the x-axis of an accelerometer which gives us information about the left-right tilt of the embedded system.  Based on the recording, MicroGrader created value-generating functions for each of the two frames, as illustrated in Figure \ref{fig:actual-input-frames}.  At a glance, one can see the actions that occurred during the recording. Frame 1 consists of a long press, followed by some tilting, following by a short press, and finally a long press.  Frame 2 consists of a long press followed by a short press, with very little tilting.
+In the recording, input samples were taken on two channels: a digital input connected to the active-low push-button switch, and the x-axis of an accelerometer which gives us information about the left-right tilt of the embedded system.  Based on the recording, MicroGrader created value-generating functions for each of the two frames, as illustrated in Figure \ref{fig:actual-input-frames}.  At a glance, one can see the actions that occurred during the recording. Frame 1 consists of a long press, followed by some tilting, following by a short press, and finally a long press.  Frame 2 consists of a long press followed by a short press, with very little tilting.
 
 \begin{figure}[ht]
 \centering
@@ -810,7 +809,7 @@ In the recording, two input samples were taken on two channels: a digital input 
 \end{subfigure}
 \begin{subfigure}[b]{.45\linewidth}
 \includegraphics[width=\linewidth]{f0-acc.png}
-\caption{Frame 1, accelerometer input.}
+\caption{Frame 1, x-axis accelerometer input.}
 \end{subfigure}
 
 \begin{subfigure}[b]{.45\linewidth}
@@ -819,7 +818,7 @@ In the recording, two input samples were taken on two channels: a digital input 
 \end{subfigure}
 \begin{subfigure}[b]{.45\linewidth}
 \includegraphics[width=\linewidth]{f1-acc.png}
-\caption{Frame 2, accelerometer input.}
+\caption{Frame 2, x-axis accelerometer input.}
 \end{subfigure}
 
 \caption{Visualization of value-generating functions for both frames in the automatically generated Wikipedia Scroller test.}
@@ -849,7 +848,7 @@ Expected Value & Check Function & Condition & Interval & Portion \\ \hline \vspa
 \end{center}
 \end{table}
 
-In practice, this automatically constructed test was effective at grading this assignment.  We made a variety of minor changes to the reference implementation.  Some of these changes did not affect the system's adherence to the specification of the exercise, such as the exact positioning of text on the screen.  Using the generated test, MicroGrader correctly gave these implementations full credit.  Other changes resulted in a system that did not quite meet the specification, and MicroGrader correctly gave these less-than-perfect scores.
+In practice, this automatically constructed test was effective at grading this assignment.  We made a variety of minor changes to the reference implementation.  Some of these changes did not affect the system's adherence to the specification of the exercise, such as altering the exact positioning of text on the screen.  Using the generated test, MicroGrader correctly gave these implementations full credit.  Other changes resulted in a system that did not quite meet the specification, and MicroGrader correctly gave these less-than-perfect scores.
 
 \clearpage
 \section{Future Work}
@@ -862,7 +861,7 @@ In the current implementation of MicroGrader, adding new data types for input an
 It is currently difficult for instructors to have loose specifications with regards to time shifts, since evaluation points have fixed intervals relative to a condition.  The only flexibility is picking a condition to which that interval is relative.  In the next version of MicroGrader, the data structure for test cases will be augmented such that an instructor can give different sorts of timing specification.  For example, an instructor could specify that a certain sequence of output values must occur in a certain order, regardless of timing.  It will also be possible to put requirements on the length of time for which an output value occurs, regardless of exactly when it occurs.
 
 \subsection{Editing automatically generated test cases}
-A significant problem with automatically generated test cases is that of ambiguity.  The test case might prescribe inputs that can have multiple reasonable outputs.  For example, a test case for Wikipedia Scroller might involve a ``tilt" input in query-entry mode that should cause the selected character to scroll $n$ indices forward, but is very close to causing the character to scroll $n+1$ indices forward.  Instructors may not want to penalize students whose systems scroll one character too far, but the automatically generated test case will penalize these students.  Instructors, therefore, might want to edit the test case to disambiguate the tilt input so that its duration is further from an edge case.  A future version of MicroGrader will include tools for making changes to existing test cases.
+A significant problem with automatically generated test cases is that of ambiguity.  The test case might prescribe inputs that can have multiple reasonable outputs.  For example, a test case for Wikipedia Scroller might involve a ``tilt" input in query entry mode that should cause the selected character to scroll $n$ indices forward, but is very close to causing the character to scroll $n+1$ indices forward.  Instructors may not want to penalize students whose systems scroll one character too far, but the automatically generated test case will penalize these students.  Instructors, therefore, might want to edit the test case to disambiguate the tilt input so that its duration is further from an edge case.  A future version of MicroGrader will include tools for making changes to existing test cases.
 
 \subsection{Dynamic values}
 Certain ``correct" values are not determined at the time the test case is created.  For example, the Wikipedia Scroller assignment has an output that involves the current text on Wikipedia.org.  The next version of MicroGrader, will include a ``place-holder" data type.  This placeholder will be a function that runs at evaluation time to generate the correct value.  In the Wikipedia Scroller case, the placeholder would fetch the correct text from Wikipedia.
