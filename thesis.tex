@@ -653,9 +653,9 @@ In order to obtain a recording of a correctly implemented solution, we introduce
 \label{fig:recording-mode}
 \end{figure}
 
-An instructor with a working solution can use this mode to perform some set of tasks that fully demonstrate the functionality of the system.  Meanwhile, the MicroGrader server compiles a full record of observations of the embedded system's, including input values.  Those observations are then used to programmatically construct a test case.
+An instructor with a working solution can use this mode to perform some set of tasks that fully demonstrate the functionality of the system.  Meanwhile, the MicroGrader server compiles a full record of observations of the embedded system, including input values.  Those observations are then used to programmatically construct a test case.
 
-It is difficult to define a test case using observations alone.  There are many ambiguities in terms of how an instructor might want to the assignment to be graded.  MicroGrader test cases define inputs dynamically, relative to a condition; a test generator would have to determine the conditions relative to which input signals should be defined.  Furthermore, an instructor might only want to assess system outputs during certain periods of time, and ignore other periods.  For example, a Wikipedia Scroller test might be set up in such a way that ignores system outputs when the embedded system is waiting for an HTTP response.
+It is difficult to define a test case using observations alone.  There are many ambiguities in terms of how an instructor might want the assignment to be graded.  MicroGrader test cases define inputs dynamically, relative to a condition; a test generator would have to determine the conditions relative to which input signals should be defined.  Furthermore, an instructor might only want to assess system outputs during certain periods of time, and ignore other periods.  For example, a Wikipedia Scroller test might be set up in such a way that ignores system outputs when the embedded system is waiting for an HTTP response.
 
 The evaluation point data structure allows instructors to specify check functions, which afford leniency to output values that are not exactly correct.  Evaluation points also allow instructors to specify a time interval and a ``required portion" of that interval for which the output should be correct.  A test generator would have to account for instructors' preferences with regards to these attributes.
 
@@ -679,7 +679,7 @@ Frame 2 & $1^{\text{st}}$ HTTP response received & 6 seconds after first HTTP re
 \end{center}
 \end{table}
 
-Frame 1 would specify the inputs required to begin the first query entry process, perform out that entry process, and send the query.  Frame 2 would specify the inputs required to restart the query entry process after the HTTP response arrives.  An instructor specifies the start and end conditions; it is the role of our test construction algorithm to add the value-generating functions.
+Frame 1 would specify the inputs required to begin the first query entry process, carry out that entry process, and send the query.  Frame 2 would specify the inputs required to restart the query entry process after the HTTP response arrives.  An instructor specifies the start and end conditions; it is the role of our test construction algorithm to add the value-generating functions.
 
 \subsection{Building value-generating functions}
 The first step in constructing our value-generating functions is to convert the observed discrete input signals to continuous input signals.  Suppose that on some input channel, the \textit{n}th sample occurs at time $t_n$, the previous sample occurs at time $t_{n-1}$, and the subsequent sample occurs at time $t_{n+1}$.  MicroGrader offers several ways to create a continuous signal using these samples:
