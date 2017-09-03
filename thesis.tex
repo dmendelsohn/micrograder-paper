@@ -999,17 +999,17 @@ It is important to inform the server of certain events, especially ones that hav
 \clearpage
 \section{Client implementation for Teensy}
 \label{sec:teensy}
-MicroGrader is built to be cross-platform and is should work with a wide variety of microcontrollers.  As of now, the client side of the communication protocol is implemented for only one microcontroller development board: the Teensy.  The key for any client implementation is to be as invisible to students as possible.  In the case of the Teensy implementation, students implement projects in a \texttt{.ino} file, which has access to built-in functions.  In order to properly implement the protocol, I wrote a library that overrides many of these built-in functions to perform the proper communication with the server.  The required changes to the student's \texttt{.ino} file are minimal.
+MicroGrader is built to be cross-platform and it should work with a wide variety of microcontrollers.  As of now, the client side of the communication protocol is implemented for only one microcontroller development board: the Teensy.  The key for any client implementation is to be as invisible to students as possible.  In the case of the Teensy implementation, students implement projects in an \texttt{.ino} file, which has access to built-in input and output functions.  In order to properly implement the protocol, I wrote a library that overrides many of these built-in functions to perform the proper communication with the server.  The required changes to the student's \texttt{.ino} file are minimal.
 
-At its core, the client consists of a communication library that interacts with the server.  It provides functionality for other libraries to send messages to the server; the core communication library adds the message header to the message.  If the message requires a response, the communication library waits, and processes, that response, and returns its contents.  If the message does not require a response, the communication library returns immediately after sending a message.
+At its core, the client consists of a communication library that interacts with the server.  It provides functionality for other libraries to send messages to the server; the core communication library adds the message header to the message.  If the message requires a response, the communication library waits for and processes that response.  This waiting process is blocking; no other communication occurs on the microcontroller until a response is received.
 
 The Teensy includes built-in functions to send and receive data over USB.  The MicroGrader client for Teensy replaces the built-in \texttt{Serial} object with a wrapper object.  When testing or recording, any print statements made using the \texttt{Serial} object have no effect.  For cases where a student or instructor wishes to print some text for debugging, the library includes a \texttt{debug} function, which sends a Print message in accordance with the MicroGrader protocol.  
 
-The built-in functions for general purpose input-output functionality (GPIO) is also wrapped.  This allows for recording GPIO events and for injecting test inputs from the MicroGrader server.  For input from the inertial measurement unit (IMU), we modified the MPU9250 \cite{MPU9250} library for Arduino/Teensy.  For output to a display, we modified the U8g2 \cite{u8g2} library for Arduino/Teensy.  If an academic course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is relatively simple.
+The built-in functions for general purpose input-output (GPIO) functionality is also wrapped.  This allows for recording GPIO events and for injecting test inputs from the MicroGrader server.  For input from the inertial measurement unit (IMU), we modified the MPU9250 \cite{MPU9250} library for Arduino.  For output to a display, we modified the U8g2 \cite{u8g2} library for Arduino.  Both of these libraries are compatible with the Teensy development board.  If an academic course uses the Teensy, but uses different libraries for IMU input and screen output, the course staff must modify the source code of those libraries.  Specifically, those libraries need to request inputs from the MicroGrader server when appropriate, instead of performing real sensor readings, and need to report information to the MicroGrader server when appropriate.  In practice, the code for doing this, with the help of the core communication library, is relatively simple.
 
 The MicroGrader client for Teensy includes an \textit{inactive mode}, in which all built-in GPIO functions and third-party libraries operate normally, and in which there is no communication with the MicroGrader server.  In this mode, \texttt{Serial} print statements work normally.  Therefore, students can use \texttt{Serial} print statements when not connected to the MicroGrader server, but they do not have to worry about those statements interfering with MicroGrader communication when actual testing is happening.
 
-From a student's perspective, very few changes need to be made in order to run the MicroGrader client.  He or she needs to install the core library and the modified versions of the third-party libraries.  The line \verb+#include "MicroGrader.h"+ must be added to the top of the \texttt{.ino} file and an initialization function, \texttt{MicroGrader.begin()} must be called at the beginning of the Teensy \texttt{setup()} routine.
+From a student's perspective, very few changes need to be made in order to run the MicroGrader client.  He or she needs to install the core library and the modified versions of the third-party libraries.  The line \verb+#include "MicroGrader.h"+ must be added to the top of the \texttt{.ino} file and an initialization function, \texttt{MicroGrader.begin()} must be called at the beginning of the Teensy's \texttt{setup()} routine.
 
 \end{appendices}
 
@@ -1025,11 +1025,11 @@ https://www.edx.org/course/embedded-systems-shape-world-utaustinx-ut-6-10x.  Acc
 http://www2.keil.com/mdk5/. Accessed September 1, 2017.
 
 \bibitem{catsoop}
-``CAT-SOOP is an Automatic Tutor for Six-Oh-One Problems."  \textit{mit.edu.}  Available at:
+``CAT-SOOP is an Automatic Tutor for Six-Oh-One Problems."  \textit{MIT.}  Available at:
 https://catsoop.mit.edu/.  Accessed September 1, 2017.
 
 \bibitem{wiki-scroller}
-``Exercises 04."  \textit{mit.edu.} Available at:
+``Exercises 04."  \textit{MIT.} Available at:
 https://iesc-s2.mit.edu/6S08/S17/EX04.  Accessed September 1, 2017.
 
 \bibitem{teensy}
