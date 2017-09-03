@@ -970,7 +970,7 @@ Since the built-in screen type is a monochrome display, in which each pixel is o
 
 We encode the screen as a collection of 8x8 \textit{tiles}.  The entire bitmap for a tile is contained in an unsigned 64-bit integer.  The most significant byte of the 64-bit integer encodes the leftmost column of the tile.  The next-most significant byte encodes the second-to-leftmost column of the tile, and so forth.  Within a 8-pixel column, the most significant bit represents the state (on or off) of the top pixel, the second-most significant bit represents the state of the pixel below that, and so forth.  In our terminology, the leftmost column has the coordinate $x=0$ and the topmost row has the coordinate $y=0$.  Therefore, the point $(0, 0)$ is the top-left corner of a bitmap.  When a tile is transmitted, its unsigned 64-bit integer encoding is transmitted in little-endian fashion; the lowest-order byte, representing the rightmost column of the tile, is transmitted first.
 
-The screen can be considered a grid of non-overlapping tiles (though padding might be necessary so that 8x8 tiles perfectly cover the entire screen).  When transmitting the screen, the tiles are transmitted by row, from top to bottom (lowest y-coordinate to highest y-coordinate).  Within each row, tiles are transmitted from right to left (highest x-coordinate to lowest x-coordinate).  Note that the Screen message does not specify the shape of the screen; it just sends a sequence of tiles.  Therefore, it is imperative that, before sending any Screen messages, the client informs the server of the screen shape using a ``Screen Init" message (see section \ref{sec:event-messages}).
+The screen can be considered a grid of non-overlapping tiles (though padding might be necessary so that 8x8 tiles perfectly cover the entire screen).  When transmitting the screen, the tiles are transmitted by row, from top to bottom (lowest y-coordinate to highest y-coordinate).  Within each row, tiles are transmitted from right to left (highest x-coordinate to lowest x-coordinate).  Note that the Screen message does not specify the shape of the screen; it just sends a sequence of tiles.  Therefore, it is imperative that, before sending any Screen messages, the client informs the server of the screen shape using a ``Screen init" message (see section \ref{sec:event-messages}).
 
 \subsection{Events}
 \label{sec:event-messages}
@@ -981,7 +981,7 @@ Event messages are similar to output messages in that they are used to report in
 \begin{tabular}{l l l}
 code & name & request body \\ \hline
 0x00 & Init & (\textit{empty}) \\
-0x01 & Print & $<$uint8 char$>$* \\
+0x01 & Print & $<$uint8 char$>$$<$uint8 char$>$... \\
 0x40 & Screen init & $<$uint8 width$>$$<$uint8 height$>$ \\
 0x50 & GPS fix & (\textit{empty}) \\
 0x60 & HTTP request & (\textit{empty}) \\
@@ -992,9 +992,9 @@ code & name & request body \\ \hline
 \end{center}
 \end{table}
 
-The ``Init" message is sent when the embedded client initializes.  In addition, the ``Screen Init" message is used upon initialization to inform the server of the width and height of the screen, as measured in 8x8 tiles.  The ``Print" message is used to send custom text (ASCII-encoded) from the client to the server.  This is particularly helpful for debugging, since it is impossible to perform regular debugging via USB when MicroGrader is in use.
+The ``Init" message is sent when the embedded client initializes.  In addition, the ``Screen init" message is used upon initialization to inform the server of the width and height of the screen, as measured in 8x8 tiles.  The ``Print" message is used to send custom ASCII-encoded text from the client to the server.  This is particularly helpful for debugging, since it is impossible to perform regular debugging via USB when MicroGrader is in use.
 
-It is important to inform the server of certain events, especially ones that have highly variable latencies.  The ``GPS Fix" message is used to inform the server that the client has acquired a GPS fix.  The ``HTTP request" message is used to inform the server that an HTTP request has been sent.  The ``HTTP response" message is used to inform the server that a internet response has been received.
+It is important to inform the server of certain events, especially ones that have highly variable latencies.  The ``GPS fix" message is used to inform the server that the client has acquired a GPS fix.  The ``HTTP request" message is used to inform the server that an HTTP request has been sent.  The ``HTTP response" message is used to inform the server that an HTTP response has been received.
 
 \clearpage
 \section{Client implementation for Teensy}
