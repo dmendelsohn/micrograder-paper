@@ -918,13 +918,13 @@ If the optional value or values are included, this message is reporting recorded
 If the optional values are not included, this message is requesting test values.  In that case, the body of the response is just the requested values.  For digital input requests, the response is a single byte containing a 0 or a 1.  For analog input requests, the response is a 32-bit integer.  For the accelerometer, gyroscope, and magnetometer requests, the response is a sequence of three 32-bit bit integers representing the values for the x-axis, y-axis, and z-axis respectively.
 
 \subsubsection{Value encoding}
-Encoding for digital values is simple: a single byte containing the value 0 or 1.  For analog values, however, MicroGrader uses a system by which the client decides how an analog value becomes discretized.  In particular, the client specifies the \textit{analog params} which are defined as follows:
+The encoding for digital values is simple; MicroGrader uses a single byte containing the value 0 or 1.  For analog values, however, MicroGrader uses a system by which the client decides how an analog value becomes discretized.  In particular, the client specifies the \textit{analog params} which are defined as follows:
 
 \footnotesize
 \textbf{analog params ::= $<$int32 min bin$>$$<$int32 max bin$>$$<$int32 min value$>$$<$int32 max value$>$}
 \normalsize
 
-\noindent These parameters indicate that the physical quantity in the range (min value, max value) should be mapped to the range (min bin, max bin) for discretization.
+\noindent These parameters indicate that the physical quantity in the range (\texttt{min value}, \texttt{max value}) should be mapped to the range (\texttt{min bin}, \texttt{max bin}) for discretization.
 
 To illustrate, we examine the behavior of the Teensy client for analog input requests.  It uses the values 0 and 3300 for \texttt{min value} and \texttt{max value} respectively.  These represent the minimum and maximum voltages, in millivolts, that the Teensy's analog-to-digital converter (ADC) can process.  For \texttt{min bin} and \texttt{max bin}, the values depend on the Teensy's current analog resolution.  If the resolution is 10 bits for example, the Teensy client would use the values 0 and 1023 for \texttt{min bin} and \texttt{max bin}.
 
