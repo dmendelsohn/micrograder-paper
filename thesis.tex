@@ -105,7 +105,7 @@ We describe a specification format for instructors to define the technical requi
 \section{Introduction}
 In this thesis, we describe a software tool (``MicroGrader") for grading embedded systems exercises in an educational setting.  Specifically, we focus on assessing the degree to which a student's microcontroller program adheres to an instructor's specification.  This tool also provides immediate and actionable feedback to students, so that they may improve their adherence to the specification.  Before detailing the process by which MicroGrader grades exercises, we must understand why the verification of an embedded system requires a specialized approach, and understand how the educational context affects our design choices.
 
-First, let us consider program verification in general, at a high level. In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent if they produce identical sequences of outputs given the same sequence of inputs and start state.  If we only care about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we should evaluate only the output sequences and not the internal state.
+First, let us consider program verification in general, at a high level. In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent if they produce identical sequences of outputs given the same sequence of inputs and start state.  If we care only about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we should evaluate only the output sequences and not the internal state.
 
 Technical educators sometimes specify that students must use certain structures or programming patterns in their solutions.  For example, an instructor might require students to use recursion even if there are functionally equivalent non-recursive solutions.  We acknowledge the value of these pedagogical restrictions, but we put them aside for now.  MicroGrader focuses only on the functional correctness of an embedded program, not the methodology used to implement the program.
 
@@ -145,7 +145,6 @@ Each student implements a tilt-based interface that allows the device's user to 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=0.5]{wiki-block-diagram.png}
-\vspace{5mm}
 \caption{Block diagram for Wikipedia Scroller, from 6.S08 exercise description.}
 \label{fig:wiki-scroller-block}
 \end{figure}
@@ -160,7 +159,6 @@ In this state, the result for the most recent query should be displayed.  Specif
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.5\linewidth]{text-wiki-close.png}
-\vspace{5mm}
 \caption{Screen output when in the display state. The last query was ``pigeons".}
 \label{fig:pigeons}
 \end{figure}
@@ -240,7 +238,6 @@ While developing MicroGrader, we first explored a static approach to specifying 
 \begin{figure}[ht]
 \centering
 \includegraphics[scale=0.75]{button-signal.png}
-\vspace{5mm}
 \caption{A simple digital signal.}
 \label{fig:static-input}
 \end{figure}
@@ -343,8 +340,7 @@ In the context of the Wikipedia Scroller exercise, consider the following input 
 \begin{figure}[h]
 \centering
 \includegraphics[scale=1]{wiki-frame.png}
-\vspace{5mm}
-\caption{value-generating function with two input channels.}
+\caption{Value-generating function with two input channels.}
 \label{fig:value-gen}
 \end{figure}
 
@@ -386,7 +382,6 @@ For ``Blinky", an instructor might consider using the four evaluation points des
 \begin{table}[ht]
 \begin{center}
 \caption{A basic set of evaluation points for Blinky.}
-\vspace{2mm}
 \label{table:blinky-basic-points}
 \begin{tabular}{c|cccc}
 & Channel & Expected Value & Condition & Interval \\ \hline
@@ -412,7 +407,6 @@ In Table \ref{table:blinky-lenient-points}, we can see an example of a set of po
 \begin{table}[ht]
 \begin{center}
 \caption{A more lenient set of evaluation points for Blinky.}
-\vspace{2mm}
 \label{table:blinky-lenient-points}
 \begin{tabular}{c|cccccc}
 & Expected & Check Function & Condition & Interval & Portion \\ \hline
@@ -668,7 +662,6 @@ Our manual grading process for Wikipedia Scroller involved a complicated query e
 
 \begin{table}[ht]
 \begin{center}
-\vspace{2mm}
 \begin{tabular}{c|ll}
 & Start condition & End condition \\ \hline
 Frame 1 & System initialization & $1^{\text{st}}$ HTTP request sent \\
@@ -750,7 +743,6 @@ First, we partition the reference signal into intervals with constant value.  In
 \begin{table}[ht]
 \begin{center}
 \caption{Partial evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
-\vspace{2mm}
 \label{table:construct-points}
 \begin{tabular}{cccccc}
 Expected Value & Check Function & Condition & Interval & Portion \\ \hline
@@ -768,7 +760,6 @@ As observed in the table, we have no way to determine the proper check function 
 \begin{table}[ht]
 \begin{center}
 \caption{Complete evaluation points to assess reference signal from Figure \ref{fig:output-framing}.}
-\vspace{2mm}
 \label{table:construct-points-2}
 \begin{tabular}{cccccc}
 Expected Value & Check Function & Condition & Interval & Portion \\ \hline
@@ -829,7 +820,6 @@ The Wikipedia Scroller exercise involves a single output channel, represented as
 
 \begin{table}[ht]
 \begin{center}
-\vspace{2mm}
 \begin{tabular}{>{\centering\arraybackslash} m{3.75cm} >{\centering\arraybackslash} m{3cm} >{\centering\arraybackslash} m{1.5cm} >{\centering\arraybackslash} m{2.5cm} >{\centering\arraybackslash} m{1.5cm} }
 Expected Value & Check Function & Condition & Interval & Portion \\ \hline \vspace{2mm}
 \includegraphics[width=\linewidth]{screen-blank.png} & Text equality & $C_1$ & (0,2581) & 0.8 \\
