@@ -266,12 +266,13 @@ The second type of condition is the \textit{AFTER condition}.  AFTER conditions 
 
 Alternatively, an AFTER condition can have a cause number, $t_{\text{cause}}$, instead of a cause function.  In this case, we consider this condition's $t_{\text{satisfied}}$ to be the precondition's $t_{\text{satisfied}}$ plus $t_{\text{cause}}$.  In general, an AFTER condition cannot be satisfied without its precondition being satisfied.
 
-The third type of condition is the \textit{AND condition}.  This type of condition has no \textit{cause}, but rather a set of subconditions, which can be of any condition type.  This condition is considered to be met once \textbf{all} of the subconditions are met.  Equivalently, this condition's $t_{\text{satisfied}}$ is the maximum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if any subcondition has an undefined $t_{\text{satisfied}}$.
+The third type of condition is the \textit{AND condition}.  This type of condition has no cause function or number, but rather a set of subconditions, which can be of any condition type.  This condition is considered to be met once \textbf{all} of the subconditions are met.  Equivalently, this condition's $t_{\text{satisfied}}$ is the maximum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if any subcondition has an undefined $t_{\text{satisfied}}$.
 
 The fourth and final type of condition is the \textit{OR condition}.  It is analogous to the AND condition, except it is considered to be satisfied once \textbf{any} of its sub-conditions are met. Equivalently, this condition's $t_{\text{satisfied}}$ is the minimum of its subconditions' $t_{\text{satisfied}}$ values, or undefined if all subconditions have an undefined $t_{\text{satisfied}}$.  Table \ref{table:condition-summary} gives a summary of the attributes of each of the four types of conditions.
 
 \begin{table}[ht]
 \begin{center}
+\caption{Summary of attributes of each type of condition.}
 \begin{tabular}{cccc}
 Condition Type & Cause & Precondition & Subconditions \\ \hline
 BASIC & function & N/A & N/A \\
@@ -279,12 +280,13 @@ AFTER & function or number & condition & N/A \\
 AND & N/A & N/A & set of conditions \\
 OR & N/A & N/A & set of conditions \\ \hline
 \end{tabular}
-\caption{Summary of attributes of each type of condition.}
 \label{table:condition-summary}
 \end{center}
 \end{table}
 
-In Tables \ref{table:observations}, \ref{table:conditions}, and \ref{table:condition-descs}, we examine a concrete example showing a sequence of observations and a set of conditions, including each condition's value for $t_{\text{satisfied}}$ with respect to this set of observations.  Here, $f_{\text{httpreq}}$ and $f_{\text{high}}$ are cause functions, which take a single observation as input.  In particular, $f_{\text{httpreq}}$ returns \texttt{true} if the observation represents the sending of an HTTP request, and $f_{\text{high}}$ returns \texttt{true} if the observation represents the setting of digital output 13 to 1.  Notice that condition 4 is satisfied at $t=4000$, since both its subconditions are satisfied and the maximum of the subconditions' $t_{\text{satisfied}}$ is 4000.  By contrast, condition 5 is never satisfied because its cause function is only invoked for observations 5, 6, and 7.
+\vspace{-5mm}
+
+In Tables \ref{table:observations}, \ref{table:conditions}, and \ref{table:condition-descs}, we examine a concrete example showing a sequence of observations and a set of conditions, including each condition's value for $t_{\text{satisfied}}$ with respect to this set of observations.  Here, $f_{\text{httpreq}}$ and $f_{\text{high}}$ are cause functions, which take a single observation as input.  In particular, $f_{\text{httpreq}}$ returns \texttt{true} if the observation represents the sending of an HTTP request, and $f_{\text{high}}$ returns \texttt{true} if the observation represents the setting of digital output 13 to 1.  Notice that condition 4 is satisfied at $t=4000$, since both its subconditions are satisfied and the maximum of the subconditions' $t_{\text{satisfied}}$ values is 4000.  By contrast, condition 5 is never satisfied because its cause function is only invoked for observations 5, 6, and 7.
 
 \begin{table}[ht]
 \begin{center}
