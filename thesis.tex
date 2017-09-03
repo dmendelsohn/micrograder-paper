@@ -928,13 +928,19 @@ The encoding for digital values is simple; MicroGrader uses a single byte contai
 
 To illustrate, we examine the behavior of the Teensy client for analog input requests.  It uses the values 0 and 3300 for \texttt{min value} and \texttt{max value} respectively.  These represent the minimum and maximum voltages, in millivolts, that the Teensy's analog-to-digital converter (ADC) can process.  For \texttt{min bin} and \texttt{max bin}, the values depend on the Teensy's current analog resolution.  If the resolution is 10 bits for example, the Teensy client would use the values 0 and 1023 for \texttt{min bin} and \texttt{max bin}.
 
-Suppose the Teensy makes a request for an analog input using these parameters, and the server observes that the true value to ``inject" is $x$.  Let $b_{\text{min}}$, $b_{\text{max}}$, $v_{\text{min}}$, and $v_{\text{max}}$ represent the min bin, max bin, min value, and max value respectively.  The server must convert the value $x$ to a ``bin number", $y$, in accordance with the given parameters:
+Suppose the Teensy makes a request for an analog input using these parameters, and the server determines that the true value to ``inject" is $x$.  Let $b_{\text{min}}$, $b_{\text{max}}$, $v_{\text{min}}$, and $v_{\text{max}}$ represent the \texttt{min bin}, \texttt{max bin}, \texttt{min value}, and \texttt{max value} respectively.  The server must convert the value $x$ to a ``bin number", $y$, in accordance with the given parameters.
 
 $$y = \left \lfloor b_{\text{min}} + \frac{x_{\text{bound}}-v_{\text{min}}}{v_{\text{max}}-v_{\text{min}}} * (b_{\text{max}}-b_{\text{min}}) \right \rfloor$$
 
 where
 
-$$x_{\text{bound}} = \min(v_{\text{max}}, \max(v_{\text{min}}, x))$$
+\begin{equation*}
+x_{\text{bound}} = \begin{cases} 
+      v_{\text{min}} & x < v_{\text{min}} \\
+      x & v_{\text{min}} \le x \le v_{\text{max}} \\
+      v_{\text{max}} & x > v_{\text{max}}
+   \end{cases}
+\end{equation*}
 
 The server responds with the value $y$.  Now consider a situation in which the client reports an input sample to the server, rather than requesting an input value.  For such input ``recordings", the value supplied by the client should also be the bin number as described by the above formula (typically this math would be calculated in hardware by the ADC).
 
