@@ -359,13 +359,13 @@ If MicroGrader needs to inject an input value, and there are no active input fra
 \label{sec:eval-point}
 So far, we have established how MicroGrader specifies input values for a test case.  Now, we must describe how it grades the outputs of the embedded system.
 
-MicroGrader has access to a sequence of output observations.  Output observations occur when the microcontroller generates an output.  For example, MicroGrader can observe the execution of a \texttt{digitalWrite} or \texttt{analogWrite} command on the Arduino platform, both of which specify an output voltage on a GPIO pin.  MicroGrader can also observe commands that change the embedded system's display.  Using this discrete set of output observations, MicroGrader recovers continuous output signals by assuming that outputs are constant until the next observation on the same channel.  Now, we need a method of grading a set of continuous output signals.
+MicroGrader has access to a sequence of output observations.  Output observations occur when the microcontroller generates an output.  For example, MicroGrader can observe the execution of a \texttt{digitalWrite} or \texttt{analogWrite} command on the Arduino platform, both of which specify an output voltage on a pin.  MicroGrader can also observe commands that change the embedded system's display.  Using this discrete set of output observations, MicroGrader recovers continuous output signals by assuming that outputs are constant until the next observation on the same channel.  Now, we need a method of grading a set of continuous output signals.
 
 
 \subsubsection{Breaking up the grading task}
 Let us consider a simple exercise, involving no inputs at all.  We will refer to this exercise as ``Blinky".  In this exercise, the microcontroller outputs a 1 Hz digital square wave on digital output 13, starting with a value of 0.  As graders, let us suppose that we only care to check the first two periods of this square wave; if these first two periods occur correctly, we will give the exercise full credit.
 
-We define $t_{\text{start}}$ to be the time, in milliseconds, at which the embedded system finishes initializing.  Fundamentally, a grader performs four checks
+We define $t_{\text{start}}$ to be the time, in milliseconds, at which the embedded system initializes.  Fundamentally, a grader performs four checks
 
 \begin{itemize}
 \item digital output 13 must have a value of 0 in the interval $[t_{\text{start}},t_{\text{start}}+500)$.
