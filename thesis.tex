@@ -156,7 +156,7 @@ The embedded device allows its user to construct an alphanumeric query string, a
 \subsubsection{State 0: display state}
 In this state, the result for the most recent query should be displayed.  Specifically, the screen should show as many characters as possible from the most recent HTTP (hypertext transfer protocol) response.  Initially, before any query has occurred, we define the ``most recent result" to be the empty string.  The system's built-in 5-by-7 pixel fixed-size font should be used, so that 8 lines of 21 characters each can fit on the screen.  See Figure \ref{fig:pigeons} for an example.  When the user performs a long press, the system should switch to the query entry state.
 
-\begin{figure}[t]
+\begin{figure}[ht]
 \centering
 \includegraphics[width=0.5\linewidth]{text-wiki-close.png}
 \caption{Screen output when in the display state. The last query was ``pigeons".}
@@ -287,7 +287,7 @@ In Tables \ref{table:observations}, \ref{table:conditions}, and \ref{table:condi
 
 \begin{table}[ht]
 \begin{center}
-\caption{Example observations}
+\caption{Example observations.}
 \label{table:observations}
 \begin{tabular}{l|lr}
 & Description & Timestamp (ms) \\ \hline
@@ -302,7 +302,7 @@ Observation 7 & Digital output 13 set to 0 & 6000 \\ \hline
 
 \vspace{5mm}
 
-\caption{Example conditions, with $t_{\text{satisfied}}$ calculated with respect to Table \ref{table:observations}}
+\caption{Example conditions, with $t_{\text{satisfied}}$ calculated with respect to Table \ref{table:observations}.}
 \label{table:conditions}
 
 \begin{tabular}{l|llllr}
@@ -316,7 +316,7 @@ Condition 5 & AFTER & $f_{\text{high}}$ & Condition 2 & N/A & Undefined \\ \hlin
 
 \vspace{5mm}
 
-\caption{Text descriptions of example conditions from Table \ref{table:conditions}}
+\caption{Text descriptions of example conditions from Table \ref{table:conditions}.}
 \label{table:condition-descs}
 
 \begin{tabular}{l|l}
@@ -361,7 +361,7 @@ MicroGrader has access to a sequence of output observations.  Output observation
 \subsubsection{Breaking up the grading task}
 Let us consider a simple exercise, involving no inputs at all.  We will refer to this exercise as ``Blinky".  In this exercise, the microcontroller outputs a 1 Hz digital square wave on digital output 13, starting with a value of 0.  As graders, let us suppose that we only care to check the first two periods of this square wave; if these first two periods occur correctly, we will give the exercise full credit.
 
-We define $t_{\text{start}}$ to be the time, in milliseconds, at which the embedded system initializes.  Fundamentally, a grader performs four checks
+We define $t_{\text{start}}$ to be the time, in milliseconds, at which the embedded system initializes.  Fundamentally, a grader performs four checks:
 
 \begin{itemize}
 \item digital output 13 must have a value of 0 in the interval $[t_{\text{start}},t_{\text{start}}+500)$.
@@ -461,7 +461,7 @@ In this stage, the MicroGrader server considers all the activity that occurred d
 
 \begin{itemize}
 \item Determine the time at which each evaluation point's condition was met, if it was met at all.  This allows for a point's relative time interval to be converted to an absolute time interval.
-\item Reconstruct all the output signals.  Recall that we assume that each the output on each channel holds until the next output on the same channel.
+\item Reconstruct all the output signals.  Recall that we assume that the output on each channel holds until the next output on the same channel.
 \end{itemize}
 
 Each evaluation point is examined and evaluated (refer back to section \ref{sec:eval-point} for details).  If a point's condition was never met, then that point automatically evaluates to \texttt{false}.  The boolean results of each evaluation point are aggregated into an overall score, as per section \ref{sec:aggregating}.
@@ -514,7 +514,7 @@ As previously mentioned, bitmap screens are a built-in type in MicroGrader.  Mic
 \subsubsection{Bitmap distance metric}
 MicroGrader includes a built-in distance metric for bitmaps of the same dimensions.  We say the distance between two bitmaps is the number of pixels that do not match.  We can compute this easily by XOR-ing two bitmaps and counting the number of 1s in the result, as shown in Figure \ref{fig:naive-distance}.
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{squares-horizontal.png}
@@ -539,7 +539,7 @@ MicroGrader includes a built-in distance metric for bitmaps of the same dimensio
 
 This distance metric is very unforgiving of slight translations.  For example, consider two bitmaps that each represent the outline of a circle.  If one bitmap is slightly shifted relative to the other, the distance between them is quite high, as shown in Figure \ref{fig:naive-distance-problem}.  In fact, the empty (all 0s) bitmap is closer to each of these than they are to each other.  We therefore will refer to this simple distance metric as the \textit{naive distance} metric. A more complex distance metric seems valuable.
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{circle-left.png}
@@ -569,7 +569,7 @@ To allow for leniency with regard to translations, we introduce a parametric fam
 Many assignments, such as Wikipedia Scroller, involve displaying text on a screen.  MicroGrader includes functionality to extract text from a bitmap.  At first we explored using existing tools for optical character recognition (OCR), such as tesseract \cite{tesseract}.  These generic OCR tools, however, do not perform well for small fonts.  The character glyphs of small fonts sometimes bear only vague resemblance to their counterparts in larger fonts.  For example, Figure \ref{fig:small-glyph} shows the glyph for the letter ``m" in a small font from the X11 distribution \cite{5x7}.  It is difficult to develop an OCR algorithm for small fonts without prior knowledge of the exact character glyphs.
 
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \includegraphics[width=0.3\linewidth]{glyph-m.png}
 \caption{A lower-case ``m" in a 5-by-7 pixel font is difficult to recognize.}
@@ -578,7 +578,7 @@ Many assignments, such as Wikipedia Scroller, involve displaying text on a scree
 
 MicroGrader's text extraction algorithm requires access to the bitmap representation of each character in a font.  Essentially, the algorithm scans the embedded system's output screen looking for rectangular patches that exactly match known bitmaps from a pre-loaded font.  The algorithm can be configured to ignore a subset of the characters in the font.  This is useful because some characters have glyphs that can appear in an image as a result of some other character, as shown in Figure \ref{fig:bad-ocr}.
 
-\begin{figure}
+\begin{figure}[ht]
 \centering
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{glyph-T.png}
@@ -738,7 +738,7 @@ To construct evaluation points, the first step is converting discrete output obs
 
 Recall that this is a recording of an instructor's embedded system, so its outputs are correct by definition.  Now, our task is to generate a set of evaluation points that can represent this interval of the expected output signal.  For the sake of clarity, we will continue to focus on a reference signal for a single output channel within a single frame, but the process of creating and using a reference signal is the same for all frames and output channels.  We will refer to the start condition of our hypothetical frame as $C_{\text{start}}$.
 
-First, we partition the reference signal into intervals with constant value.  In this case, there are three such intervals: $(0,1000)$, $(1000,2000)$, and $(2000,3000)$.  For each of these constant-value intervals, we construct one evaluation point that determines whether another signal matches the r?eference signal in this interval, as shown in Table \ref{table:construct-points}.
+First, we partition the reference signal into intervals with constant value.  In this case, there are three such intervals: $(0,1000)$, $(1000,2000)$, and $(2000,3000)$.  For each of these constant-value intervals, we construct one evaluation point that determines whether another signal matches the reference signal in this interval, as shown in Table \ref{table:construct-points}.
 
 \begin{table}[ht]
 \begin{center}
@@ -755,7 +755,7 @@ Expected Value & Check Function & Condition & Interval & Portion \\ \hline
 
 The start and end time of each constant-value interval define the ``time interval" attribute of the corresponding evaluation point.  Recall that we defined $t=0$ in our reference signal to be the time at which $C_{\text{start}}$ was satisfied, so $C_{\text{start}}$ is the condition for each evaluation point.  The expected value for each evaluation point is the value of the reference signal in the corresponding interval.
 
-As observed in the table, we have no way to determine the proper check function for the evaluation points.  Similarly, we cannot determine the ``portion" attribute, which essentially tunes the leniency of the evaluation point.  These two attributes are used to make evaluation points more flexible, and are inherently not specified by the reference signal, but rather by instructors.  Therefore, our scaffold data structure includes instructors' preferences for these attributes.  Instructors can specify a check function and portion for each output channel.  Table \ref{table:construct-points-2} shows some reasonable choices.
+As observed in the table, we have no way to determine the proper check function for the evaluation points.  Similarly, we cannot determine the ``portion" attribute, which essentially tunes the leniency of the evaluation point.  These two attributes are used to make evaluation points more flexible and are inherently not specified by the reference signal, but rather by instructors.  Therefore, our scaffold data structure includes instructors' preferences for these attributes.  Instructors can specify a check function and portion for each output channel.  Table \ref{table:construct-points-2} shows some reasonable choices.
 
 \begin{table}[ht]
 \begin{center}
