@@ -53,7 +53,7 @@ Department of Electrical Engineering and Computer Science \\
 
 Certified by \dotfill \\
 \begin{flushright}
-Joseph Steinmeyer \\
+Joseph D. Steinmeyer \\
 Thesis Supervisor \\
 \mydate
 \end{flushright}
@@ -105,7 +105,7 @@ We describe a specification format for instructors to define the technical requi
 \section{Introduction}
 In this thesis, we describe a software tool (``MicroGrader") for grading embedded systems exercises in an educational setting.  Specifically, we focus on assessing the degree to which a student's microcontroller program adheres to an instructor's specification.  This tool also provides immediate and actionable feedback to students, so that they may improve their adherence to the specification.  Before detailing the process by which MicroGrader grades exercises, we must understand why the verification of an embedded system requires a specialized approach, and understand how the educational context affects our design choices.
 
-First, let us consider program verification in general, at a high level. In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent if they produce identical sequences of outputs given the same sequence of inputs and start state.  If we care only about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we should evaluate only the output sequences and not the internal state.
+First, let us consider program verification in general, at a high level. In order to assess the correctness of any software system, we must first choose how to model such a system.  Often, it is useful to model a software system as a finite state machine (FSM).  That is, at any time, the output and next state of the system are uniquely defined by the input and current state of the system.  Two FSMs are considered equivalent (for the purposes of assessment) if they produce identical sequences of outputs given the same sequence of inputs and start state.  If we care only about the functional correctness of a system, we should consider any FSMs that are equivalent to the correct ``solution" to be correct as well.  This implies we should evaluate only the output sequences and not the internal state.
 
 Technical educators sometimes specify that students must use certain structures or programming patterns in their solutions.  For example, an instructor might require students to use recursion even if there are functionally equivalent non-recursive solutions.  We acknowledge the value of these pedagogical restrictions, but we put them aside for now.  MicroGrader focuses only on the functional correctness of an embedded program, not the methodology used to implement the program.
 
@@ -125,7 +125,7 @@ The process of constructing test cases can be time-consuming.  It is often prohi
 \section{Prior work}
 In our search for existing automatic graders for embedded systems, we found only one system that is actually being used in an educational environment.  The University of Texas at Austin (UT Austin) offers an EdX course "Embedded Systems - Shape The World" \cite{ut-austin-edx}, which uses a grading system called TExaS.  Most of what we learned about TExaS was gleaned by examining the course on EdX itself; we were not able to find technical documentation.
 
-TExaS consists of a grader, running on a student's computer, that observes the activity of the student's microcontroller.  It is decidedly not multi-platform: the core of TExaS runs as a plug-in to the Keil Microcontroller Development Kit \cite{keil}, which only runs on Windows.  That plug-in is designed to interface with the particular microcontroller used in the course.
+TExaS consists of a grader, running on a student's computer, that observes the activity of the student's microcontroller.  It is decidedly not multi-platform: the core of TExaS runs as a plug-in to the Keil Microcontroller Development Kit \cite{keil}, which currently runs only on Windows.  That plug-in is designed to interface with the particular microcontroller used in the course.
 
 The platform lock-in of TExaS has benefits.  It appears to have low-level access to the operation of the microcontroller and places little burden on the microcontroller itself.  TExaS can observe all the inputs and outputs of the microcontroller and it can even observe arrays of raw data in the microcontroller's memory.
 
@@ -428,9 +428,8 @@ For any output channel, we calculate an overall test result in a flexible way.  
 Embedded systems typically run indefinitely; there is no inherent ``end" to the execution of an embedded system.  Any test of an embedded system must, however, have an end.  A MicroGrader test case has an attribute called the \textit{termination condition}.  This is an instance of our usual condition data structure that, when satisfied, indicates that the test case is complete.  When constructing a test case, it is a good idea to use an end condition that is always satisfied eventually, regardless of the correctness of the student's system.  Otherwise, a test might run indefinitely, much to the student's consternation.
 
 
-
 \clearpage
-\section{Technical design }
+\section{Implementation details}
 In the introduction of this paper, we discussed that the grader and the system being graded exist in separate computing environments.  To help us describe the implementation of MicroGrader, additional terminology is helpful.  The MicroGrader \textit{server} runs on a computer, presumably a student's personal machine.  It runs the actual test case, generating inputs and collecting observations.  These observations are evaluated with respect to the test case to compute a numerical grade.
 
 The MicroGrader \textit{client} is software running on the embedded system that allows the server to interact with the student's implementation of an exercise.  It is a thin wrapper around the input/output functionality of the embedded system.  When the student's embedded code is running, and a function is called to sample an input, the client software makes a request to the server instead of actually sampling an input from the physical sensor.  The server, in turn, responds with the test input value.  In this way, the client allows for 	``simulated" test inputs.  From the perspective of the student's code, this should be transparent; it should appear that the embedded system is receiving these inputs from sensors, even though that is not actually true.
@@ -518,13 +517,13 @@ MicroGrader includes a built-in distance metric for bitmaps of the same dimensio
 \centering
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{squares-horizontal.png}
-\caption{Bitmap 1, two horizontal 10x10 white squares.}
+\caption{Bitmap 1, horizontally aligned 10x10 white squares.}
 \label{fig:squares-horizontal}
 \end{subfigure}
 \hspace{2mm}
 \begin{subfigure}[b]{.3\linewidth}
 \includegraphics[width=\linewidth]{squares-vertical.png}
-\caption{Bitmap 2, two vertical 10x10 white squares.}
+\caption{Bitmap 2, vertically aligned 10x10 white squares.}
 \label{fig:squares-vertical}
 \end{subfigure}
 \hspace{2mm}
@@ -533,7 +532,7 @@ MicroGrader includes a built-in distance metric for bitmaps of the same dimensio
 \caption{XOR of bitmaps 1 and 2, showing 200 differing pixels.}
 \label{fig:squares-diagonal}
 \end{subfigure}
-\caption{Example of using bitmap XOR to find number of pixel differences.}
+\caption{Example of using bitmap XOR to find the difference (c) between two bitmaps (a and b).}
 \label{fig:naive-distance}
 \end{figure}
 
@@ -746,9 +745,9 @@ First, we partition the reference signal into intervals with constant value.  In
 \label{table:construct-points}
 \begin{tabular}{cccccc}
 Expected Value & Check Function & Condition & Interval & Portion \\ \hline
-2.0 V & ? & $C_{\text{start}}$ & (0,1000) & ? \\
-0.0 V & ? & $C_{\text{start}}$ & (1000,2000) & ? \\
-3.0 V & ? & $C_{\text{start}}$ & (2000,3000) & ? \\ \hline
+2.0 V & Undefined & $C_{\text{start}}$ & (0,1000) & Undefined \\
+0.0 V & Undefined & $C_{\text{start}}$ & (1000,2000) & Undefined \\
+3.0 V & Undefined & $C_{\text{start}}$ & (2000,3000) & Undefined \\ \hline
 \end{tabular}
 \end{center}
 \end{table}

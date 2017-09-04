@@ -4,7 +4,7 @@
 \contentsline {figure}{\numberline {4}{\ignorespaces A simple digital signal.\relax }}{18}
 \contentsline {figure}{\numberline {5}{\ignorespaces Value-generating function with two input channels.\relax }}{24}
 \contentsline {figure}{\numberline {6}{\ignorespaces MicroGrader block diagram.\relax }}{31}
-\contentsline {figure}{\numberline {7}{\ignorespaces Example of using bitmap XOR to find number of pixel differences.\relax }}{37}
+\contentsline {figure}{\numberline {7}{\ignorespaces Example of using bitmap XOR to find the difference (c) between two bitmaps (a and b).\relax }}{37}
 \contentsline {figure}{\numberline {8}{\ignorespaces Example where two visually similar bitmaps have a large difference under the naive distance metric.\relax }}{38}
 \contentsline {figure}{\numberline {9}{\ignorespaces A lower-case ``m" in a 5-by-7 pixel font is difficult to recognize.\relax }}{39}
 \contentsline {figure}{\numberline {10}{\ignorespaces In this font, the crossbar of a ``T" is identical to an underscore character. An instructor might choose to ignore the underscore character.\relax }}{39}
